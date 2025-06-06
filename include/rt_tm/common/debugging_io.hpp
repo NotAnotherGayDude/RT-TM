@@ -1,0 +1,735 @@
+/*
+Copyright (c) 2025 RealTimeChris (Chris M.)
+
+This file is part of software offered under a restricted-use license to a designated Licensee,
+whose identity is confirmed in writing by the Author.
+
+License Terms (Summary):
+- Exclusive, non-transferable license for internal use only.
+- Redistribution, sublicensing, or public disclosure is prohibited without written consent.
+- Full ownership remains with the Author.
+- License may terminate if unused for [X months], if materially breached, or by mutual agreement.
+- No warranty is provided, express or implied.
+
+Full license terms are provided in the LICENSE file distributed with this software.
+
+Signed,
+RealTimeChris (Chris M.)
+2025
+*/
+
+#pragma once
+
+#include <rt_tm/common/model_arch_traits.hpp>
+#include <rt_tm/common/core_base.hpp>
+#include <rt_tm/common/common.hpp>
+#include <filesystem>
+#include <stdexcept>
+#include <charconv>
+#include <cstdint>
+#include <fstream>
+
+namespace rt_tm {
+
+	template<bool exceptions> class file_loader {
+	  public:
+		explicit file_loader(const std::filesystem::path& filePath) {
+			if (!std::filesystem::exists(filePath)) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("File does not exist: " + filePath.string());
+				} else {
+					std::cerr << "File does not exist: " + filePath.string() << std::endl;
+				}
+			}
+
+			std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+			if (!file) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Failed to open file: " + filePath.string());
+				} else {
+					std::cerr << "Failed to open file: " + filePath.string() << std::endl;
+				}
+			}
+
+			const std::streamsize size = file.tellg();
+			file.seekg(0, std::ios::beg);
+			if (size != -1) {
+				contents.resize(static_cast<size_t>(size));
+				if (!file.read(contents.data(), size)) {
+					if constexpr (exceptions) {
+						throw std::runtime_error("Failed to read file: " + filePath.string());
+					} else {
+						std::cerr << "Failed to read file: " + filePath.string() << std::endl;
+					}
+				}
+			}
+		}
+
+		operator const std::string&() const noexcept {
+			return contents;
+		}
+
+		size_t size() const noexcept {
+			return contents.size();
+		}
+
+	  private:
+		std::string contents;
+	};
+
+	template<bool exceptions> class file_saver {
+	  public:
+		file_saver(const std::filesystem::path& path, const void* data, size_t size) {
+			if (!data || size == 0) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Cannot save null or empty data to file: " + path.string());
+				} else {
+					std::cerr << "Cannot save null or empty data to file: " + path.string() << std::endl;
+				}
+			}
+
+			std::ofstream file(path, std::ios::binary | std::ios::trunc);
+			if (!file) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Failed to open file for writing: " + path.string());
+				} else {
+					std::cerr << "Failed to open file for writing: " + path.string() << std::endl;
+				}
+			}
+
+			file.write(static_cast<const char*>(data), static_cast<std::streamsize>(size));
+			if (!file) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Failed to write data to file: " + path.string());
+				} else {
+					std::cerr << "Failed to write data to file: " + path.string() << std::endl;
+				}
+			}
+		}
+	};
+
+	std::string map_rt_tm_to_ggml(llama_op_names rt_tm_enum, size_t layer_index = 0) {
+		switch (rt_tm_enum) {
+			case llama_op_names::norm:
+				return "norm-" + std::to_string(layer_index);
+			case llama_op_names::attn_norm:
+				return "attn_norm-" + std::to_string(layer_index);
+			case llama_op_names::q_proj:
+				return "Qcur-" + std::to_string(layer_index);
+			case llama_op_names::q_reshape:
+				return "Qcur-" + std::to_string(layer_index) + " (reshaped)";
+			case llama_op_names::rope_q:
+				return "Qcur-" + std::to_string(layer_index);
+			case llama_op_names::k_proj:
+				return "Kcur-" + std::to_string(layer_index);
+			case llama_op_names::k_reshape:
+				return "Kcur-" + std::to_string(layer_index) + " (reshaped)";
+			case llama_op_names::rope_k:
+				return "Kcur-" + std::to_string(layer_index);
+			case llama_op_names::v_proj:
+				return "Vcur-" + std::to_string(layer_index);
+			case llama_op_names::v_reshape:
+				return "Vcur-" + std::to_string(layer_index);
+			case llama_op_names::k_cache_view:
+				return "cache_k_l" + std::to_string(layer_index) + " (view)";
+			case llama_op_names::k_cache_copy:
+				return "cache_k_l" + std::to_string(layer_index) + " (view) (copy of Kcur-" + std::to_string(layer_index) + ")";
+			case llama_op_names::v_reshape_2:
+				return "Vcur-" + std::to_string(layer_index) + " (reshaped)";
+			case llama_op_names::v_transpose:
+				return "Vcur-" + std::to_string(layer_index) + " (reshaped) (transposed)";
+			case llama_op_names::v_cache_view:
+				return "cache_v_l" + std::to_string(layer_index) + " (view)";
+			case llama_op_names::v_cache_copy:
+				return "cache_v_l" + std::to_string(layer_index) + " (view) (copy of Vcur-" + std::to_string(layer_index) + " (reshaped) (transposed))";
+			case llama_op_names::v_cache_view_2:
+				return "cache_v_l" + std::to_string(layer_index) + " (view)";
+			case llama_op_names::v_cache_permute:
+				return "cache_v_l" + std::to_string(layer_index) + " (view) (permuted)";
+			case llama_op_names::k_cache_view_2:
+				return "cache_k_l" + std::to_string(layer_index) + " (view)";
+			case llama_op_names::k_cache_permute:
+				return "cache_k_l" + std::to_string(layer_index) + " (view) (permuted)";
+			case llama_op_names::q_permute:
+				return "Qcur-" + std::to_string(layer_index) + " (permuted)";
+			case llama_op_names::attn_scores:
+				return "node_" + std::to_string(36 * layer_index + 22);
+			case llama_op_names::attn_weights:
+				return "node_" + std::to_string(36 * layer_index + 23);
+			case llama_op_names::attn_out:
+				return "node_" + std::to_string(36 * layer_index + 24);
+			case llama_op_names::attn_permute:
+				return " (permuted)";
+			case llama_op_names::attn_cont:
+				return "kqv_out-" + std::to_string(layer_index);
+			case llama_op_names::attn_proj:
+				return "attn_out-" + std::to_string(layer_index);
+			case llama_op_names::residual_add:
+				return "ffn_inp-" + std::to_string(layer_index);
+			case llama_op_names::ffn_norm:
+				return "norm-" + std::to_string(layer_index);
+			case llama_op_names::ffn_norm_mul:
+				return "ffn_norm-" + std::to_string(layer_index);
+			case llama_op_names::ffn_gate:
+				return "ffn_gate-" + std::to_string(layer_index);
+			case llama_op_names::ffn_silu:
+				return "ffn_silu-" + std::to_string(layer_index);
+			case llama_op_names::ffn_up:
+				return "ffn_up-" + std::to_string(layer_index);
+			case llama_op_names::ffn_gate_mul:
+				return "ffn_gate_par-" + std::to_string(layer_index);
+			case llama_op_names::ffn_down:
+				return "ffn_out-" + std::to_string(layer_index);
+			case llama_op_names::layer_out:
+				return "l_out-" + std::to_string(layer_index);
+			default:
+				return "unknown_tensor";
+		}
+	}
+
+	std::string map_rt_tm_to_ggml_with_context(llama_op_names rt_tm_enum, size_t layer_index = 0) {
+		if (rt_tm_enum == llama_op_names::attn_scores) {
+			size_t node_num = 36 * layer_index + 22;
+			return "node_" + std::to_string(node_num);
+		}
+		if (rt_tm_enum == llama_op_names::attn_weights) {
+			size_t node_num = 36 * layer_index + 23;
+			return "node_" + std::to_string(node_num);
+		}
+		if (rt_tm_enum == llama_op_names::attn_out) {
+			size_t node_num = 36 * layer_index + 24;
+			return "node_" + std::to_string(node_num);
+		}
+		return map_rt_tm_to_ggml(rt_tm_enum, layer_index);
+	}
+
+	std::string convert_rt_tm_name_to_ggml(std::string_view rt_tm_name) {
+		size_t dash_pos	   = rt_tm_name.find_last_of('-');
+		size_t layer_index = 0;
+
+		if (dash_pos != std::string_view::npos) {
+			std::string_view number_part = rt_tm_name.substr(dash_pos + 1);
+			auto result					 = std::from_chars(number_part.data(), number_part.data() + number_part.size(), layer_index);
+			if (result.ec != std::errc{}) {
+				layer_index = 0;
+			}
+		}
+
+		std::string_view base_name = (dash_pos != std::string_view::npos) ? rt_tm_name.substr(0, dash_pos) : rt_tm_name;
+
+		if (base_name == "norm")
+			return map_rt_tm_to_ggml(llama_op_names::norm, layer_index);
+		if (base_name == "attn_norm")
+			return map_rt_tm_to_ggml(llama_op_names::attn_norm, layer_index);
+		if (base_name == "q_proj")
+			return map_rt_tm_to_ggml(llama_op_names::q_proj, layer_index);
+		if (base_name == "q_reshape")
+			return map_rt_tm_to_ggml(llama_op_names::q_reshape, layer_index);
+		if (base_name == "rope_q")
+			return map_rt_tm_to_ggml(llama_op_names::rope_q, layer_index);
+		if (base_name == "k_proj")
+			return map_rt_tm_to_ggml(llama_op_names::k_proj, layer_index);
+		if (base_name == "k_reshape")
+			return map_rt_tm_to_ggml(llama_op_names::k_reshape, layer_index);
+		if (base_name == "rope_k")
+			return map_rt_tm_to_ggml(llama_op_names::rope_k, layer_index);
+		if (base_name == "v_proj")
+			return map_rt_tm_to_ggml(llama_op_names::v_proj, layer_index);
+		if (base_name == "v_reshape")
+			return map_rt_tm_to_ggml(llama_op_names::v_reshape, layer_index);
+		if (base_name == "k_cache_view")
+			return map_rt_tm_to_ggml(llama_op_names::k_cache_view, layer_index);
+		if (base_name == "k_cache_copy")
+			return map_rt_tm_to_ggml(llama_op_names::k_cache_copy, layer_index);
+		if (base_name == "v_reshape_2")
+			return map_rt_tm_to_ggml(llama_op_names::v_reshape_2, layer_index);
+		if (base_name == "v_transpose")
+			return map_rt_tm_to_ggml(llama_op_names::v_transpose, layer_index);
+		if (base_name == "v_cache_view")
+			return map_rt_tm_to_ggml(llama_op_names::v_cache_view, layer_index);
+		if (base_name == "v_cache_copy")
+			return map_rt_tm_to_ggml(llama_op_names::v_cache_copy, layer_index);
+		if (base_name == "v_cache_view_2")
+			return map_rt_tm_to_ggml(llama_op_names::v_cache_view_2, layer_index);
+		if (base_name == "v_cache_permute")
+			return map_rt_tm_to_ggml(llama_op_names::v_cache_permute, layer_index);
+		if (base_name == "k_cache_view_2")
+			return map_rt_tm_to_ggml(llama_op_names::k_cache_view_2, layer_index);
+		if (base_name == "k_cache_permute")
+			return map_rt_tm_to_ggml(llama_op_names::k_cache_permute, layer_index);
+		if (base_name == "q_permute")
+			return map_rt_tm_to_ggml(llama_op_names::q_permute, layer_index);
+		if (base_name == "attn_scores")
+			return map_rt_tm_to_ggml(llama_op_names::attn_scores, layer_index);
+		if (base_name == "attn_weights")
+			return map_rt_tm_to_ggml(llama_op_names::attn_weights, layer_index);
+		if (base_name == "attn_out")
+			return map_rt_tm_to_ggml(llama_op_names::attn_out, layer_index);
+		if (base_name == "attn_permute")
+			return map_rt_tm_to_ggml(llama_op_names::attn_permute, layer_index);
+		if (base_name == "attn_cont")
+			return map_rt_tm_to_ggml(llama_op_names::attn_cont, layer_index);
+		if (base_name == "attn_proj")
+			return map_rt_tm_to_ggml(llama_op_names::attn_proj, layer_index);
+		if (base_name == "residual_add")
+			return map_rt_tm_to_ggml(llama_op_names::residual_add, layer_index);
+		if (base_name == "ffn_norm")
+			return map_rt_tm_to_ggml(llama_op_names::ffn_norm, layer_index);
+		if (base_name == "ffn_norm_mul")
+			return map_rt_tm_to_ggml(llama_op_names::ffn_norm_mul, layer_index);
+		if (base_name == "ffn_gate")
+			return map_rt_tm_to_ggml(llama_op_names::ffn_gate, layer_index);
+		if (base_name == "ffn_silu")
+			return map_rt_tm_to_ggml(llama_op_names::ffn_silu, layer_index);
+		if (base_name == "ffn_up")
+			return map_rt_tm_to_ggml(llama_op_names::ffn_up, layer_index);
+		if (base_name == "ffn_gate_mul")
+			return map_rt_tm_to_ggml(llama_op_names::ffn_gate_mul, layer_index);
+		if (base_name == "ffn_down")
+			return map_rt_tm_to_ggml(llama_op_names::ffn_down, layer_index);
+		if (base_name == "layer_out")
+			return map_rt_tm_to_ggml(llama_op_names::layer_out, layer_index);
+
+		return static_cast<std::string>(rt_tm_name);
+	}
+
+	struct intermediary_tensor {
+		static constexpr size_t tensor_len_size{ sizeof(uint64_t) };
+		static constexpr size_t name_len_size{ sizeof(uint64_t) };
+		static constexpr size_t dims_size{ sizeof(size_t) * 4 };
+		static constexpr size_t type_size{ sizeof(uint32_t) };
+		static constexpr size_t op_size{ sizeof(uint32_t) };
+		std::vector<std::string> input_names{};
+		array<size_t, 4> dims{};
+		std::string name{};
+		data_type type{};
+		op_type op{};
+
+		intermediary_tensor() noexcept = default;
+
+		intermediary_tensor(const core_base& other) {
+			size_t nbytes{ other.core_total_byte_size() };
+			for (size_t x = 0; x < 4; ++x) {
+				dims[x] = other.allocated_dims[x];
+			}
+			op	 = other.type;
+			type = other.data_type_val;
+			name = { other.name };
+		}
+
+		intermediary_tensor(const core_base_creation_data& other) {
+			size_t nbytes{ other.core_total_byte_size() };
+			for (size_t x = 0; x < 4; ++x) {
+				dims[x] = other.allocated_dims[x];
+			}
+			op	 = other.type;
+			type = other.data_type_val;
+			name = { other.name };
+		}
+
+		RT_TM_FORCE_INLINE friend bool operator==(const intermediary_tensor& lhs, const intermediary_tensor& rhs) {
+			std::stringstream stream{};
+			bool same{ true };
+			std::cout << "Correct Name: " << lhs.name << std::endl;
+			std::cout << "Current Name: " << rhs.name << std::endl;
+			if (lhs.op != rhs.op) {
+				stream << "Different op-type!" << std::endl;
+				stream << "Correct op-type: " << static_cast<int32_t>(lhs.op) << std::endl;
+				stream << "Current op-type: " << static_cast<int32_t>(rhs.op) << std::endl;
+				same = false;
+			}
+			if (lhs.type != rhs.type) {
+				stream << "Different type!" << std::endl;
+				stream << "Correct type: " << static_cast<int32_t>(lhs.type) << std::endl;
+				stream << "Current type: " << static_cast<int32_t>(rhs.type) << std::endl;
+				same = false;
+			}
+			if (lhs.dims != rhs.dims) {
+				stream << "Different dims!" << std::endl;
+				stream << "Correct Dims: " << lhs.dims << std::endl;
+				stream << "Current Dims: " << rhs.dims << std::endl;
+				same = false;
+			}
+			if (!same) {
+				std::cerr << "For Tensor: " << rhs.name << std::endl;
+				std::cerr << stream.str() << std::endl;
+			}
+			return same;
+		}
+
+		/*
+		intermediary_tensor(const ggml_tensor& other) {
+			size_t nbytes{ ggml_nbytes(&other) };
+			data.resize(nbytes);
+			std::memcpy(data.data(), other.data, nbytes);
+			for (size_t x = 0; x < 4; ++x) {
+				dims[x] = other.ne[x];
+			}
+			type = static_cast<data_type>(other.type);
+			name = std::string{other.name};
+		}*/
+	};
+
+	enum ggml_op {
+		GGML_OP_NONE = 0,
+
+		GGML_OP_DUP,
+		GGML_OP_ADD,
+		GGML_OP_ADD1,
+		GGML_OP_ACC,
+		GGML_OP_SUB,
+		GGML_OP_MUL,
+		GGML_OP_DIV,
+		GGML_OP_SQR,
+		GGML_OP_SQRT,
+		GGML_OP_LOG,
+		GGML_OP_SIN,
+		GGML_OP_COS,
+		GGML_OP_SUM,
+		GGML_OP_SUM_ROWS,
+		GGML_OP_MEAN,
+		GGML_OP_ARGMAX,
+		GGML_OP_COUNT_EQUAL,
+		GGML_OP_REPEAT,
+		GGML_OP_REPEAT_BACK,
+		GGML_OP_CONCAT,
+		GGML_OP_SILU_BACK,
+		GGML_OP_NORM,
+		GGML_OP_RMS_NORM,
+		GGML_OP_RMS_NORM_BACK,
+		GGML_OP_GROUP_NORM,
+		GGML_OP_L2_NORM,
+
+		GGML_OP_MUL_MAT,
+		GGML_OP_MUL_MAT_ID,
+		GGML_OP_OUT_PROD,
+
+		GGML_OP_SCALE,
+		GGML_OP_SET,
+		GGML_OP_CPY,
+		GGML_OP_CONT,
+		GGML_OP_RESHAPE,
+		GGML_OP_VIEW,
+		GGML_OP_PERMUTE,
+		GGML_OP_TRANSPOSE,
+		GGML_OP_GET_ROWS,
+		GGML_OP_GET_ROWS_BACK,
+		GGML_OP_DIAG,
+		GGML_OP_DIAG_MASK_INF,
+		GGML_OP_DIAG_MASK_ZERO,
+		GGML_OP_SOFT_MAX,
+		GGML_OP_SOFT_MAX_BACK,
+		GGML_OP_ROPE,
+		GGML_OP_ROPE_BACK,
+		GGML_OP_CLAMP,
+		GGML_OP_CONV_TRANSPOSE_1D,
+		GGML_OP_IM2COL,
+		GGML_OP_IM2COL_BACK,
+		GGML_OP_CONV_TRANSPOSE_2D,
+		GGML_OP_POOL_1D,
+		GGML_OP_POOL_2D,
+		GGML_OP_POOL_2D_BACK,
+		GGML_OP_UPSCALE,
+		GGML_OP_PAD,
+		GGML_OP_PAD_REFLECT_1D,
+		GGML_OP_ARANGE,
+		GGML_OP_TIMESTEP_EMBEDDING,
+		GGML_OP_ARGSORT,
+		GGML_OP_LEAKY_RELU,
+
+		GGML_OP_FLASH_ATTN_EXT,
+		GGML_OP_FLASH_ATTN_BACK,
+		GGML_OP_SSM_CONV,
+		GGML_OP_SSM_SCAN,
+		GGML_OP_WIN_PART,
+		GGML_OP_WIN_UNPART,
+		GGML_OP_GET_REL_POS,
+		GGML_OP_ADD_REL_POS,
+		GGML_OP_RWKV_WKV6,
+		GGML_OP_GATED_LINEAR_ATTN,
+		GGML_OP_RWKV_WKV7,
+
+		GGML_OP_UNARY,
+
+		GGML_OP_MAP_UNARY,
+		GGML_OP_MAP_BINARY,
+
+		GGML_OP_MAP_CUSTOM1_F32,
+		GGML_OP_MAP_CUSTOM2_F32,
+		GGML_OP_MAP_CUSTOM3_F32,
+
+		GGML_OP_MAP_CUSTOM1,
+		GGML_OP_MAP_CUSTOM2,
+		GGML_OP_MAP_CUSTOM3,
+
+		GGML_OP_CROSS_ENTROPY_LOSS,
+		GGML_OP_CROSS_ENTROPY_LOSS_BACK,
+		GGML_OP_OPT_STEP_ADAMW,
+
+		GGML_OP_COUNT,
+	};
+
+	enum op_type convert_ggml_op_to_op_type(enum ggml_op ggml_op) {
+		switch (ggml_op) {
+			case GGML_OP_NONE:
+				return op_type::noop;
+
+			case GGML_OP_MUL_MAT:
+			case GGML_OP_MUL_MAT_ID:
+			case GGML_OP_OUT_PROD:
+				return op_type::mul_mat;
+
+			case GGML_OP_MUL:
+				return op_type::mul;
+
+			case GGML_OP_ADD:
+			case GGML_OP_ADD1:
+			case GGML_OP_ACC:
+			case GGML_OP_ADD_REL_POS:
+				return op_type::add;
+
+			case GGML_OP_SUB:
+				return op_type::sub;
+
+			case GGML_OP_GET_ROWS:
+			case GGML_OP_GET_ROWS_BACK:
+				return op_type::get_rows;
+
+			case GGML_OP_VIEW:
+				return op_type::view;
+
+			case GGML_OP_CPY:
+			case GGML_OP_SET:
+				return op_type::copy;
+
+			case GGML_OP_SOFT_MAX:
+			case GGML_OP_SOFT_MAX_BACK:
+				return op_type::softmax;
+
+			case GGML_OP_RMS_NORM:
+			case GGML_OP_RMS_NORM_BACK:
+			case GGML_OP_NORM:
+			case GGML_OP_GROUP_NORM:
+			case GGML_OP_L2_NORM:
+				return op_type::rms_norm;
+
+			case GGML_OP_RESHAPE:
+				return op_type::reshape;
+
+			case GGML_OP_ROPE:
+			case GGML_OP_ROPE_BACK:
+				return op_type::rope;
+
+			case GGML_OP_TRANSPOSE:
+			case GGML_OP_CONV_TRANSPOSE_1D:
+			case GGML_OP_CONV_TRANSPOSE_2D:
+				return op_type::transpose;
+
+			case GGML_OP_PERMUTE:
+				return op_type::permute;
+
+			case GGML_OP_CONT:
+				return op_type::cont;
+
+			case GGML_OP_SILU_BACK:
+				return op_type::silu;
+
+			case GGML_OP_DIV:
+			case GGML_OP_SQR:
+			case GGML_OP_SQRT:
+			case GGML_OP_LOG:
+			case GGML_OP_SIN:
+			case GGML_OP_COS:
+			case GGML_OP_SUM:
+			case GGML_OP_SUM_ROWS:
+			case GGML_OP_MEAN:
+			case GGML_OP_ARGMAX:
+			case GGML_OP_COUNT_EQUAL:
+			case GGML_OP_REPEAT:
+			case GGML_OP_REPEAT_BACK:
+			case GGML_OP_CONCAT:
+			case GGML_OP_SCALE:
+			case GGML_OP_DIAG:
+			case GGML_OP_DIAG_MASK_INF:
+			case GGML_OP_DIAG_MASK_ZERO:
+			case GGML_OP_CLAMP:
+			case GGML_OP_POOL_1D:
+			case GGML_OP_POOL_2D:
+			case GGML_OP_POOL_2D_BACK:
+			case GGML_OP_UPSCALE:
+			case GGML_OP_PAD:
+			case GGML_OP_PAD_REFLECT_1D:
+			case GGML_OP_ARANGE:
+			case GGML_OP_TIMESTEP_EMBEDDING:
+			case GGML_OP_ARGSORT:
+			case GGML_OP_LEAKY_RELU:
+			case GGML_OP_FLASH_ATTN_EXT:
+			case GGML_OP_FLASH_ATTN_BACK:
+			case GGML_OP_SSM_CONV:
+			case GGML_OP_SSM_SCAN:
+			case GGML_OP_WIN_PART:
+			case GGML_OP_WIN_UNPART:
+			case GGML_OP_GET_REL_POS:
+			case GGML_OP_RWKV_WKV6:
+			case GGML_OP_GATED_LINEAR_ATTN:
+			case GGML_OP_RWKV_WKV7:
+			case GGML_OP_UNARY:
+			case GGML_OP_MAP_CUSTOM1:
+			case GGML_OP_MAP_CUSTOM2:
+			case GGML_OP_MAP_CUSTOM3:
+			case GGML_OP_CROSS_ENTROPY_LOSS:
+			case GGML_OP_CROSS_ENTROPY_LOSS_BACK:
+			case GGML_OP_OPT_STEP_ADAMW:
+			case GGML_OP_IM2COL:
+			case GGML_OP_IM2COL_BACK:
+			case GGML_OP_COUNT:
+			default:
+				return op_type::unset;
+		}
+	}
+
+	intermediary_tensor parse_tensor_from_string(const std::string& file_contents) {
+		intermediary_tensor tensor{};
+		size_t offset = 0;
+
+		constexpr size_t min_header_size =
+			intermediary_tensor::type_size + intermediary_tensor::op_size + intermediary_tensor::dims_size + intermediary_tensor::name_len_size + sizeof(uint64_t);
+
+		if (file_contents.size() < min_header_size) {
+			throw std::runtime_error("File contents too small for valid tensor");
+		}
+
+		if (offset + intermediary_tensor::type_size > file_contents.size()) {
+			throw std::runtime_error("Not enough data for type field");
+		}
+		uint32_t temp_type{};
+		std::memcpy(&temp_type, file_contents.data() + offset, intermediary_tensor::type_size);
+		offset += intermediary_tensor::type_size;
+		tensor.type = static_cast<data_type>(temp_type);
+
+		if (offset + intermediary_tensor::op_size > file_contents.size()) {
+			throw std::runtime_error("Not enough data for operation field");
+		}
+		ggml_op temp_op_type{};
+		std::memcpy(&temp_op_type, file_contents.data() + offset, intermediary_tensor::op_size);
+		offset += intermediary_tensor::op_size;
+		tensor.op = convert_ggml_op_to_op_type(temp_op_type);
+		if (offset + intermediary_tensor::dims_size > file_contents.size()) {
+			throw std::runtime_error("Not enough data for dimensions");
+		}
+		std::memcpy(tensor.dims.data(), file_contents.data() + offset, intermediary_tensor::dims_size);
+		offset += intermediary_tensor::dims_size;
+
+		uint64_t name_length = 0;
+		if (offset + intermediary_tensor::name_len_size > file_contents.size()) {
+			throw std::runtime_error("Not enough data for name length");
+		}
+		std::memcpy(&name_length, file_contents.data() + offset, intermediary_tensor::name_len_size);
+		offset += intermediary_tensor::name_len_size;
+
+		if (name_length > 10000) {
+			throw std::runtime_error("Suspiciously large name length: " + std::to_string(name_length));
+		}
+
+		if (name_length > 0) {
+			if (offset + name_length > file_contents.size()) {
+				throw std::runtime_error("Not enough data for tensor name");
+			}
+			tensor.name.resize(name_length);
+			std::memcpy(tensor.name.data(), file_contents.data() + offset, name_length);
+			offset += name_length;
+		}
+
+		uint64_t input_count = 0;
+		if (offset + sizeof(uint64_t) > file_contents.size()) {
+			throw std::runtime_error("Not enough data for input count");
+		}
+		std::memcpy(&input_count, file_contents.data() + offset, sizeof(uint64_t));
+		offset += sizeof(uint64_t);
+
+		if (input_count > 1000) {
+			throw std::runtime_error("Suspiciously large input count: " + std::to_string(input_count));
+		}
+
+		tensor.input_names.reserve(input_count);
+		for (uint64_t i = 0; i < input_count; ++i) {
+			uint64_t input_name_length = 0;
+			if (offset + intermediary_tensor::name_len_size > file_contents.size()) {
+				throw std::runtime_error("Not enough data for input name length at index " + std::to_string(i));
+			}
+			std::memcpy(&input_name_length, file_contents.data() + offset, intermediary_tensor::name_len_size);
+			offset += intermediary_tensor::name_len_size;
+
+			if (input_name_length > 10000) {
+				throw std::runtime_error("Suspiciously large input name length: " + std::to_string(input_name_length));
+			}
+
+			std::string input_name{};
+			if (input_name_length > 0) {
+				if (offset + input_name_length > file_contents.size()) {
+					throw std::runtime_error("Not enough data for input name at index " + std::to_string(i));
+				}
+				input_name.resize(input_name_length);
+				std::memcpy(input_name.data(), file_contents.data() + offset, input_name_length);
+				offset += input_name_length;
+			}
+
+			tensor.input_names.push_back(std::move(input_name));
+		}
+
+		return tensor;
+	}
+
+	intermediary_tensor parse_tensor_from_string_safe(const std::string& file_contents, bool strict_validation = true) {
+		try {
+			auto tensor = parse_tensor_from_string(file_contents);
+
+			if (strict_validation) {
+				if (tensor.name.empty()) {
+					std::cerr << "Warning: Tensor has empty name" << std::endl;
+				}
+
+				for (size_t i = 0; i < 4; ++i) {
+					if (tensor.dims[i] > 1000000) {
+						std::cerr << "Warning: Dimension " << i << " is very large: " << tensor.dims[i] << std::endl;
+					}
+				}
+
+				std::cout << "Parsed tensor: '" << tensor.name << "'" << std::endl;
+				std::cout << "  Dimensions: [" << tensor.dims[0] << ", " << tensor.dims[1] << ", " << tensor.dims[2] << ", " << tensor.dims[3] << "]" << std::endl;
+				std::cout << "  Type: " << static_cast<int>(tensor.type) << std::endl;
+				std::cout << "  Op: " << static_cast<int>(tensor.op) << std::endl;
+				std::cout << "  Input names count: " << tensor.input_names.size() << std::endl;
+				for (size_t i = 0; i < tensor.input_names.size(); ++i) {
+					std::cout << "    Input " << i << ": '" << tensor.input_names[i] << "'" << std::endl;
+				}
+			}
+
+			return tensor;
+		} catch (const std::exception& e) {
+			std::cerr << "Error parsing tensor: " << e.what() << std::endl;
+			throw;
+		}
+	}
+
+	RT_TM_FORCE_INLINE intermediary_tensor parse_tensor(const std::string& other) {
+		return parse_tensor_from_string(other);
+	}
+
+	template<bool exceptions, typename value_type> struct debugging_io;
+
+	template<bool exceptions> struct debugging_io<exceptions, struct core_base_creation_data> {
+		RT_TM_FORCE_INLINE static void load_and_compare_tensors(const core_base_creation_data& core) {
+			auto new_string = file_loader<exceptions>{ std::string{ convert_rt_tm_name_to_ggml(core.name) } + ".safetensor" }.operator const std::string&();
+			if (new_string.size() > 0) {
+				intermediary_tensor new_tensor{ parse_tensor(new_string) };
+				intermediary_tensor save_tensor{ core };
+				if (new_tensor != save_tensor) {
+					std::cout << "Failed on Tensor: " << new_tensor.name << std::endl;
+				} else {
+					std::cout << "Success on Tensor: " << new_tensor.name << std::endl;
+				}
+			}
+		}
+	};
+}
