@@ -1,4 +1,4 @@
-name: Fap-Tensor Multi-Platform Build-Sanitized
+name: RT-TM Multi-Platform Build-Sanitized
 on:
   push:
     branches: [ "**" ]

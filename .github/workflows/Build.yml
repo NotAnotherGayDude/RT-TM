@@ -1,4 +1,4 @@
-name: Fap-Tensor Multi-Platform Build
+name: RT-TM Multi-Platform Build
 on:
   push:
     branches: [ "**" ]

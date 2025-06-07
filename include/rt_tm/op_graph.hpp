@@ -38,7 +38,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE op_graph_bases_op() noexcept									   = default;
 		RT_TM_FORCE_INLINE op_graph_bases_op& operator=(const op_graph_bases_op&) noexcept = delete;
 		RT_TM_FORCE_INLINE op_graph_bases_op(const op_graph_bases_op&) noexcept			   = delete;
-		std::vector<op_core<model_arch::llama, static_cast<llama_op_names>(type_new)>> ops{};
+		std::vector<op_core<static_cast<llama_op_names>(type_new)>> ops{};
 		RT_TM_FORCE_INLINE core_base* emplace_back(enum_type args) {
 			if (args == type_new) {
 				auto& new_ref = ops.emplace_back();

@@ -737,16 +737,16 @@ namespace rt_tm {
 
 			for (size_t x = 0; x < block_count; ++x) {
 				core_base_creation_data k_cache{};
-				k_cache.allocated_dims = { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 };
-				k_cache.allocated_dims = { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 };
+				k_cache.allocated_dims = { { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 } };
+				k_cache.allocated_dims = { { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 } };
 				k_cache.data_type_val  = data_type::float_16;
 				k_cache.op_id		   = op_id_counter++;
 				k_cache.type		   = op_type::noop;
 				k_cache.name		   = model_arch_traits<model_arch::llama>::op_names[static_cast<size_t>(llama_op_names::cache_k)][x];
 				model.op_cores.emplace_back(k_cache);
 				core_base_creation_data v_cache{};
-				v_cache.allocated_dims = { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 };
-				v_cache.allocated_dims = { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 };
+				v_cache.allocated_dims = { { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 } };
+				v_cache.allocated_dims = { { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 } };
 				v_cache.data_type_val  = data_type::float_16;
 				v_cache.op_id		   = op_id_counter++;
 				v_cache.type		   = op_type::noop;
@@ -1370,9 +1370,9 @@ namespace rt_tm {
 				return_value.op_cores.emplace_back(new_core);
 			}
 			generate_ops(return_value);
-			std::cout << "CURRENT COUNT: " << return_value.op_cores.size() << std::endl;
+			//std::cout << "CURRENT COUNT: " << return_value.op_cores.size() << std::endl;
 			for (size_t x = 0; x < return_value.op_cores.size(); ++x) {
-				debugging_io<false, core_base_creation_data>::load_and_compare_tensors(return_value.op_cores[x]);
+				//debugging_io<false, core_base_creation_data>::load_and_compare_tensors(return_value.op_cores[x]);
 			}
 			return return_value;
 		}

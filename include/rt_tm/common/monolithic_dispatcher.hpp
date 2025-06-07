@@ -30,8 +30,7 @@ namespace rt_tm {
 		array<data_type, type_count> types{};
 	};
 
-	template<impl_indices indices, bool are_we_last_new, size_t index_new, data_type... types_new> struct type_group_impl {
-		inline static constexpr array<data_type, sizeof...(types_new)> types{ types_new... };
+	template<bool are_we_last_new, size_t index_new> struct type_group_impl {
 		inline static constexpr size_t index{ index_new };
 		inline static constexpr bool are_we_last{ are_we_last_new };
 		RT_TM_FORCE_INLINE bool operator==(const cpu_op_core_thread_base* other) const {
@@ -43,136 +42,153 @@ namespace rt_tm {
 
 	template<> struct op_entity<op_type::unset> {
 		inline static constexpr op_type type{ op_type::unset };
-		static constexpr array<type_group<1>, 0> groups{ [] {
-			array<type_group<1>, 0> return_values{};
+		inline static constexpr size_t type_count{ 1 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::noop> {
 		inline static constexpr op_type type{ op_type::noop };
-		static constexpr array<type_group<1>, 0> groups{ [] {
-			array<type_group<1>, 0> return_values{};
+		inline static constexpr size_t type_count{ 1 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::mul_mat> {
 		inline static constexpr op_type type{ op_type::mul_mat };
-		static constexpr array<type_group<3>, 0> groups{ [] {
-			array<type_group<3>, 0> return_values{};
+		inline static constexpr size_t type_count{ 3 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::mul> {
 		inline static constexpr op_type type{ op_type::mul };
-		static constexpr array<type_group<3>, 0> groups{ [] {
-			array<type_group<3>, 0> return_values{};
+		inline static constexpr size_t type_count{ 3 };
+		static constexpr array<type_group<type_count>, 1> groups{ [] {
+			array<type_group<type_count>, 1> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::add> {
 		inline static constexpr op_type type{ op_type::add };
-		static constexpr array<type_group<3>, 0> groups{ [] {
-			array<type_group<3>, 0> return_values{};
+		inline static constexpr size_t type_count{ 3 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::sub> {
 		inline static constexpr op_type type{ op_type::sub };
-		static constexpr array<type_group<3>, 0> groups{ [] {
-			array<type_group<3>, 0> return_values{};
+		inline static constexpr size_t type_count{ 3 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::get_rows> {
 		inline static constexpr op_type type{ op_type::get_rows };
-		static constexpr array<type_group<3>, 0> groups{ [] {
-			array<type_group<3>, 0> return_values{};
+		inline static constexpr size_t type_count{ 3 };
+		static constexpr array<type_group<type_count>, 1> groups{ [] {
+			array<type_group<type_count>, 1> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::view> {
 		inline static constexpr op_type type{ op_type::view };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::copy> {
 		inline static constexpr op_type type{ op_type::copy };
-		static constexpr array<type_group<2>, 2> groups{ [] {
-			array<type_group<2>, 2> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 2> groups{ [] {
+			array<type_group<type_count>, 2> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::softmax> {
 		inline static constexpr op_type type{ op_type::softmax };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::rms_norm> {
 		inline static constexpr op_type type{ op_type::rms_norm };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::reshape> {
 		inline static constexpr op_type type{ op_type::reshape };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::rope> {
 		inline static constexpr op_type type{ op_type::rope };
-		static constexpr array<type_group<4>, 0> groups{ [] {
-			array<type_group<4>, 0> return_values{};
+		inline static constexpr size_t type_count{ 4 };
+		static constexpr array<type_group<type_count>, 1> groups{ [] {
+			array<type_group<type_count>, 1> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::transpose> {
 		inline static constexpr op_type type{ op_type::transpose };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::permute> {
 		inline static constexpr op_type type{ op_type::permute };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::cont> {
 		inline static constexpr op_type type{ op_type::cont };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
 
 	template<> struct op_entity<op_type::silu> {
 		inline static constexpr op_type type{ op_type::silu };
-		static constexpr array<type_group<2>, 0> groups{ [] {
-			array<type_group<2>, 0> return_values{};
+		inline static constexpr size_t type_count{ 2 };
+		static constexpr array<type_group<type_count>, 0> groups{ [] {
+			array<type_group<type_count>, 0> return_values{};
 			return return_values;
 		}() };
 	};
@@ -185,40 +201,39 @@ namespace rt_tm {
 					return x;
 				}
 			}
-			return 0;
+			return std::numeric_limits<size_t>::max();
 		}
 	};
 
-	template<template<impl_indices, op_type, data_type, data_type, data_type> typename function_type, device_type dev_type, impl_indices indices_new, op_type op_type_val>
-	struct op_dispatcher;
-
-	template<template<impl_indices, op_type, data_type, data_type, data_type> typename function_type, device_type dev_type, impl_indices indices_new, op_type op_type_val,
-		typename op_entity_type>
-	struct op_entities_internal : public op_entity_type {
-		constexpr op_entities_internal() noexcept = default;
-
-		RT_TM_FORCE_INLINE static bool processIndex(cpu_op_core_thread_base* params) {
-			static constexpr op_entity_type op_entity{};
-			if (params == op_entity) {
-				//function_type<indices_new, op_type, op_entity_type::type01, op_entity_type::type02, op_entity_type::type03>::impl(params);
-				return false;
-			} else {
-				if constexpr (op_entity_type::are_we_last) {
-					std::string error_string{ "Sorry, but you need to create a 'type_trio' value to be stored in the array of op_entity, for op_type: " +
-						static_cast<std::string>(print_enum_value<static_cast<op_type>(0), op_type::count>(op_type_val)) + ", for data_types: " };
-					for (uint64_t x = 0; x < params->core_base_ptr->input_ops.size(); ++x) {
-						error_string += print_enum_value<static_cast<data_type>(0), data_type::count>(params->core_base_ptr->input_ops[x]->data_type_val);
-						error_string += ", ";
-					}
-					error_string += "and (dst-type) == ";
-					error_string += print_enum_value<static_cast<data_type>(0), data_type::count>(params->core_base_ptr->data_type_val);
-				}
-				return true;
+	template<op_type type_val, size_t entity_index, size_t array_index> struct get_type_from_enum {
+		using entity_type			 = op_entity<type_val>;
+		static constexpr auto groups = op_entity<type_val>::groups;
+		static_assert(entity_index < groups.size(), "Sorry, but that entity index is out of bounds!");
+		static_assert(array_index < groups[entity_index].types.size(), "Sorry, but that array index is out of bounds!");
+		RT_TM_FORCE_INLINE constexpr static auto get_type() noexcept {
+			constexpr auto type = groups[entity_index].types[array_index];
+			if constexpr (type == data_type::float_32) {
+				return float{};
 			}
-		};
+		}
+		using type = decltype(get_type());
 	};
 
-	template<impl_indices indices_new, typename... bases> struct op_map : public bases... {
+	template<device_type dev_type, impl_indices indices_new, op_type type, size_t entity_index> struct kernel_dispatcher {};
+
+	template<size_t entity_index> struct kernel_dispatcher<device_type::cpu, impl_indices{ .cpu_index = 0 }, op_type::rope, entity_index> {
+		RT_TM_FORCE_INLINE static void impl(cpu_op_core_thread_base* params_new) {
+			auto params					= static_cast<cpu_op_core_thread<3>*>(params_new);
+			auto params_rop		= static_cast<op_core<op_type::rope>*>(params->core_base_ptr);
+			double rope_freq_base		= params_rop->rope_freq_base;
+			using source01_type = get_type_from_enum<op_type::rope, 0, 0>::type;
+			using source02_type = get_type_from_enum<op_type::rope, 0, 1>::type;
+			using source02_type = get_type_from_enum<op_type::rope, 0, 2>::type;
+			using dst_type		= get_type_from_enum<op_type::rope, 0, 3>::type;
+		}
+	};
+
+	template<typename... bases> struct op_map : public bases... {
 		template<typename op_entity_type> RT_TM_FORCE_INLINE static bool iterate_values_impl(cpu_op_core_thread_base* params) {
 			return op_entity_type::processIndex(params);
 		}
@@ -228,60 +243,55 @@ namespace rt_tm {
 		}
 	};
 
-	template<impl_indices indices_new, op_type type, uint64_t, typename index_sequence> struct op_entity_getter;
+	template<device_type dev_type, impl_indices indices_new, op_type type, typename data_type_entity_type> struct data_type_types {
+		constexpr data_type_types() noexcept = default;
 
-	template<impl_indices indices_new, op_type op_type_val, uint64_t index, uint64_t... indices>
-	struct op_entity_getter<indices_new, op_type_val, index, std::index_sequence<indices...>> {
-		static constexpr auto index_count = op_entity<op_type_val>::groups.size();
-		static constexpr auto group		  = op_entity<op_type_val>::groups[index];
-		using type						  = type_group_impl<indices_new, index, index == (index_count - 1), group.types[indices]...>;
+		RT_TM_FORCE_INLINE static bool processIndex(cpu_op_core_thread_base* params) {
+			if (params->core_base_ptr->comparison_index == data_type_entity_type::index) {
+				//kernel_dispatcher<dev_type, indices_new, type, data_type_entity_type::index>;
+				return false;
+			} else {
+				if constexpr (data_type_entity_type::are_we_last) {
+					std::string error_string{ "Sorry, but you need to create a 'type_group' value to be stored in the array of op_entity, for op_type: " +
+						static_cast<std::string>(print_enum_value<static_cast<op_type>(0), op_type::count>(type)) };
+					if (params->core_base_ptr->input_ops.size() > 0) {
+						error_string += ", for data_types: ";
+					}
+					for (size_t x = 0; x < params->core_base_ptr->input_ops.size(); ++x) {
+						error_string += print_enum_value<static_cast<data_type>(0), data_type::count>(params->core_base_ptr->input_ops[x]->data_type_val);
+						error_string += ", ";
+					}
+					error_string += "and (dst-type) == ";
+					error_string += print_enum_value<static_cast<data_type>(0), data_type::count>(params->core_base_ptr->data_type_val);
+					std::cerr << error_string << std::endl;
+				}
+				return true;
+			}
+		};
 	};
 
-	template<template<impl_indices, op_type, data_type, data_type, data_type> typename function_type, device_type dev_type, impl_indices indices_new, op_type op_type_val,
-		typename index_sequence, typename... value_types>
-	struct get_op_entity_base_internal;
+	template<device_type dev_type, impl_indices indices_new, op_type type, typename index_sequence> struct get_data_type_type_base;
 
-	template<template<impl_indices, op_type, data_type, data_type, data_type> typename function_type, device_type dev_type, impl_indices indices_new, op_type op_type_val,
-		uint64_t... index>
-	struct get_op_entity_base_internal<function_type, dev_type, indices_new, op_type_val, std::index_sequence<index...>> {
-		using type = op_map<indices_new,
-			op_entities_internal<function_type, dev_type, indices_new, op_type_val,
-				typename op_entity_getter<indices_new, op_type_val, index, std::make_index_sequence<sizeof...(index)>>::type>...>;
+	template<device_type dev_type, impl_indices indices_new, op_type type_val, uint64_t... index>
+	struct get_data_type_type_base<dev_type, indices_new, type_val, std::index_sequence<index...>> {
+		using type = op_map<data_type_types<dev_type, indices_new, type_val, type_group_impl<index == op_entity<static_cast<op_type>(type_val)>::groups.size() - 1, index>>...>;
 	};
 
-	template<template<impl_indices, op_type, data_type, data_type, data_type> typename function_type, device_type dev_type, impl_indices indices_new, op_type op_type_val>
-	using op_entity_base_internal_t = typename get_op_entity_base_internal<function_type, dev_type, indices_new, op_type_val,
-		std::make_index_sequence<static_cast<uint64_t>(op_entity<op_type_val>::groups.size())>>::type;
+	template<device_type dev_type, impl_indices indices_new, op_type type> using data_type_type_base_t =
+		typename get_data_type_type_base<dev_type, indices_new, type, std::make_index_sequence<op_entity<type>::groups.size()>>::type;
 
-	template<template<impl_indices, op_type, data_type, data_type, data_type> typename function_type, device_type dev_type, impl_indices indices_new, op_type op_type_val>
-	struct op_dispatcher {
-		template<typename... arg_types> RT_TM_FORCE_INLINE static void impl(arg_types&&... params) {
-			std::cout << "CURRENT TYPE: " << ( int32_t )op_type_val << std::endl;
-			op_entity_base_internal_t<function_type, dev_type, indices_new, op_type_val>::iterate_values(std::forward<arg_types>(params)...);
-		}
-	};
-	template<typename value_type>
-	concept specializable = requires(value_type value) { value_type::specialized; };
-
-	template<impl_indices indices, op_type op_type, data_type... types> struct function_dispatcher_new {
+	template<device_type dev_type, op_type type, impl_indices indices_new> struct data_type_dispatcher_final {
 		RT_TM_FORCE_INLINE static void impl(cpu_op_core_thread_base* params) {
-			std::cout << "CURRENT TYPE: " << ( int32_t )op_type << std::endl;
-			//using function_dispatcher_type = function_dispatcher_impl<op_type, indices.cpu_index, types...>;
-			//if constexpr (specializable<function_dispatcher_type>) {
-				//return function_dispatcher_impl<op_type, indices.cpu_index, type...>::impl(params);
-			//} else {//
-			//static_assert(false, "Sorry, but you need to add a \"specialized\" boolean to the type.");
-			//}
+			data_type_type_base_t<dev_type, indices_new, type>::iterate_values(params);
 		}
 	};
 
-	template<device_type dev_type, impl_indices indices_new, typename op_entity_type> struct op_types : public op_entity_type {
+	template<typename op_entity_type, device_type dev_type, impl_indices indices_new> struct op_types {
 		constexpr op_types() noexcept = default;
 
 		RT_TM_FORCE_INLINE static bool processIndex(cpu_op_core_thread_base* params) {
 			if (params->core_base_ptr->type == op_entity_type::type) {
-				std::cout << "CURRENT TYPE: " << ( int32_t )op_entity_type::type << std::endl;
-				op_dispatcher<function_dispatcher_new, dev_type, indices_new, op_entity_type::type>::impl(params);
+				data_type_dispatcher_final<dev_type, op_entity_type::type, indices_new>::impl(params);
 				return false;
 			} else {
 				return true;
@@ -289,19 +299,19 @@ namespace rt_tm {
 		};
 	};
 
-	template<device_type dev_type, impl_indices indices_new, typename index_sequence, typename... value_types> struct get_op_type_base;
+	template<template<auto...> typename op_entity_type, template<typename, auto...> typename op_types, typename index_sequence, auto... types> struct get_entity_type_base;
 
-	template<device_type dev_type, impl_indices indices_new, uint64_t... index> struct get_op_type_base<dev_type, indices_new, std::index_sequence<index...>> {
-		using type = op_map<indices_new, op_types<dev_type, indices_new, op_entity<static_cast<op_type>(index)>>...>;
+	template<template<auto...> typename op_entity_type, template<typename, auto...> typename op_types, uint64_t... index, auto... types>
+	struct get_entity_type_base<op_entity_type, op_types, std::index_sequence<index...>, types...> {
+		using type = op_map<op_types<op_entity_type<static_cast<op_type>(index)>, types...>...>;
 	};
 
 	template<device_type dev_type, impl_indices indices_new> using op_type_base_t =
-		typename get_op_type_base<dev_type, indices_new, std::make_index_sequence<static_cast<uint64_t>(op_type::count)>>::type;
+		typename get_entity_type_base<op_entity, op_types, std::make_index_sequence<static_cast<uint64_t>(op_type::count)>, dev_type, indices_new>::type;
 
 	template<device_type dev_type, impl_indices indices_new> struct op_dispatcher_final {
 		RT_TM_FORCE_INLINE static void impl(cpu_op_core_thread_base* params) {
 			op_type_base_t<dev_type, indices_new>::iterate_values(params);
 		}
 	};
-
 }

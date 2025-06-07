@@ -17,7 +17,7 @@
 # 2025
 # */
 
-message(STATUS "Fap-Tensor: Configuring AVX2 optimizations")
+message(STATUS "RT-TM: Configuring AVX2 optimizations")
 
 file(GLOB_RECURSE RT_TM_AVX2_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
@@ -29,7 +29,7 @@ add_library(rt_tm::avx2 ALIAS rt_tm_avx2)
 rt_tm_configure_x64_variant(rt_tm_avx2)
 
 target_compile_options(rt_tm_avx2 PRIVATE
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-mavx2>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-mfma>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mavx2>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mfma>"
     "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>"
 )

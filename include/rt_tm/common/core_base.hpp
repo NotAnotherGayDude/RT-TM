@@ -104,9 +104,9 @@ namespace rt_tm {
 		constexpr core_base() noexcept = default;
 	};
 
-	template<model_arch arch, auto type_new> struct op_core;
+	template<auto type_new> struct op_core;
 
-	template<auto type_new> struct op_core<model_arch::llama, type_new> : public param_api<op_core<model_arch::llama, type_new>>, public core_base {
+	template<auto type_new> struct op_core : public param_api<op_core<type_new>>, public core_base {
 		std::vector<core_base*> input_ops{};
 		op_core(const core_base_creation_data& other) noexcept {
 			this->data_type_val	 = other.data_type_val;
@@ -124,7 +124,7 @@ namespace rt_tm {
 		~op_core() noexcept							= default;
 	};
 
-	template<> struct op_core<model_arch::llama, op_type::rope> : public param_api<op_core<model_arch::llama, op_type::rope>>, public core_base {
+	template<> struct op_core<op_type::rope> : public param_api<op_core<op_type::rope>>, public core_base {
 		static constexpr op_type type{ op_type::rope };
 		uint64_t rope_dimension_count{};
 		double rope_freq_base{};
@@ -145,7 +145,7 @@ namespace rt_tm {
 		~op_core() noexcept							= default;
 	};
 
-	template<> struct op_core<model_arch::llama, op_type::rms_norm> : public param_api<op_core<model_arch::llama, op_type::rms_norm>>, public core_base {
+	template<> struct op_core<op_type::rms_norm> : public param_api<op_core<op_type::rms_norm>>, public core_base {
 		static constexpr op_type type{ op_type::rope };
 		std::vector<core_base*> input_ops{};
 		uint64_t rms_norm_epsilon{};

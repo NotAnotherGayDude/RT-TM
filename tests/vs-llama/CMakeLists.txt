@@ -62,14 +62,14 @@ target_link_libraries(
 
 target_compile_options(
 	"rt_tm_performance" PUBLIC
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wnull-dereference>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wuninitialized>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wconversion>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wpedantic>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wshadow>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
+	#"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wnull-dereference>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wuninitialized>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wconversion>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wpedantic>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wshadow>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wextra>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wall>"
 	
 	"$<$<CXX_COMPILER_ID:GNU>:-Wnull-dereference>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wuninitialized>"
@@ -86,6 +86,7 @@ target_compile_options(
 target_link_options(
 	"rt_tm_performance" PUBLIC
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 )
 
 if (WIN32)

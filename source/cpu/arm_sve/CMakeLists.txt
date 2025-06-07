@@ -17,7 +17,7 @@
 # 2025
 # */
 
-message(STATUS "Fap-Tensor: Configuring ARM SVE optimizations")
+message(STATUS "RT-TM: Configuring ARM SVE optimizations")
 
 file(GLOB_RECURSE RT_TM_ARM_SVE_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
@@ -29,7 +29,7 @@ add_library(rt_tm::arm_sve ALIAS rt_tm_arm_sve)
 rt_tm_configure_arm_variant(rt_tm_arm_sve)
 
 target_compile_options(rt_tm_arm_sve PRIVATE
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-msve-vector-bits=scalable>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-march=armv8-a+sve+sve2>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-march=armv8-a+sve>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-msve-vector-bits=scalable>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-march=armv8-a+sve+sve2>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-march=armv8-a+sve>"
 )

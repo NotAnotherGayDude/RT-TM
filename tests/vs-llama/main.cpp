@@ -592,30 +592,15 @@ int32_t run_llama(int argc, char** argv, std::string& output, size_t& token_coun
 	return 0;
 }
 
-enum class test_enum {
-	count = 3,
-};
-
-template<typename value_type> void test_function() {
-	std::cout << static_cast<size_t>(value_type::count) << std::endl;
-}
-
 int main(int argc, char** argv) {
 	try {
 		std::string return_value{};
-		/*
-		test_function<test_enum>();
 		bnch_swt::benchmark_stage<"rt_tm-vs_llama.cpp", 2, 1, true, "Token">::runBenchmark<"llama.cpp", "cyan">([&] {
 			return_value.clear();
 			size_t token_count{};
 			run_llama(argc, argv, return_value, token_count);
 			return token_count - 1;
-		});*/
-		rt_tm::op_core<rt_tm::model_arch::llama, rt_tm::llama_op_names::attn_out> base{};
-		base.type = rt_tm::op_type::get_rows;
-		rt_tm::cpu_op_core_thread<1> thread{};
-		thread.core_base_ptr = &base;
-		rt_tm::op_dispatcher_final<rt_tm::device_type::cpu, rt_tm::impl_indices{}>::impl(&thread);
+		});
 		static constexpr rt_tm::global_config global_config{ .arch = rt_tm::model_arch::llama, .exceptions = false };
 		auto model_graph = rt_tm::harbinger<global_config>::parse_model_graph<rt_tm::model_format::gguf>(argv[2]);
 		rt_tm::op_graph_config graph_config{ .num_threads = 12 };

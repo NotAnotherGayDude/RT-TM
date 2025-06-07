@@ -108,15 +108,6 @@ Coming next:
 
 ---
 
-## 📚 Documentation
-
-Explore Fap-Tensor’s internal structure and philosophy:
-
-* [🧠 Core_Api.md – Entry-point API for model parsing and execution graph creation](Documentation/Core_Api.md)
-* [🧱 Core.md – Naming system and architectural layers](Documentation/Core.md)
-
----
-
 # ✨ **Conclusion**
 
 RT-TM represents an attempt to rethink how CPU-based ML runtimes are structured.

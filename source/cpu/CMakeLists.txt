@@ -17,17 +17,17 @@
 # 2025
 # */
 
-message(STATUS "Fap-Tensor: Configuring CPU variant subdirectories with centralized flags")
+message(STATUS "RT-TM: Configuring CPU variant subdirectories with centralized flags")
 
 set(RT_TM_X64_BIT_MANIPULATION_FLAGS
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-mlzcnt>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-mbmi2>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-mbmi>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mlzcnt>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mbmi2>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mbmi>"
 )
 
 set(RT_TM_ARM_COMMON_FLAGS
-    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},aarch64>>:-march=armv8-a>"
-    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-mfloat-abi=hard>"
+    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},aarch64>>:-march=armv8-a>"
+    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-mfloat-abi=hard>"
 )
 
 function(rt_tm_configure_cpu_variant target_name)
@@ -69,14 +69,14 @@ function(rt_tm_configure_arm_variant target_name)
 endfunction()
 
 if(RT_TM_ARCH_X64)
-    message(STATUS "Fap-Tensor: Building ALL x64 SIMD variants")
+    message(STATUS "RT-TM: Building ALL x64 SIMD variants")
     add_subdirectory(avx_2)
     add_subdirectory(avx_512)    
 elseif(RT_TM_ARCH_ARM64)
-    message(STATUS "Fap-Tensor: Building ALL ARM64 SIMD variants")
+    message(STATUS "RT-TM: Building ALL ARM64 SIMD variants")
     add_subdirectory(arm_neon)
     add_subdirectory(arm_sve)
 endif()
 
-message(STATUS "Fap-Tensor: CPU variants configured with centralized flag management")
-message(STATUS "Fap-Tensor: Runtime CPU detection will select optimal implementation")
+message(STATUS "RT-TM: CPU variants configured with centralized flag management")
+message(STATUS "RT-TM: Runtime CPU detection will select optimal implementation")

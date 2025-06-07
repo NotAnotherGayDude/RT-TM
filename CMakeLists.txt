@@ -27,22 +27,22 @@ set(ENV{CMAKE_INSTALL_PREFIX} "${CMAKE_SOURCE_DIR}/../Install")
 project(
     "${PROJECT_NAME}"
     VERSION "1.0.0"
-    DESCRIPTION "Fap-Tensor: FakeTime Tensor Language - You trained the model. Fap-Tensor gives it a voice."
+    DESCRIPTION "RT-TM: RealTime Tensor Math - You trained the model. RT-TM gives it a voice."
     LANGUAGES CXX
 )
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     set(RT_TM_ARCH_X64 TRUE)
     set(RT_TM_BUILD_ALL_X64_VARIANTS TRUE)
-    message(STATUS "Fap-Tensor: Building ALL x64 SIMD variants for runtime selection")
+    message(STATUS "RT-TM: Building ALL x64 SIMD variants for runtime selection")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
     set(RT_TM_ARCH_ARM64 TRUE)
     set(RT_TM_BUILD_ALL_ARM_VARIANTS TRUE)
-    message(STATUS "Fap-Tensor: Building ALL ARM64 SIMD variants for runtime selection")
+    message(STATUS "RT-TM: Building ALL ARM64 SIMD variants for runtime selection")
 endif()
 
-message(STATUS "Fap-Tensor: Detected architecture: ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "Fap-Tensor: Universal binary strategy: Runtime CPU detection")
+message(STATUS "RT-TM: Detected architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "RT-TM: Universal binary strategy: Runtime CPU detection")
 
 add_library("${PROJECT_NAME}" INTERFACE)
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
@@ -66,20 +66,26 @@ target_include_directories(
 )
 
 set(RT_RM_COMMON_COMPILE_FLAGS
+    "$<$<BOOL:${PGO_GENERATE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-generate>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fno-trapping-math>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fno-signed-zeros>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-funroll-loops>>"
+    "$<$<BOOL:${PGO_USE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-use>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-ffast-math>>"
     "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN_ENABLED}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-    "$<$<BOOL:${PGO_GENERATE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fprofile-generate>>"
-    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fno-trapping-math>>"
-    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fno-signed-zeros>>"
-    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-funroll-loops>>"
-    "$<$<BOOL:${PGO_USE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fprofile-use>>"
-    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-ffast-math>>"
-    "$<$<CXX_COMPILER_ID:MSVC>:/bigobj>""$<$<CXX_COMPILER_ID:CLANG>:-Wnull-dereference>"
-    "$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-O3>>"
-    "$<$<CONFIG:DEBUG>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-O0>>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fprefetch-loop-arrays>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-falign-loops=32>"
-    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-ftree-vectorize>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/bigobj>""$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wnull-dereference>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-O3>>"
+    "$<$<CONFIG:DEBUG>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-O0>>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprefetch-loop-arrays>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-falign-loops=32>"
+    "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-ftree-vectorize>"
+    #"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wuninitialized>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wconversion>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wpedantic>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wshadow>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wextra>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wall>"	
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/fp:fast>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/Ob2>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/GL>>"
@@ -87,18 +93,12 @@ set(RT_RM_COMMON_COMPILE_FLAGS
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/O2>>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wnull-dereference>"
     "$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wuninitialized>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wuninitialized>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wconversion>"
     "$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wpedantic>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wconversion>"
     "$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wpedantic>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wshadow>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wshadow>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"	
 	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
@@ -106,15 +106,15 @@ set(RT_RM_COMMON_COMPILE_FLAGS
 )
 
 set(RT_RM_COMMON_LINK_OPTIONS
+    "$<$<BOOL:${PGO_GENERATE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-generate>>"
+    "$<$<BOOL:${PGO_USE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-use>>"
+    "$<$<AND:$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
     "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN_ENABLED}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-    "$<$<BOOL:${PGO_GENERATE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fprofile-generate>>"
-    "$<$<BOOL:${PGO_USE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fprofile-use>>"
-    "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
+    "$<$<CONFIG:RELEASE>:$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-flto=thin>>"
     "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
-    "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:Clang>:-flto=thin>>"
+    "$<$<CONFIG:RELEASE>:$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wl,-O3>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>>"
-    "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:Clang>:-Wl,-O3>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:GNU>:-Wl,-O3>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/LTCG>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:GNU>:-flto>>"
@@ -140,10 +140,10 @@ add_subdirectory(source/cpu)
 
 if(RT_TM_ARCH_X64)
     target_link_libraries("${PROJECT_NAME}" INTERFACE rt_tm::avx2 rt_tm::avx512)
-    message(STATUS "Fap-Tensor: Main library linked with ALL x64 variants")
+    message(STATUS "RT-TM: Main library linked with ALL x64 variants")
 elseif(RT_TM_ARCH_ARM64)
     target_link_libraries("${PROJECT_NAME}" INTERFACE rt_tm::arm_neon rt_tm::arm_sve)
-    message(STATUS "Fap-Tensor: Main library linked with ALL ARM64 variants")
+    message(STATUS "RT-TM: Main library linked with ALL ARM64 variants")
 endif()
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
@@ -202,7 +202,7 @@ install(
 )
 
 message(STATUS "")
-message(STATUS "Fap-Tensor Configuration Summary:")
+message(STATUS "RT-TM Configuration Summary:")
 message(STATUS "==========================")
 message(STATUS "Version: ${PROJECT_VERSION}")
 message(STATUS "Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
@@ -216,8 +216,7 @@ if(RT_TM_BUILD_ALL_ARM_VARIANTS)
     message(STATUS "ARM Variants: NEON, SVE (All built)")
 endif()
 message(STATUS "")
-message(STATUS "Fap-Tensor: FakeTime Tensor Language")
-message(STATUS "The fastest tensor computation library on Earth")
+message(STATUS "RT-TM: RealTime Tensor Math")
 message(STATUS "Universal binaries with runtime CPU detection")
 message(STATUS "")
 

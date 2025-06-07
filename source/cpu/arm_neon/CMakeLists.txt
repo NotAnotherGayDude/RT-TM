@@ -17,7 +17,7 @@
 # 2025
 # */
 
-message(STATUS "Fap-Tensor: Configuring ARM NEON optimizations")
+message(STATUS "RT-TM: Configuring ARM NEON optimizations")
 
 file(GLOB_RECURSE RT_TM_ARM_NEON_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
@@ -29,5 +29,5 @@ add_library(rt_tm::arm_neon ALIAS rt_tm_arm_neon)
 rt_tm_configure_arm_variant(rt_tm_arm_neon)
 
 target_compile_options(rt_tm_arm_neon PRIVATE
-    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-mfpu=neon>"
+    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-mfpu=neon>"
 )
