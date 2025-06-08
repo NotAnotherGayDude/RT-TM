@@ -33,3 +33,7 @@ target_compile_options(rt_tm_avx2 PRIVATE
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mfma>"
     "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>"
 )
+
+target_compile_definitions(rt_tm_avx2 PUBLIC
+    "RT_TM_AVX2"
+)

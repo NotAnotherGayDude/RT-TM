@@ -247,7 +247,7 @@ namespace rt_tm {
 				for (size_t x = 0; x < op_chain.cpu_op_core_thread_ptrs.size() - 1; ++x) {
 					cpu_op_core_thread_base* new_task{ static_cast<cpu_op_core_thread_base*>(op_thread_chains[thread_index].cpu_op_core_thread_ptrs[x]) };
 					new_task->thread_count;
-					op_dispatcher_final<rt_tm::device_type::cpu, indices>::impl(new_task);
+					//op_dispatcher_final<rt_tm::device_type::cpu, indices>::impl(new_task);
 				}
 				op_chain.start_latch->arrive_and_wait();
 				//op_dispatcher_final<rt_tm::device_type::cpu, indices>::impl(op_chain.cpu_op_core_thread_ptrs[op_chain.cpu_op_core_thread_ptrs.size() - 1]);

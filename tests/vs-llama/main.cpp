@@ -75,12 +75,12 @@ static void sigint_handler(int signo) {
 #endif
 /*
 int32_t main() {
-static constexpr rt_tm::global_config global_config{ .exceptions = true };
-rt_tm::model_graph model_graph = rt_tm::harbinger<global_config>::parse_model_graph("C:\\Users\\Chris\\source\\repos\\oi_engine\\models\\Meta-Llama-3.1-8B-Instruct-Q8_0.gguf");
+static constexpr rt_tm::model_config model_config{ .exceptions = true };
+rt_tm::model_graph model_graph = rt_tm::harbinger<model_config>::parse_model_graph("C:\\Users\\Chris\\source\\repos\\oi_engine\\models\\Meta-Llama-3.1-8B-Instruct-Q8_0.gguf");
 rt_tm::op_graph_config graph_config{ .num_threads = 12 };
-rt_tm::op_graph op_graph{ rt_tm::harbinger<global_config>::create_op_graph(graph_config, model_graph) };
+rt_tm::op_graph op_graph{ rt_tm::harbinger<model_config>::create_op_graph(graph_config, model_graph) };
 rt_tm::input_session_config input_config{ std::cin, .max_length = 1024 };
-rt_tm::input_session input_session{ rt_tm::harbinger<global_config>::create_input_session(input_config) };
+rt_tm::input_session input_session{ rt_tm::harbinger<model_config>::create_input_session(input_config) };
 while (input_session) {
 op_graph.process_input(input_session);
 }
@@ -595,22 +595,23 @@ int32_t run_llama(int argc, char** argv, std::string& output, size_t& token_coun
 int main(int argc, char** argv) {
 	try {
 		std::string return_value{};
-
 		bnch_swt::benchmark_stage<"rt_tm-vs_llama.cpp", 2, 1, true, "Token">::runBenchmark<"llama.cpp", "cyan">([&] {
 			return_value.clear();
 			size_t token_count{};
 			run_llama(argc, argv, return_value, token_count);
 			return token_count - 1;
 		});
-		static constexpr rt_tm::global_config global_config{ .arch = rt_tm::model_arch::llama, .exceptions = false };
-		auto model_graph = rt_tm::harbinger<global_config>::parse_model_graph<rt_tm::model_format::gguf>(argv[2]);
+		//rt_tm::kernel_dispatcher<rt_tm::device_type::cpu, rt_tm::impl_indices{}, rt_tm::kernel_type::mul_mat, int32_t> kernel{};
+		static constexpr auto model_config =
+			rt_tm::generate_model_config(rt_tm::llama_model_generation::v3, rt_tm::llama_model_size::llama_8B, rt_tm::kernel_type_profile::q8_gqa, rt_tm::model_arch::llama);
+		rt_tm::model<model_config> model_graph{};
 		rt_tm::op_graph_config graph_config{ .num_threads = 12 };
-		rt_tm::op_graph<global_config> op_graph{ rt_tm::harbinger<global_config>::create_op_graph(graph_config, model_graph) };
-		rt_tm::input_session_config session_config{ .stream = std::cin, .max_tokens = 1024 };
-		rt_tm::input_session input_session{ session_config };
-		while (input_session) {
-			op_graph.process_input(input_session);
-		}
+		//rt_tm::op_graph<model_config> op_graph{ rt_tm::harbinger<model_config>::create_op_graph(graph_config, model_graph) };
+		//rt_tm::input_session_config session_config{ std::cin, 1024 };
+		//rt_tm::input_session input_session{ session_config };
+		//while (input_session) {
+		//			op_graph.process_input(input_session);
+		//}
 		std::cout << return_value << std::endl;
 		bnch_swt::benchmark_stage<"rt_tm-vs_llama.cpp", 2, 1, true, "Token">::printResults();
 	} catch (const std::exception& error) {

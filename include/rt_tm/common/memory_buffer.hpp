@@ -28,7 +28,7 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<global_config config> struct memory_buffer : public allocator<uint8_t> {
+	template<model_config config> struct memory_buffer : public allocator<uint8_t> {
 		using value_type = uint8_t;
 		using alloc		 = allocator<value_type>;
 		using pointer	 = value_type*;
@@ -68,28 +68,34 @@ namespace rt_tm {
 			}
 		}
 
+		RT_TM_FORCE_INLINE size_type size() noexcept {
+			return size_val;
+		}
+
 		RT_TM_FORCE_INLINE pointer data() noexcept {
 			return data_val;
 		}
 
 		RT_TM_FORCE_INLINE pointer claim_memory(size_t amount_to_claim) noexcept {
-			if (current_offset + amount_to_claim > size_val) {
+			size_t alignment = alignments[cpu_arch_index_holder::cpu_arch_index];
+
+			size_t aligned_amount = roundUpToMultiple(amount_to_claim, alignment);
+
+			if (current_offset + aligned_amount > size_val) {
 				if constexpr (config.exceptions) {
 					throw std::runtime_error{ "Sorry, but this memory_buffer is out of memory!" };
 				} else {
 					return nullptr;
 				}
 			}
+
 			pointer return_value = data_val + current_offset;
-			current_offset += amount_to_claim;
+			current_offset += aligned_amount;
 			return return_value;
 		}
 
 		RT_TM_FORCE_INLINE ~memory_buffer() noexcept {
-			if (data_val && size_val > 0) {
-				alloc::deallocate(data_val);
-				data_val = nullptr;
-			}
+			clear();
 		}
 
 	  protected:

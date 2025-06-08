@@ -27,7 +27,7 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<global_config config> struct harbinger {
+	template<model_config config> struct harbinger {
 		template<model_format format> RT_TM_FORCE_INLINE static model_graph<config> parse_model_graph(std::string_view path) {
 			return model_parser<config, config.arch, format>::parse_model(path);
 		}

@@ -21,11 +21,20 @@ RealTimeChris (Chris M.)
 #pragma once
 
 #include <rt_tm/common/string_literal.hpp>
+#include <rt_tm/common/data_types.hpp>
 #include <rt_tm/common/concepts.hpp>
 #include <cstdint>
 #include <thread>
 
 namespace rt_tm {
+
+	template<size_t N, auto lambda, typename... args> inline constexpr void for_each(args&&... arg_vals) {
+		if constexpr (N > 0) {
+			[&]<size_t... I>(std::index_sequence<I...>) {
+				( void )(lambda.template operator()<I>(std::forward<args>(arg_vals)...), ...);
+			}(std::make_index_sequence<N>{});
+		}
+	}
 
 	template<auto current_index, auto enum_count> RT_TM_FORCE_INLINE constexpr std::string_view get_enum_name() {
 		std::string_view return_string{ std::source_location::current().function_name() };
@@ -61,29 +70,96 @@ namespace rt_tm {
 		count,
 	};
 
-	enum class op_type : uint64_t {
-		unset	  = 0,
-		noop	  = 1,
-		mul_mat	  = 2,
-		mul		  = 3,
-		add		  = 4,
-		sub		  = 5,
-		get_rows  = 6,
-		view	  = 7,
-		copy	  = 8,
-		softmax	  = 9,
-		rms_norm  = 10,
-		reshape	  = 11,
-		rope	  = 12,
-		transpose = 13,
-		permute	  = 14,
-		cont	  = 15,
-		silu	  = 16,
+	enum class kernel_type : uint64_t {
+		unset,
+		mul_mat,
+		mul,
+		add,
+		sub,
+		get_rows,
+		view,
+		copy,
+		softmax,
+		rms_norm,
+		reshape,
+		rope,
+		transpose,
+		permute,
+		cont,
+		silu,
+		noop,
 		count,
 	};
 
+	enum class op_types : uint64_t {
+		per_model_token_embd_noop,
+		per_model_rope_freqs_noop,
+		per_model_output_norm_noop,
+		per_model_output_noop,
+		token_embedding_input_tokens_noop,
+		token_embedding_pos_embd_noop,
+		token_embedding_attn_mask_noop,
+		token_embedding_inp_embd_get_rows,
+		attention_block_attn_norm_noop,
+		attention_block_attn_q_noop,
+		attention_block_attn_k_noop,
+		attention_block_attn_v_noop,
+		attention_block_attn_out_noop,
+		attention_block_k_cache_noop,
+		attention_block_v_cache_noop,
+		attention_block_norm_rms_norm,
+		attention_block_attn_norm_mul,
+		attention_block_attn_q_mul_mat,
+		attention_block_attn_k_mul_mat,
+		attention_block_attn_v_mul_mat,
+		attention_block_attn_q_reshape,
+		attention_block_attn_k_reshape,
+		attention_block_attn_v_reshape,
+		attention_block_attn_q_rope,
+		attention_block_attn_k_rope,
+		attention_block_k_cache_view,
+		attention_block_k_cache_copy,
+		attention_block_v_cache_view,
+		attention_block_v_cache_copy,
+		attention_block_v_cache_reshape,
+		attention_block_v_cache_transpose,
+		attention_block_k_cache_permute,
+		attention_block_v_cache_permute,
+		attention_block_attn_q_permute,
+		attention_block_attn_scores_mul_mat,
+		attention_block_attn_weights_softmax,
+		attention_block_attn_context_mul_mat,
+		attention_block_attn_context_permute,
+		attention_block_attn_context_cont,
+		attention_block_attn_out_mul_mat,
+		attention_block_residual_add,
+		ffn_block_ffn_norm_noop,
+		ffn_block_ffn_gate_noop,
+		ffn_block_ffn_up_noop,
+		ffn_block_ffn_down_noop,
+		ffn_block_norm_rms_norm,
+		ffn_block_ffn_norm_mul,
+		ffn_block_ffn_gate_mul_mat,
+		ffn_block_ffn_up_mul_mat,
+		ffn_block_ffn_gate_silu,
+		ffn_block_ffn_intermediate_mul,
+		ffn_block_ffn_down_mul_mat,
+		ffn_block_residual_add,
+		output_layer_norm_rms_norm,
+		output_layer_output_norm_mul,
+		output_layer_output_mul_mat,
+		output_layer_logits_softmax,
+		output_layer_sample_multinomial,
+		count
+	};
+
 	enum class tensor_type : uint64_t {
+		input_embed,
+		input_tokens,
+		token_position,
 		token_embd,
+		k_cache,
+		v_cache,
 		token_embd_norm,
 		token_types,
 		pos_embd,
@@ -213,8 +289,9 @@ namespace rt_tm {
 	};
 
 	enum class device_type {
-		cpu = 0,
-		gpu = 1,
+		cpu	 = 0,
+		gpu	 = 1,
+		numa = 2,
 	};
 
 	enum class model_arch {
@@ -222,9 +299,81 @@ namespace rt_tm {
 		count,
 	};
 
-	struct global_config {
+	enum class kernel_type_profile : size_t {
+		fp16_mha,
+		fp16_moe,
+		bf16_mha,
+		bf16_gqa,
+		q4_mha,
+		q4_gqa,
+		q4_moe,
+		q8_mha,
+		q8_gqa,
+		q8_moe,
+		mixed_fp16_fp32,
+		mixed_bf16_fp32,
+		count,
+	};
+
+	enum class norm_type : size_t {
+		rms_standard,
+		rms_parallel,
+		rms_grouped,
+		layer_norm_standard,
+		layer_norm_no_bias,
+		rms_norm_welford,
+		adaptive_norm,
+		count,
+	};
+
+	enum class kv_cache_strategy : size_t {
+		contiguous,
+		paged,
+		compressed,
+		streaming,
+		hierarchical,
+		count,
+	};
+
+	enum class rope_scaling_type : size_t {
+		none,
+		linear,
+		dynamic,
+		yarn,
+		longrope,
+		count,
+	};
+
+	template<typename model_generation_type, typename model_size_type> struct model_config {
+		model_generation_type model_generation{};
+		model_size_type model_size{};
+		kernel_type_profile kernel_profile{};
 		model_arch arch{};
+		kv_cache_strategy cache_strategy{};
+		bool use_gradient_checkpointing{};
+		rope_scaling_type rope_scaling{};
+		bool use_rotary_embeddings{};
+		size_t kv_cache_block_size{};
+		bool use_flash_attention{};
+		norm_type rms_norm_type{};
+		float norm_epsilon{};
 		bool exceptions{};
+
+	  protected:
+		template<typename model_generation_type_new, typename model_size_type_new> friend struct model_base;
+		friend consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch, kv_cache_strategy cache_strategy,
+			bool use_gradient_checkpointing, rope_scaling_type rope_scaling, bool use_rotary_embeddings, size_t kv_cache_block_size, bool use_flash_attention,
+			norm_type rms_norm_type, float norm_epsilon, bool exceptions);
+
+		constexpr model_config(auto model_generation_new, auto model_size_new, kernel_type_profile kernel_profile_new, model_arch arch_new, kv_cache_strategy cache_strategy_new,
+			bool use_gradient_checkpointing_new, rope_scaling_type rope_scaling_new, bool use_rotary_embeddings_new, size_t kv_cache_block_size_new, bool use_flash_attention_new,
+			norm_type rms_norm_type_new, float norm_epsilon_new, bool exceptions_new)
+			: model_generation(model_generation_new), model_size(model_size_new), kernel_profile(kernel_profile_new), arch(arch_new), cache_strategy(cache_strategy_new),
+			  use_gradient_checkpointing(use_gradient_checkpointing_new), rope_scaling(rope_scaling_new), use_rotary_embeddings(use_rotary_embeddings_new),
+			  kv_cache_block_size(kv_cache_block_size_new), use_flash_attention(use_flash_attention_new), rms_norm_type(rms_norm_type_new), norm_epsilon(norm_epsilon_new),
+			  exceptions(exceptions_new) {};
+
+		constexpr model_config() = default;
 	};
 
 	struct cli_params {

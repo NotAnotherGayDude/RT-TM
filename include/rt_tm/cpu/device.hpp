@@ -25,12 +25,12 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<device_type dev, typename model_arch_traits, global_config config, impl_indices indices> struct device;
+	template<device_type dev, typename arch_traits, model_config config, impl_indices indices> struct device;
 
-	template<device_type dev, typename model_arch_traits, global_config config, impl_indices indices> struct device_registry;
+	template<device_type dev, typename arch_traits, model_config config, impl_indices indices> struct device_registry;
 
-	template<global_config config, typename model_arch_traits, impl_indices indices> struct device<device_type::cpu, model_arch_traits, config, indices> {
-		using thread_pool_t	  = thread_pool<model_arch_traits::max_inputs, indices>;
+	template<model_config config, typename arch_traits, impl_indices indices> struct device<device_type::cpu, arch_traits, config, indices> {
+		using thread_pool_t	  = thread_pool<arch_traits::max_inputs, indices>;
 		using memory_buffer_t = memory_buffer<config>;
 
 		thread_pool_t thread_pool_val{};
@@ -57,20 +57,20 @@ namespace rt_tm {
 		}
 	};
 
-	template<global_config config, typename model_arch_traits, impl_indices indices> struct device_registry<device_type::cpu, model_arch_traits, config, indices> {
+	template<model_config config, typename arch_traits, impl_indices indices> struct device_registry<device_type::cpu, arch_traits, config, indices> {
 		RT_TM_INLINE device_registry() noexcept									 = default;
 		RT_TM_INLINE device_registry& operator=(const device_registry&) noexcept = delete;
 		RT_TM_INLINE device_registry(const device_registry&) noexcept			 = delete;
 
 		RT_TM_FORCE_INLINE device_registry(size_t thread_count) {
-			devices.emplace_back(std::make_unique<device<device_type::cpu, model_arch_traits, config, indices>>(thread_count));
+			devices.emplace_back(std::make_unique<device<device_type::cpu, arch_traits, config, indices>>(thread_count));
 		}
 
 		RT_TM_FORCE_INLINE auto& get_devices() {
 			return devices;
 		}
 
-		std::vector<std::unique_ptr<device<device_type::cpu, model_arch_traits, config, indices>>> devices{};
+		std::vector<std::unique_ptr<device<device_type::cpu, arch_traits, config, indices>>> devices{};
 	};
 
 }

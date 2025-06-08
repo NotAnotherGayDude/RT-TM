@@ -22,7 +22,7 @@ RealTimeChris (Chris M.)
 
 #include <rt_tm/common/common.hpp>
 #include <rt_tm/common/param_api.hpp>
-#include <rt_tm/common/string_view.hpp>
+#include <rt_tm/common/core_traits.hpp>
 
 namespace rt_tm {
 
@@ -39,7 +39,7 @@ namespace rt_tm {
 		bool blocking{};
 		size_t op_id{};
 		size_t depth{};
-		op_type type{};
+		kernel_type type{};
 
 		RT_TM_FORCE_INLINE size_t core_total_dims() const {
 			return allocated_dims[0] * allocated_dims[1] * allocated_dims[2] * allocated_dims[3];
@@ -67,14 +67,14 @@ namespace rt_tm {
 	};
 
 	struct core_base {
-		array<size_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
+		mutable array<size_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
 		std::vector<core_base*> input_ops{};
 		size_t comparison_index{};
 		data_type data_type_val{};
 		mutable void* data{};
 		const char* name{};
 		size_t op_id{};
-		op_type type{};
+		kernel_type type{};
 
 		RT_TM_FORCE_INLINE size_t core_total_dims() const {
 			return allocated_dims[0] * allocated_dims[1] * allocated_dims[2] * allocated_dims[3];
@@ -102,67 +102,6 @@ namespace rt_tm {
 
 	  protected:
 		constexpr core_base() noexcept = default;
-	};
-
-	template<auto type_new> struct op_core;
-
-	template<auto type_new> struct op_core : public param_api<op_core<type_new>>, public core_base {
-		std::vector<core_base*> input_ops{};
-		op_core(const core_base_creation_data& other) noexcept {
-			this->data_type_val	 = other.data_type_val;
-			this->allocated_dims = other.allocated_dims;
-			this->op_id			 = other.op_id;
-			this->name			 = other.name;
-			this->data			 = other.data;
-			this->type			 = other.type;
-		};
-		op_core& operator=(op_core&&) noexcept		= default;
-		op_core(op_core&&) noexcept					= default;
-		op_core& operator=(const op_core&) noexcept = default;
-		op_core(const op_core&) noexcept			= default;
-		op_core() noexcept							= default;
-		~op_core() noexcept							= default;
-	};
-
-	template<> struct op_core<op_type::rope> : public param_api<op_core<op_type::rope>>, public core_base {
-		static constexpr op_type type{ op_type::rope };
-		uint64_t rope_dimension_count{};
-		double rope_freq_base{};
-		op_core(const core_base_creation_data& other) noexcept {
-			rope_dimension_count = other.get_value<uint64_t, rope_aux_params::rope_dimension_count>();
-			rope_freq_base		 = other.get_value<uint64_t, rope_aux_params::rope_freq_base>();
-			data_type_val		 = other.data_type_val;
-			allocated_dims		 = other.allocated_dims;
-			op_id				 = other.op_id;
-			name				 = other.name;
-			data				 = other.data;
-		};
-		op_core& operator=(op_core&&) noexcept		= default;
-		op_core(op_core&&) noexcept					= default;
-		op_core& operator=(const op_core&) noexcept = default;
-		op_core(const op_core&) noexcept			= default;
-		op_core() noexcept							= default;
-		~op_core() noexcept							= default;
-	};
-
-	template<> struct op_core<op_type::rms_norm> : public param_api<op_core<op_type::rms_norm>>, public core_base {
-		static constexpr op_type type{ op_type::rope };
-		std::vector<core_base*> input_ops{};
-		uint64_t rms_norm_epsilon{};
-		op_core(const core_base_creation_data& other) noexcept {
-			rms_norm_epsilon = other.get_value<uint64_t, rms_norm_aux_params::rms_norm_epsilon>();
-			data_type_val	 = other.data_type_val;
-			allocated_dims	 = other.allocated_dims;
-			op_id			 = other.op_id;
-			name			 = other.name;
-			data			 = other.data;
-		};
-		op_core& operator=(op_core&&) noexcept		= default;
-		op_core(op_core&&) noexcept					= default;
-		op_core& operator=(const op_core&) noexcept = default;
-		op_core(const op_core&) noexcept			= default;
-		op_core() noexcept							= default;
-		~op_core() noexcept							= default;
 	};
 
 }

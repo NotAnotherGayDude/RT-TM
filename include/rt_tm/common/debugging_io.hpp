@@ -20,7 +20,7 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
-#include <rt_tm/common/model_arch_traits.hpp>
+#include <rt_tm/common/arch_traits.hpp>
 #include <rt_tm/common/core_base.hpp>
 #include <rt_tm/common/common.hpp>
 #include <filesystem>
@@ -108,101 +108,9 @@ namespace rt_tm {
 		}
 	};
 
-	std::string map_rt_tm_to_ggml(llama_op_names rt_tm_enum, size_t layer_index = 0) {
-		switch (rt_tm_enum) {
-			case llama_op_names::input_tokens:
-				return "leaf_2";
-			case llama_op_names::norm:
-				return "norm-" + std::to_string(layer_index);
-			case llama_op_names::attn_norm:
-				return "attn_norm-" + std::to_string(layer_index);
-			case llama_op_names::q_proj:
-				return "Qcur-" + std::to_string(layer_index) + "_MUL_MAT";
-			case llama_op_names::q_reshape:
-				return "Qcur-" + std::to_string(layer_index) + " (reshaped)_RESHAPE";
-			case llama_op_names::rope_q:
-				return "Qcur-" + std::to_string(layer_index) + "_ROPE";
-			case llama_op_names::k_proj:
-				return "Kcur-" + std::to_string(layer_index);
-			case llama_op_names::k_reshape:
-				return "Kcur-" + std::to_string(layer_index) + " (reshaped)_RESHAPE";
-			case llama_op_names::rope_k:
-				return "Kcur-" + std::to_string(layer_index);
-			case llama_op_names::v_proj:
-				return "Vcur-" + std::to_string(layer_index);
-			case llama_op_names::v_reshape:
-				return "Vcur-" + std::to_string(layer_index);
-			case llama_op_names::k_cache_view:
-				return "cache_k_l" + std::to_string(layer_index) + " (view)";
-			case llama_op_names::k_cache_copy:
-				return "cache_k_l" + std::to_string(layer_index) + " (view) (copy of Kcur-" + std::to_string(layer_index) + ")";
-			case llama_op_names::v_reshape_2:
-				return "Vcur-" + std::to_string(layer_index) + " (reshaped)";
-			case llama_op_names::v_transpose:
-				return "Vcur-" + std::to_string(layer_index) + " (reshaped) (transposed)";
-			case llama_op_names::v_cache_view:
-				return "cache_v_l" + std::to_string(layer_index) + " (view)";
-			case llama_op_names::v_cache_copy:
-				return "cache_v_l" + std::to_string(layer_index) + " (view) (copy of Vcur-" + std::to_string(layer_index) + " (reshaped) (transposed))";
-			case llama_op_names::v_cache_view_2:
-				return "cache_v_l" + std::to_string(layer_index) + " (view)";
-			case llama_op_names::v_cache_permute:
-				return "cache_v_l" + std::to_string(layer_index) + " (view) (permuted)";
-			case llama_op_names::k_cache_view_2:
-				return "cache_k_l" + std::to_string(layer_index) + " (view)";
-			case llama_op_names::k_cache_permute:
-				return "cache_k_l" + std::to_string(layer_index) + " (view) (permuted)";
-			case llama_op_names::q_permute:
-				return "Qcur-" + std::to_string(layer_index) + " (permuted)";
-			case llama_op_names::attn_scores:
-				return "node_" + std::to_string(36 * layer_index + 22);
-			case llama_op_names::attn_weights:
-				return "node_" + std::to_string(36 * layer_index + 23);
-			case llama_op_names::attn_out:
-				return "node_" + std::to_string(36 * layer_index + 24);
-			case llama_op_names::attn_permute:
-				return " (permuted)";
-			case llama_op_names::attn_cont:
-				return "kqv_out-" + std::to_string(layer_index);
-			case llama_op_names::attn_proj:
-				return "attn_out-" + std::to_string(layer_index);
-			case llama_op_names::residual_add:
-				return "ffn_inp-" + std::to_string(layer_index);
-			case llama_op_names::ffn_norm:
-				return "norm-" + std::to_string(layer_index);
-			case llama_op_names::ffn_norm_mul:
-				return "ffn_norm-" + std::to_string(layer_index);
-			case llama_op_names::ffn_gate:
-				return "ffn_gate-" + std::to_string(layer_index);
-			case llama_op_names::ffn_silu:
-				return "ffn_silu-" + std::to_string(layer_index);
-			case llama_op_names::ffn_up:
-				return "ffn_up-" + std::to_string(layer_index);
-			case llama_op_names::ffn_gate_mul:
-				return "ffn_gate_par-" + std::to_string(layer_index);
-			case llama_op_names::ffn_down:
-				return "ffn_out-" + std::to_string(layer_index);
-			case llama_op_names::layer_out:
-				return "l_out-" + std::to_string(layer_index);
-			default:
-				return "unknown_tensor";
-		}
-	}
-
-	std::string map_rt_tm_to_ggml_with_context(llama_op_names rt_tm_enum, size_t layer_index = 0) {
-		if (rt_tm_enum == llama_op_names::attn_scores) {
-			size_t node_num = 36 * layer_index + 22;
-			return "node_" + std::to_string(node_num);
-		}
-		if (rt_tm_enum == llama_op_names::attn_weights) {
-			size_t node_num = 36 * layer_index + 23;
-			return "node_" + std::to_string(node_num);
-		}
-		if (rt_tm_enum == llama_op_names::attn_out) {
-			size_t node_num = 36 * layer_index + 24;
-			return "node_" + std::to_string(node_num);
-		}
-		return map_rt_tm_to_ggml(rt_tm_enum, layer_index);
+	std::string map_rt_tm_to_ggml(tensor_type , size_t ) {
+		return {};
+		//arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(rt_tm_enum)][layer_index].operator const char*();
 	}
 
 	std::string convert_rt_tm_name_to_ggml(std::string_view rt_tm_name) {
@@ -219,80 +127,7 @@ namespace rt_tm {
 
 		std::string_view base_name = (dash_pos != std::string_view::npos) ? rt_tm_name.substr(0, dash_pos) : rt_tm_name;
 		if (base_name == "inp_tokens")
-			return map_rt_tm_to_ggml(llama_op_names::input_tokens, layer_index);
-		if (base_name == "norm")
-			return map_rt_tm_to_ggml(llama_op_names::norm, layer_index);
-		if (base_name == "attn_norm")
-			return map_rt_tm_to_ggml(llama_op_names::attn_norm, layer_index);
-		if (base_name == "q_proj")
-			return map_rt_tm_to_ggml(llama_op_names::q_proj, layer_index);
-		if (base_name == "q_reshape")
-			return map_rt_tm_to_ggml(llama_op_names::q_reshape, layer_index);
-		if (base_name == "rope_q")
-			return map_rt_tm_to_ggml(llama_op_names::rope_q, layer_index);
-		if (base_name == "k_proj")
-			return map_rt_tm_to_ggml(llama_op_names::k_proj, layer_index);
-		if (base_name == "k_reshape")
-			return map_rt_tm_to_ggml(llama_op_names::k_reshape, layer_index);
-		if (base_name == "rope_k")
-			return map_rt_tm_to_ggml(llama_op_names::rope_k, layer_index);
-		if (base_name == "v_proj")
-			return map_rt_tm_to_ggml(llama_op_names::v_proj, layer_index);
-		if (base_name == "v_reshape")
-			return map_rt_tm_to_ggml(llama_op_names::v_reshape, layer_index);
-		if (base_name == "k_cache_view")
-			return map_rt_tm_to_ggml(llama_op_names::k_cache_view, layer_index);
-		if (base_name == "k_cache_copy")
-			return map_rt_tm_to_ggml(llama_op_names::k_cache_copy, layer_index);
-		if (base_name == "v_reshape_2")
-			return map_rt_tm_to_ggml(llama_op_names::v_reshape_2, layer_index);
-		if (base_name == "v_transpose")
-			return map_rt_tm_to_ggml(llama_op_names::v_transpose, layer_index);
-		if (base_name == "v_cache_view")
-			return map_rt_tm_to_ggml(llama_op_names::v_cache_view, layer_index);
-		if (base_name == "v_cache_copy")
-			return map_rt_tm_to_ggml(llama_op_names::v_cache_copy, layer_index);
-		if (base_name == "v_cache_view_2")
-			return map_rt_tm_to_ggml(llama_op_names::v_cache_view_2, layer_index);
-		if (base_name == "v_cache_permute")
-			return map_rt_tm_to_ggml(llama_op_names::v_cache_permute, layer_index);
-		if (base_name == "k_cache_view_2")
-			return map_rt_tm_to_ggml(llama_op_names::k_cache_view_2, layer_index);
-		if (base_name == "k_cache_permute")
-			return map_rt_tm_to_ggml(llama_op_names::k_cache_permute, layer_index);
-		if (base_name == "q_permute")
-			return map_rt_tm_to_ggml(llama_op_names::q_permute, layer_index);
-		if (base_name == "attn_scores")
-			return map_rt_tm_to_ggml(llama_op_names::attn_scores, layer_index);
-		if (base_name == "attn_weights")
-			return map_rt_tm_to_ggml(llama_op_names::attn_weights, layer_index);
-		if (base_name == "attn_out")
-			return map_rt_tm_to_ggml(llama_op_names::attn_out, layer_index);
-		if (base_name == "attn_permute")
-			return map_rt_tm_to_ggml(llama_op_names::attn_permute, layer_index);
-		if (base_name == "attn_cont")
-			return map_rt_tm_to_ggml(llama_op_names::attn_cont, layer_index);
-		if (base_name == "attn_proj")
-			return map_rt_tm_to_ggml(llama_op_names::attn_proj, layer_index);
-		if (base_name == "residual_add")
-			return map_rt_tm_to_ggml(llama_op_names::residual_add, layer_index);
-		if (base_name == "ffn_norm")
-			return map_rt_tm_to_ggml(llama_op_names::ffn_norm, layer_index);
-		if (base_name == "ffn_norm_mul")
-			return map_rt_tm_to_ggml(llama_op_names::ffn_norm_mul, layer_index);
-		if (base_name == "ffn_gate")
-			return map_rt_tm_to_ggml(llama_op_names::ffn_gate, layer_index);
-		if (base_name == "ffn_silu")
-			return map_rt_tm_to_ggml(llama_op_names::ffn_silu, layer_index);
-		if (base_name == "ffn_up")
-			return map_rt_tm_to_ggml(llama_op_names::ffn_up, layer_index);
-		if (base_name == "ffn_gate_mul")
-			return map_rt_tm_to_ggml(llama_op_names::ffn_gate_mul, layer_index);
-		if (base_name == "ffn_down")
-			return map_rt_tm_to_ggml(llama_op_names::ffn_down, layer_index);
-		if (base_name == "layer_out")
-			return map_rt_tm_to_ggml(llama_op_names::layer_out, layer_index);
-
+			return map_rt_tm_to_ggml(tensor_type::input_tokens, layer_index);
 		return static_cast<std::string>(rt_tm_name);
 	}
 
@@ -306,12 +141,12 @@ namespace rt_tm {
 		array<size_t, 4> dims{};
 		std::string name{};
 		data_type type{};
-		op_type op{};
+		kernel_type op{};
 
 		intermediary_tensor() noexcept = default;
 
 		intermediary_tensor(const core_base& other) {
-			size_t nbytes{ other.core_total_byte_size() };
+			//size_t nbytes{ other.core_total_byte_size() };
 			for (size_t x = 0; x < 4; ++x) {
 				dims[x] = other.allocated_dims[x];
 			}
@@ -321,7 +156,7 @@ namespace rt_tm {
 		}
 
 		intermediary_tensor(const core_base_creation_data& other) {
-			size_t nbytes{ other.core_total_byte_size() };
+			//size_t nbytes{ other.core_total_byte_size() };
 			for (size_t x = 0; x < 4; ++x) {
 				dims[x] = other.allocated_dims[x];
 			}
@@ -472,123 +307,8 @@ namespace rt_tm {
 		GGML_OP_COUNT,
 	};
 
-	enum op_type convert_ggml_op_to_op_type(enum ggml_op ggml_op) {
-		switch (ggml_op) {
-			case GGML_OP_NONE:
-				return op_type::noop;
-
-			case GGML_OP_MUL_MAT:
-			case GGML_OP_MUL_MAT_ID:
-			case GGML_OP_OUT_PROD:
-				return op_type::mul_mat;
-
-			case GGML_OP_MUL:
-				return op_type::mul;
-
-			case GGML_OP_ADD:
-			case GGML_OP_ADD1:
-			case GGML_OP_ACC:
-			case GGML_OP_ADD_REL_POS:
-				return op_type::add;
-
-			case GGML_OP_SUB:
-				return op_type::sub;
-
-			case GGML_OP_GET_ROWS:
-			case GGML_OP_GET_ROWS_BACK:
-				return op_type::get_rows;
-
-			case GGML_OP_VIEW:
-				return op_type::view;
-
-			case GGML_OP_CPY:
-			case GGML_OP_SET:
-				return op_type::copy;
-
-			case GGML_OP_SOFT_MAX:
-			case GGML_OP_SOFT_MAX_BACK:
-				return op_type::softmax;
-
-			case GGML_OP_RMS_NORM:
-			case GGML_OP_RMS_NORM_BACK:
-			case GGML_OP_NORM:
-			case GGML_OP_GROUP_NORM:
-			case GGML_OP_L2_NORM:
-				return op_type::rms_norm;
-
-			case GGML_OP_RESHAPE:
-				return op_type::reshape;
-
-			case GGML_OP_ROPE:
-			case GGML_OP_ROPE_BACK:
-				return op_type::rope;
-
-			case GGML_OP_TRANSPOSE:
-			case GGML_OP_CONV_TRANSPOSE_1D:
-			case GGML_OP_CONV_TRANSPOSE_2D:
-				return op_type::transpose;
-
-			case GGML_OP_PERMUTE:
-				return op_type::permute;
-
-			case GGML_OP_CONT:
-				return op_type::cont;
-
-			case GGML_OP_SILU_BACK:
-				return op_type::silu;
-
-			case GGML_OP_DIV:
-			case GGML_OP_SQR:
-			case GGML_OP_SQRT:
-			case GGML_OP_LOG:
-			case GGML_OP_SIN:
-			case GGML_OP_COS:
-			case GGML_OP_SUM:
-			case GGML_OP_SUM_ROWS:
-			case GGML_OP_MEAN:
-			case GGML_OP_ARGMAX:
-			case GGML_OP_COUNT_EQUAL:
-			case GGML_OP_REPEAT:
-			case GGML_OP_REPEAT_BACK:
-			case GGML_OP_CONCAT:
-			case GGML_OP_SCALE:
-			case GGML_OP_DIAG:
-			case GGML_OP_DIAG_MASK_INF:
-			case GGML_OP_DIAG_MASK_ZERO:
-			case GGML_OP_CLAMP:
-			case GGML_OP_POOL_1D:
-			case GGML_OP_POOL_2D:
-			case GGML_OP_POOL_2D_BACK:
-			case GGML_OP_UPSCALE:
-			case GGML_OP_PAD:
-			case GGML_OP_PAD_REFLECT_1D:
-			case GGML_OP_ARANGE:
-			case GGML_OP_TIMESTEP_EMBEDDING:
-			case GGML_OP_ARGSORT:
-			case GGML_OP_LEAKY_RELU:
-			case GGML_OP_FLASH_ATTN_EXT:
-			case GGML_OP_FLASH_ATTN_BACK:
-			case GGML_OP_SSM_CONV:
-			case GGML_OP_SSM_SCAN:
-			case GGML_OP_WIN_PART:
-			case GGML_OP_WIN_UNPART:
-			case GGML_OP_GET_REL_POS:
-			case GGML_OP_RWKV_WKV6:
-			case GGML_OP_GATED_LINEAR_ATTN:
-			case GGML_OP_RWKV_WKV7:
-			case GGML_OP_UNARY:
-			case GGML_OP_MAP_CUSTOM1:
-			case GGML_OP_MAP_CUSTOM2:
-			case GGML_OP_MAP_CUSTOM3:
-			case GGML_OP_CROSS_ENTROPY_LOSS:
-			case GGML_OP_CROSS_ENTROPY_LOSS_BACK:
-			case GGML_OP_OPT_STEP_ADAMW:
-			case GGML_OP_IM2COL:
-			case GGML_OP_IM2COL_BACK:
-			case GGML_OP_COUNT:
-			default:
-				return op_type::unset;
-		}
+	enum kernel_type convert_ggml_op_to_op_type(enum ggml_op) {
+		return {};
 	}
 
 	intermediary_tensor parse_tensor_from_string(const std::string& file_contents) {

@@ -31,3 +31,7 @@ rt_tm_configure_arm_variant(rt_tm_arm_neon)
 target_compile_options(rt_tm_arm_neon PRIVATE
     "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-mfpu=neon>"
 )
+
+target_compile_definitions(rt_tm_arm_neon PUBLIC
+    "RT_TM_ARM_NEON"
+)

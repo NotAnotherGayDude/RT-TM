@@ -33,3 +33,7 @@ target_compile_options(rt_tm_arm_sve PRIVATE
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-march=armv8-a+sve+sve2>"
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-march=armv8-a+sve>"
 )
+
+target_compile_definitions(rt_tm_arm_sve PUBLIC
+    "RT_TM_ARM_SVE"
+)

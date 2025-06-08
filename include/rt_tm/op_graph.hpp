@@ -24,7 +24,7 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/core_base.hpp>
 #include <rt_tm/common/input_session.hpp>
 #include <rt_tm/common/memory_buffer.hpp>
-#include <rt_tm/common/model_arch_traits.hpp>
+#include <rt_tm/common/arch_traits.hpp>
 #include <rt_tm/cpu/device.hpp>
 
 namespace rt_tm {
@@ -38,11 +38,12 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE op_graph_bases_op() noexcept									   = default;
 		RT_TM_FORCE_INLINE op_graph_bases_op& operator=(const op_graph_bases_op&) noexcept = delete;
 		RT_TM_FORCE_INLINE op_graph_bases_op(const op_graph_bases_op&) noexcept			   = delete;
-		std::vector<op_core<static_cast<llama_op_names>(type_new)>> ops{};
+		//std::vector<core<static_cast<llama_op_names>(type_new)>> ops{};
 		RT_TM_FORCE_INLINE core_base* emplace_back(enum_type args) {
 			if (args == type_new) {
-				auto& new_ref = ops.emplace_back();
-				return &new_ref;
+				//auto& new_ref = ops.emplace_back();
+				return nullptr;
+				//&new_ref;
 			} else {
 				return nullptr;
 			}
@@ -78,20 +79,20 @@ namespace rt_tm {
 		}
 	};
 
-	template<global_config config, typename index_sequence> struct get_op_graph_bases;
+	template<model_config config, typename index_sequence> struct get_op_graph_bases;
 
-	template<global_config config, size_t... index> struct get_op_graph_bases<config, std::index_sequence<index...>> {
+	template<model_config config, size_t... index> struct get_op_graph_bases<config, std::index_sequence<index...>> {
 		using type = op_graph_bases<op_graph_bases_op<config.arch, index>...>;
 	};
 
-	template<global_config config, typename enum_tyoe> using op_graph_bases_t =
+	template<model_config config, typename enum_tyoe> using op_graph_bases_t =
 		typename get_op_graph_bases<config, std::make_index_sequence<static_cast<size_t>(enum_tyoe::count)>>::type;
 
-	template<global_config config, typename model_arch_traits, impl_indices indices_new> struct op_graph_base;
+	template<model_config config, typename arch_traits, impl_indices indices_new> struct op_graph_base;
 
-	template<global_config config, impl_indices indices_new> struct op_graph_base<config, model_arch_traits<model_arch::llama>, indices_new>
-		: public device_registry<device_type::cpu, model_arch_traits<model_arch::llama>, config, indices_new>,
-		  op_graph_bases_t<config, model_arch_traits<model_arch::llama>::enum_type> {
+	template<model_config config, impl_indices indices_new> struct op_graph_base<config, arch_traits<model_arch::llama>, indices_new>
+		: public device_registry<device_type::cpu, arch_traits<model_arch::llama>, config, indices_new>,
+		  op_graph_bases_t<config, arch_traits<model_arch::llama>::enum_type> {
 	  public:
 		inline static constexpr impl_indices indices{ indices_new };
 		op_graph_config config_val{};
@@ -101,7 +102,7 @@ namespace rt_tm {
 		RT_TM_INLINE op_graph_base(const op_graph_base&) noexcept			 = delete;
 
 		RT_TM_FORCE_INLINE op_graph_base(op_graph_config graph_config)
-			: device_registry<device_type::cpu, model_arch_traits<model_arch::llama>, config, indices_new>{ graph_config.num_threads }, config_val{ graph_config } {};
+			: device_registry<device_type::cpu, arch_traits<model_arch::llama>, config, indices_new>{ graph_config.num_threads }, config_val{ graph_config } {};
 
 		RT_TM_FORCE_INLINE void process_input(input_session& session) {
 			reset_state();
@@ -109,21 +110,21 @@ namespace rt_tm {
 		};
 
 		RT_TM_FORCE_INLINE void reset_state() {
-			auto& cpu_devices{ static_cast<device_registry<device_type::cpu, model_arch_traits<model_arch::llama>, config, indices_new>*>(this)->get_devices() };
+			auto& cpu_devices{ static_cast<device_registry<device_type::cpu, arch_traits<model_arch::llama>, config, indices_new>*>(this)->get_devices() };
 			for (auto& value: cpu_devices) {
 				value->reset_state();
 			}
 		}
 
 		RT_TM_FORCE_INLINE void schedule_execution() {
-			auto& cpu_devices{ static_cast<device_registry<device_type::cpu, model_arch_traits<model_arch::llama>, config, indices_new>*>(this)->get_devices() };
+			auto& cpu_devices{ static_cast<device_registry<device_type::cpu, arch_traits<model_arch::llama>, config, indices_new>*>(this)->get_devices() };
 			for (auto& value: cpu_devices) {
 				value->schedule_execution(ops);
 			}
 		}
 
 		RT_TM_FORCE_INLINE void execute_tasks() {
-			auto& cpu_devices{ static_cast<device_registry<device_type::cpu, model_arch_traits<model_arch::llama>, config, indices_new>*>(this)->get_devices() };
+			auto& cpu_devices{ static_cast<device_registry<device_type::cpu, arch_traits<model_arch::llama>, config, indices_new>*>(this)->get_devices() };
 			for (auto& value: cpu_devices) {
 				value->execute_tasks();
 			}
@@ -136,7 +137,7 @@ namespace rt_tm {
 		std::vector<core_base*> ops{};
 	};
 
-	template<global_config config> struct op_graph {
+	template<model_config config> struct op_graph {
 		RT_TM_FORCE_INLINE op_graph& operator=(const op_graph&) = delete;
 		RT_TM_FORCE_INLINE op_graph(op_graph&)					= delete;
 		RT_TM_FORCE_INLINE op_graph& operator=(op_graph&& other) {
@@ -153,15 +154,15 @@ namespace rt_tm {
 		op_graph(op_graph_config graph_config) {
 			switch (cpu_arch_index_holder::cpu_arch_index) {
 				case 0ull: {
-					op_graph00 = std::make_unique<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 0ull }>>(graph_config);
+					op_graph00 = std::make_unique<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 0ull }>>(graph_config);
 					break;
 				}
 				case 1ull: {
-					op_graph01 = std::make_unique<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 1ull }>>(graph_config);
+					op_graph01 = std::make_unique<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 1ull }>>(graph_config);
 					break;
 				}
 				case 2ull: {
-					op_graph02 = std::make_unique<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 2ull }>>(graph_config);
+					op_graph02 = std::make_unique<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 2ull }>>(graph_config);
 					break;
 				}
 			}
@@ -238,24 +239,24 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE void init(op_graph_config graph_config = {}) {
 			switch (cpu_arch_index_holder::cpu_arch_index) {
 				case 0ull: {
-					op_graph00 = std::make_unique<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 0ull }>>(graph_config);
+					op_graph00 = std::make_unique<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 0ull }>>(graph_config);
 					break;
 				}
 				case 1ull: {
-					op_graph01 = std::make_unique<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 1ull }>>(graph_config);
+					op_graph01 = std::make_unique<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 1ull }>>(graph_config);
 					break;
 				}
 				case 2ull: {
-					op_graph02 = std::make_unique<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 2ull }>>(graph_config);
+					op_graph02 = std::make_unique<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 2ull }>>(graph_config);
 					break;
 				}
 			}
 		}
 
 	  protected:
-		std::unique_ptr<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 0ull }>> op_graph00{};
-		std::unique_ptr<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 1ull }>> op_graph01{};
-		std::unique_ptr<op_graph_base<config, model_arch_traits<config.arch>, impl_indices{ .cpu_index = 2ull }>> op_graph02{};
+		std::unique_ptr<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 0ull }>> op_graph00{};
+		std::unique_ptr<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 1ull }>> op_graph01{};
+		std::unique_ptr<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 2ull }>> op_graph02{};
 	};
 
 }

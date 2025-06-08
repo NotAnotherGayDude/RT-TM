@@ -335,7 +335,7 @@ bool save_tensor_if_not_exists(const struct ggml_tensor* tensor_new) {
 		const char* op_name = ggml_op_name(tensor->op);
 	}
 
-	// Create filename: tensor_name + ".safetensor" (with op_type if contains "Qcur")
+	// Create filename: tensor_name + ".safetensor" (with kernel_type if contains "Qcur")
 	size_t filename_len;
 	char* filename;
 
@@ -344,7 +344,7 @@ bool save_tensor_if_not_exists(const struct ggml_tensor* tensor_new) {
 		filename_len		= strlen(safe_name) + 1 + strlen(op_name) + strlen(".safetensor") + 1;
 		filename			= ( char* )malloc(filename_len);
 		if (!filename) {
-			printf("DEBUG: failed to allocate filename with op_type\n");
+			printf("DEBUG: failed to allocate filename with kernel_type\n");
 			free(safe_name);
 			free_intermediary_tensor(tensor);
 			return false;
@@ -372,7 +372,7 @@ bool save_tensor_if_not_exists(const struct ggml_tensor* tensor_new) {
 		txt_filename_len	= strlen(safe_name) + 1 + strlen(op_name) + strlen(".txt") + 1;
 		txt_filename		= ( char* )malloc(txt_filename_len);
 		if (!txt_filename) {
-			printf("DEBUG: failed to allocate txt filename with op_type\n");
+			printf("DEBUG: failed to allocate txt filename with kernel_type\n");
 			free(filename);
 			free(safe_name);
 			free_intermediary_tensor(tensor);

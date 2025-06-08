@@ -22,6 +22,7 @@ RealTimeChris (Chris M.)
 
 #include <rt_tm/common/iterator.hpp>
 #include <algorithm>
+#include <stdexcept>
 
 namespace rt_tm {
 
@@ -39,6 +40,12 @@ namespace rt_tm {
 		using const_iterator		 = const array_iterator<value_type, size_new>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+		RT_TM_FORCE_INLINE constexpr array(const std::initializer_list<value_type>& list) {
+			for (size_t x = 0; x < list.size(); ++x) {
+				data_val[x] = list.begin()[x];
+			}
+		}
 
 		RT_TM_FORCE_INLINE constexpr void fill(const value_type& _Value) {
 			std::fill_n(data_val, size_new, _Value);

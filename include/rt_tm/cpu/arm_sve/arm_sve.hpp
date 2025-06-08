@@ -18,6 +18,9 @@ RealTimeChris (Chris M.)
 2025
 */
 
-#pragma once
+#if defined(RT_TM_ARM_SVE)
+	#pragma once
 
-#include <arm_sve.h>
+	#include <arm_sve.h>
+
+#endif

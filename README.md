@@ -26,14 +26,14 @@ The result is a runtime that:
 # 🖥️ **Sample Usage (from RT-TM API)**
 
 ```cpp
-static constexpr rt_tm::global_config global_config{ .arch = rt_tm::model_arch::llama, .exceptions = false };
+static constexpr rt_tm::model_config model_config{ .arch = rt_tm::model_arch::llama, .exceptions = false };
 
 // Parse model from GGUF
-auto model_graph = rt_tm::harbinger<global_config>::parse_model_graph<rt_tm::model_format::gguf>(argv[2]);
+auto model_graph = rt_tm::harbinger<model_config>::parse_model_graph<rt_tm::model_format::gguf>(argv[2]);
 
 // Create op graph with thread configuration
 rt_tm::op_graph_config graph_config{ .num_threads = 12 };
-rt_tm::op_graph<global_config> op_graph{ rt_tm::harbinger<global_config>::create_op_graph(graph_config, model_graph) };
+rt_tm::op_graph<model_config> op_graph{ rt_tm::harbinger<model_config>::create_op_graph(graph_config, model_graph) };
 
 // Setup input stream
 rt_tm::input_session_config session_config{ .stream = std::cin, .max_tokens = 1024 };
@@ -52,11 +52,11 @@ while (input_session) {
 ```
 Model Parsing (GGUF) → model_graph (static topology + metadata)
                           ↓
-harbinger::create_op_graph() → op_graph<global_config>
+harbinger::create_op_graph() → op_graph<model_config>
                           ↓
 op_graph {
     op_graph_bases {
-        op_graph_bases_op<op_enum_value> → vector<typed op_core<T>>
+        op_graph_bases_op<op_enum_value> → vector<typed core<T>>
     }
     device_registry {
         thread_pool {

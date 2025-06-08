@@ -35,9 +35,17 @@ namespace rt_tm {
 		data_type type{};
 	};
 
-	template<data_type> struct type_traits;
+	template<typename derived_type> struct total_bytes_size {
+		RT_TM_FORCE_INLINE constexpr size_t total_byte_size(const array<size_t,4>& dims) {
+			size_t total_elements{ dims[0] * dims[1] * dims[2] * dims[3] };
+			size_t num_blocks = (total_elements + static_cast<derived_type*>(this)->block_size - 1) / static_cast<derived_type*>(this)->block_size;
+			return num_blocks * static_cast<derived_type*>(this)->type_size;
+		}
+	};
 
-	template<> struct type_traits<data_type::int_8> {
+	template<typename data_type> struct type_traits;
+
+	template<> struct type_traits<int8_t> : public total_bytes_size<type_traits<int8_t>> {
 		using value_type = int8_t;
 		using quant_type = int8_t;
 		inline static constexpr data_type type{ data_type::int_8 };
@@ -47,7 +55,7 @@ namespace rt_tm {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<data_type::int_32> {
+	template<> struct type_traits<int32_t> : public total_bytes_size<type_traits<int32_t>> {
 		using value_type = int32_t;
 		using quant_type = int32_t;
 		inline static constexpr data_type type{ data_type::int_32 };
@@ -57,7 +65,7 @@ namespace rt_tm {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<data_type::float_32> {
+	template<> struct type_traits<float> : public total_bytes_size<type_traits<float>> {
 		using value_type = float;
 		using quant_type = float;
 		inline static constexpr data_type type{ data_type::float_32 };
@@ -67,7 +75,7 @@ namespace rt_tm {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<data_type::float_16> {
+	template<> struct type_traits<uint16_t> : public total_bytes_size<type_traits<uint16_t>> {
 		using value_type = fp16_t;
 		using quant_type = fp16_t;
 		inline static constexpr data_type type{ data_type::float_16 };
@@ -77,7 +85,7 @@ namespace rt_tm {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<data_type::q8_0> {
+	template<> struct type_traits<block_q8_0<half>> : public total_bytes_size<type_traits<block_q8_0<half>>> {
 		using value_type = block_q8_0<half>;
 		using quant_type = block_q8_0<half>;
 		inline static constexpr data_type type{ data_type::q8_0 };
@@ -87,15 +95,13 @@ namespace rt_tm {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<data_type::count> {
+	template<> struct type_traits<void> : public total_bytes_size<type_traits<void>> {
 		inline static constexpr data_type type{ data_type::count };
 		inline static constexpr uint64_t type_size{ 0 };
 		inline static constexpr bool is_quantized{ true };
 		inline static constexpr uint64_t block_size{ 0 };
 		inline static constexpr uint64_t n_rows{ 0 };
 	};
-
-	template<data_type type> struct type_traits {};
 
 	static constexpr bool is_it_a_type(size_t index) {
 		switch (index) {
@@ -138,8 +144,8 @@ namespace rt_tm {
 	template<size_t index = 0> static constexpr auto get_type_traits_dynamic(array<type_traits_dynamic, static_cast<size_t>(data_type::count)> array_of_traits = {}) {
 		if constexpr (index < static_cast<size_t>(data_type::count)) {
 			if constexpr (is_it_a_type(index)) {
-				using type_traits = type_traits<static_cast<data_type>(index)>;
-
+				//using type_traits = type_traits<static_cast<data_type>(index)>;
+				/*
 				array_of_traits[index] = { .type_name = nullptr,
 					.block_size						  = type_traits::block_size,
 					.type_size						  = type_traits::type_size,
@@ -175,7 +181,7 @@ namespace rt_tm {
 					case data_type::count:
 					default:
 						break;
-				}
+				}*/
 			}
 			return get_type_traits_dynamic<index + 1>(array_of_traits);
 		}

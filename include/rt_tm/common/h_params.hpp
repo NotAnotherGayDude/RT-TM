@@ -17,9 +17,22 @@ Signed,
 RealTimeChris (Chris M.)
 2025
 */
-#if defined(RT_TM_ARM_NEON)
-	#pragma once
 
-#include <arm_neon.h>
+#pragma once
 
-#endif
+#include <rt_tm/common/common.hpp>
+#include <iterator>
+
+namespace rt_tm {
+
+	template<model_arch> struct hyper_parameters;
+
+	template<> struct hyper_parameters<model_arch::llama> {
+		uint64_t current_sequence_length{};
+		uint64_t kv_cache_size_per_layer{};
+		uint64_t batch_size{};
+		uint64_t rope_dims{};
+		double rope_freqs{};
+	};
+
+}

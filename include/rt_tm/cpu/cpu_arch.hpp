@@ -17,9 +17,16 @@ Signed,
 RealTimeChris (Chris M.)
 2025
 */
-#if defined(RT_TM_ARM_NEON)
-	#pragma once
 
-#include <arm_neon.h>
+#pragma once
 
-#endif
+#include <rt_tm/cpu/avx_2/avx_2.hpp>
+#include <rt_tm/cpu/avx_512/avx_512.hpp>
+
+#include <rt_tm/cpu/arm_neon/arm_neon.hpp>
+#include <rt_tm/cpu/arm_sve/arm_sve.hpp>
+
+namespace rt_tm {
+
+
+}

@@ -39,3 +39,7 @@ target_compile_options(rt_tm_avx512 PRIVATE
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mavx512f>"
     "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX512>"
 )
+
+target_compile_definitions(rt_tm_avx512 PUBLIC
+    "RT_TM_AVX512"
+)
