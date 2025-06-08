@@ -64,6 +64,8 @@ namespace rt_tm {
 			result.input_ops	  = { { &lhs } };
 			result.depth		  = lhs.depth + 1;
 			result.blocking		  = result.depth == 0 ? false : true;
+			data_type types[2]{ lhs.data_type_val, result.data_type_val };
+			result.comparison_index = get_comparison_value<op_entity<op_type::rms_norm>>::impl(types);
 			result.set_value<rms_norm_aux_params::rms_norm_epsilon>(rms_norm_epsilon);
 			result.allocate_memory = true;
 			lhs.dependent_ops.emplace_back(result.op_id);
@@ -83,6 +85,8 @@ namespace rt_tm {
 			result.data_type_val   = lhs.data_type_val;
 			result.input_ops	   = { { &lhs, &rhs } };
 			result.depth		   = std::max(lhs.depth, rhs.depth) + 1;
+			data_type types[3]{ lhs.data_type_val, rhs.data_type_val, result.data_type_val };
+			result.comparison_index = get_comparison_value<op_entity<op_type::mul>>::impl(types);
 			result.allocate_memory = true;
 			rhs.dependent_ops.emplace_back(result.op_id);
 			lhs.dependent_ops.emplace_back(result.op_id);
@@ -108,6 +112,8 @@ namespace rt_tm {
 			result.depth			= std::max(lhs.depth, rhs.depth) + 1;
 			result.allocate_memory	= true;
 			result.blocking			= true;
+			data_type types[3]{ lhs.data_type_val, rhs.data_type_val, result.data_type_val };
+			result.comparison_index = get_comparison_value<op_entity<op_type::mul_mat>>::impl(types);
 			rhs.dependent_ops.emplace_back(result.op_id);
 			lhs.dependent_ops.emplace_back(result.op_id);
 			return result;
@@ -131,7 +137,8 @@ namespace rt_tm {
 			result.depth		   = lhs.depth + 1;
 			result.allocate_memory = false;
 			result.blocking		   = false;
-
+			data_type types[2]{ lhs.data_type_val, result.data_type_val };
+			result.comparison_index = get_comparison_value<op_entity<op_type::reshape>>::impl(types);
 			lhs.dependent_ops.emplace_back(result.op_id);
 			return result;
 		}
@@ -148,6 +155,8 @@ namespace rt_tm {
 			a.dependent_ops.emplace_back(result.op_id);
 			b.dependent_ops.emplace_back(result.op_id);
 			c.dependent_ops.emplace_back(result.op_id);
+			data_type types[4]{ a.data_type_val, b.data_type_val, c.data_type_val, result.data_type_val };
+			result.comparison_index = get_comparison_value<op_entity<op_type::rope>>::impl(types);
 			return result;
 		}
 	};

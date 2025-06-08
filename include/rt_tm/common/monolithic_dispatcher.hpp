@@ -193,9 +193,24 @@ namespace rt_tm {
 		}() };
 	};
 
+	template<auto... value> struct error_printer_impl;
+
+	template<bool value, auto... value_to_test> struct static_assert_printer {
+		RT_TM_FORCE_INLINE static constexpr bool impl() {
+			if constexpr (!value) {
+				error_printer_impl<value_to_test...>::failure_value;
+				return false;
+			} else {
+				return true;
+			}
+		}
+	};
+
 	template<typename op_entity_type> struct get_comparison_value {
 		static constexpr auto groups{ op_entity_type::groups };
 		template<uint64_t type_count> RT_TM_FORCE_INLINE static const size_t impl(data_type (&type01)[type_count]) {
+			static_assert(static_assert_printer<(type_count == op_entity_type::type_count), type_count>::impl(),
+				"Sorry, but that is the incorrect sized array of type_counts to pass in.");
 			for (size_t x = 0; x < groups.size(); ++x) {
 				if (std::memcmp(&type01, groups[x].types.data(), groups[x].types.size() * sizeof(data_type)) == 0) {
 					return x;
@@ -223,13 +238,13 @@ namespace rt_tm {
 
 	template<size_t entity_index> struct kernel_dispatcher<device_type::cpu, impl_indices{ .cpu_index = 0 }, op_type::rope, entity_index> {
 		RT_TM_FORCE_INLINE static void impl(cpu_op_core_thread_base* params_new) {
-			auto params					= static_cast<cpu_op_core_thread<3>*>(params_new);
-			auto params_rop		= static_cast<op_core<op_type::rope>*>(params->core_base_ptr);
-			double rope_freq_base		= params_rop->rope_freq_base;
-			using source01_type = get_type_from_enum<op_type::rope, 0, 0>::type;
-			using source02_type = get_type_from_enum<op_type::rope, 0, 1>::type;
-			using source02_type = get_type_from_enum<op_type::rope, 0, 2>::type;
-			using dst_type		= get_type_from_enum<op_type::rope, 0, 3>::type;
+			auto params			  = static_cast<cpu_op_core_thread<3>*>(params_new);
+			auto params_rop		  = static_cast<op_core<op_type::rope>*>(params->core_base_ptr);
+			double rope_freq_base = params_rop->rope_freq_base;
+			using source01_type	  = get_type_from_enum<op_type::rope, 0, 0>::type;
+			using source02_type	  = get_type_from_enum<op_type::rope, 0, 1>::type;
+			using source02_type	  = get_type_from_enum<op_type::rope, 0, 2>::type;
+			using dst_type		  = get_type_from_enum<op_type::rope, 0, 3>::type;
 		}
 	};
 
