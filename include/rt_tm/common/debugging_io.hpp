@@ -110,20 +110,22 @@ namespace rt_tm {
 
 	std::string map_rt_tm_to_ggml(llama_op_names rt_tm_enum, size_t layer_index = 0) {
 		switch (rt_tm_enum) {
+			case llama_op_names::input_tokens:
+				return "leaf_2";
 			case llama_op_names::norm:
 				return "norm-" + std::to_string(layer_index);
 			case llama_op_names::attn_norm:
 				return "attn_norm-" + std::to_string(layer_index);
 			case llama_op_names::q_proj:
-				return "Qcur-" + std::to_string(layer_index);
+				return "Qcur-" + std::to_string(layer_index) + "_MUL_MAT";
 			case llama_op_names::q_reshape:
-				return "Qcur-" + std::to_string(layer_index) + " (reshaped)";
+				return "Qcur-" + std::to_string(layer_index) + " (reshaped)_RESHAPE";
 			case llama_op_names::rope_q:
-				return "Qcur-" + std::to_string(layer_index);
+				return "Qcur-" + std::to_string(layer_index) + "_ROPE";
 			case llama_op_names::k_proj:
 				return "Kcur-" + std::to_string(layer_index);
 			case llama_op_names::k_reshape:
-				return "Kcur-" + std::to_string(layer_index) + " (reshaped)";
+				return "Kcur-" + std::to_string(layer_index) + " (reshaped)_RESHAPE";
 			case llama_op_names::rope_k:
 				return "Kcur-" + std::to_string(layer_index);
 			case llama_op_names::v_proj:
@@ -216,7 +218,8 @@ namespace rt_tm {
 		}
 
 		std::string_view base_name = (dash_pos != std::string_view::npos) ? rt_tm_name.substr(0, dash_pos) : rt_tm_name;
-
+		if (base_name == "inp_tokens")
+			return map_rt_tm_to_ggml(llama_op_names::input_tokens, layer_index);
 		if (base_name == "norm")
 			return map_rt_tm_to_ggml(llama_op_names::norm, layer_index);
 		if (base_name == "attn_norm")

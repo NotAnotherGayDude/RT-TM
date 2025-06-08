@@ -28,7 +28,14 @@ namespace rt_tm {
 	enum class rope_aux_params : uint64_t {
 		rope_dimension_count = 0,
 		rope_freq_base		 = 8,
-		count				 = 16,
+		freq_base			 = 16,
+		freq_scale			 = 24,
+		ext_factor			 = 32,
+		attn_factor			 = 40,
+		beta_fast			 = 48,
+		beta_slow			 = 56,
+		sections			 = 64,
+		count				 = 96,
 	};
 
 	enum class rms_norm_aux_params : uint64_t {

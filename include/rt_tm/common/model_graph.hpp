@@ -38,28 +38,66 @@ namespace rt_tm {
 		std::string pre{};
 	};
 
-	enum class llama_hyper_parameter_type_uint64 {
+	enum class llama_construction_parameter_type_uint64 {
 		rope_dimension_count,
-		quantization_version,
 		feed_forward_length,
 		embedding_length,
 		context_length,
+		n_expert_used,
 		head_count_kv,
-		entries_count,
-		default_type,
-		chunks_count,
 		block_count,
 		head_count,
 		vocab_size,
-		freq_base,
-		file_type,
+		rope_type,
+		n_expert,
+		count,
+	};
+
+	enum class llama_construction_parameter_type_float64 {
+		f_attention_scale,
+		rms_norm_epsilon,
+		rope_attn_factor,
+		rope_freq_scale,
+		rope_ext_factor,
+		rope_freq_base,
+		rope_beta_fast,
+		rope_beta_slow,
+		count,
+	};
+
+	enum class llama_hyper_parameter_type_uint64 {
+		current_sequence_length,
+		kv_cache_size_per_layer,
+		batch_size,
+		rope_dims,
 		count,
 	};
 
 	enum class llama_hyper_parameter_type_float64 {
-		rms_norm_epsilon,
-		rope_freq_base,
+		rope_freqs,
 		count,
+	};
+
+	template<model_arch arch> struct construction_parameters;
+
+	template<> struct construction_parameters<model_arch::llama> {
+		uint64_t params_uint64[static_cast<size_t>(llama_construction_parameter_type_uint64::count)]{};
+		double params_float64[static_cast<size_t>(llama_construction_parameter_type_float64::count)]{};
+		RT_TM_FORCE_INLINE uint64_t& operator()(llama_construction_parameter_type_uint64 index) {
+			return params_uint64[static_cast<size_t>(index)];
+		}
+
+		RT_TM_FORCE_INLINE double& operator()(llama_construction_parameter_type_float64 index) {
+			return params_float64[static_cast<size_t>(index)];
+		}
+
+		RT_TM_FORCE_INLINE const uint64_t& operator()(llama_construction_parameter_type_uint64 index) const {
+			return params_uint64[static_cast<size_t>(index)];
+		}
+
+		RT_TM_FORCE_INLINE const double& operator()(llama_construction_parameter_type_float64 index) const {
+			return params_float64[static_cast<size_t>(index)];
+		}
 	};
 
 	template<model_arch arch> struct hyper_parameters;
@@ -92,8 +130,9 @@ namespace rt_tm {
 		RT_TM_INLINE model_graph(const model_graph&)			= delete;
 		std::vector<core_base_creation_data> op_cores{};
 		tokenizer_parameters<config.arch> tokenizer_params{};
-		memory_buffer<config> leaf_core_data{};
+		construction_parameters<config.arch> cparams{};
 		hyper_parameters<config.arch> hparams{};
+		memory_buffer<config> leaf_core_data{};
 	};
 
 }

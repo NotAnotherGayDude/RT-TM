@@ -328,33 +328,70 @@ bool save_tensor_if_not_exists(const struct ggml_tensor* tensor_new) {
 	}
 	safe_name[tensor->name_val.length] = '\0';
 
-	// Create filename: tensor_name + ".safetensor"
-	size_t filename_len = strlen(safe_name) + strlen(".safetensor") + 1;
-	char* filename		= ( char* )malloc(filename_len);
-	if (!filename) {
-		printf("DEBUG: failed to allocate filename\n");
-		free(safe_name);
-		free_intermediary_tensor(tensor);
-		return false;
+	// Check if tensor name contains "Qcur"
+	bool has_qcur = (strstr(safe_name, "Qcur") != NULL);
+
+	if (has_qcur) {
+		const char* op_name = ggml_op_name(tensor->op);
 	}
 
-	// Create txt filename: tensor_name + ".txt"
-	size_t txt_filename_len = strlen(safe_name) + strlen(".txt") + 1;
-	char* txt_filename		= ( char* )malloc(txt_filename_len);
-	if (!txt_filename) {
-		printf("DEBUG: failed to allocate txt filename\n");
-		free(filename);
-		free(safe_name);
-		free_intermediary_tensor(tensor);
-		return false;
+	// Create filename: tensor_name + ".safetensor" (with op_type if contains "Qcur")
+	size_t filename_len;
+	char* filename;
+
+	if (has_qcur) {
+		const char* op_name = ggml_op_name(tensor->op);
+		filename_len		= strlen(safe_name) + 1 + strlen(op_name) + strlen(".safetensor") + 1;
+		filename			= ( char* )malloc(filename_len);
+		if (!filename) {
+			printf("DEBUG: failed to allocate filename with op_type\n");
+			free(safe_name);
+			free_intermediary_tensor(tensor);
+			return false;
+		}
+		sprintf(filename, "%s_%s.safetensor", safe_name, op_name);
+	} else {
+		filename_len = strlen(safe_name) + strlen(".safetensor") + 1;
+		filename	 = ( char* )malloc(filename_len);
+		if (!filename) {
+			printf("DEBUG: failed to allocate filename\n");
+			free(safe_name);
+			free_intermediary_tensor(tensor);
+			return false;
+		}
+		strcpy(filename, safe_name);
+		strcat(filename, ".safetensor");
 	}
 
-	// Build filenames safely
-	strcpy(filename, safe_name);
-	strcat(filename, ".safetensor");
+	// Create txt filename with same logic
+	size_t txt_filename_len;
+	char* txt_filename;
 
-	strcpy(txt_filename, safe_name);
-	strcat(txt_filename, ".txt");
+	if (has_qcur) {
+		const char* op_name = ggml_op_name(tensor->op);
+		txt_filename_len	= strlen(safe_name) + 1 + strlen(op_name) + strlen(".txt") + 1;
+		txt_filename		= ( char* )malloc(txt_filename_len);
+		if (!txt_filename) {
+			printf("DEBUG: failed to allocate txt filename with op_type\n");
+			free(filename);
+			free(safe_name);
+			free_intermediary_tensor(tensor);
+			return false;
+		}
+		sprintf(txt_filename, "%s_%s.txt", safe_name, op_name);
+	} else {
+		txt_filename_len = strlen(safe_name) + strlen(".txt") + 1;
+		txt_filename	 = ( char* )malloc(txt_filename_len);
+		if (!txt_filename) {
+			printf("DEBUG: failed to allocate txt filename\n");
+			free(filename);
+			free(safe_name);
+			free_intermediary_tensor(tensor);
+			return false;
+		}
+		strcpy(txt_filename, safe_name);
+		strcat(txt_filename, ".txt");
+	}
 
 	// Check if files already exist
 	bool safetensor_exists = file_exists(filename);

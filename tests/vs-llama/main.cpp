@@ -595,6 +595,7 @@ int32_t run_llama(int argc, char** argv, std::string& output, size_t& token_coun
 int main(int argc, char** argv) {
 	try {
 		std::string return_value{};
+
 		bnch_swt::benchmark_stage<"rt_tm-vs_llama.cpp", 2, 1, true, "Token">::runBenchmark<"llama.cpp", "cyan">([&] {
 			return_value.clear();
 			size_t token_count{};

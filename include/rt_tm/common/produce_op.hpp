@@ -145,17 +145,37 @@ namespace rt_tm {
 	};
 
 	template<typename model_arch_traits> struct produce_op<model_arch_traits, op_type::rope> {
-		template<typename name_type> RT_TM_FORCE_INLINE static core_base_creation_data impl(core_base_creation_data& a, core_base_creation_data& b, core_base_creation_data& c,
-			size_t op_id, name_type name, size_t layer_index, int n_dims, int mode, int n_ctx_orig, float freq_base, float freq_scale, float ext_factor, float attn_factor,
-			float beta_fast, float beta_slow, bool inplace) {
-			core_base_creation_data result{};
-			result.type	 = op_type::rope;
-			result.op_id = op_id;
-
+		template<typename name_type> RT_TM_FORCE_INLINE static core_base_creation_data impl(core_base_creation_data& a, core_base_creation_data& b, size_t op_id, name_type name,
+			size_t layer_index, int32_t rope_dimension_count, int mode, int n_ctx_orig, float rope_freq_base, float rope_freq_scale, float rope_ext_factor, float rope_attn_factor,
+			float rope_beta_fast, float rope_beta_slow, bool inplace) {
+			core_base_creation_data result{ a };
+			result.type			= op_type::rope;
+			result.op_id		= op_id;
+			result.name			= model_arch_traits::op_names[static_cast<size_t>(name)][layer_index];
+			int32_t sections[4] = { 0, 0, 0, 0 };
+			result.input_ops	= { { &a, &b } };
+			size_t offset{};
+			result.aux_params.resize(static_cast<size_t>(rope_aux_params::count));
+			std::memcpy(result.aux_params.data() + offset, &rope_dimension_count, sizeof(rope_dimension_count));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, &rope_freq_base, sizeof(rope_freq_base));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, &rope_freq_scale, sizeof(rope_freq_scale));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, &rope_ext_factor, sizeof(rope_ext_factor));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, &rope_attn_factor, sizeof(rope_attn_factor));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, &rope_beta_fast, sizeof(rope_beta_fast));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, &rope_beta_slow, sizeof(rope_beta_slow));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, &rope_freq_scale, sizeof(rope_freq_scale));
+			offset += 8;
+			std::memcpy(result.aux_params.data() + offset, sections, sizeof(sections));
 			a.dependent_ops.emplace_back(result.op_id);
 			b.dependent_ops.emplace_back(result.op_id);
-			c.dependent_ops.emplace_back(result.op_id);
-			data_type types[4]{ a.data_type_val, b.data_type_val, c.data_type_val, result.data_type_val };
+			data_type types[3]{ a.data_type_val, b.data_type_val, result.data_type_val };
 			result.comparison_index = get_comparison_value<op_entity<op_type::rope>>::impl(types);
 			return result;
 		}

@@ -150,7 +150,7 @@ namespace rt_tm {
 
 	template<> struct op_entity<op_type::rope> {
 		inline static constexpr op_type type{ op_type::rope };
-		inline static constexpr size_t type_count{ 4 };
+		inline static constexpr size_t type_count{ 3 };
 		static constexpr array<type_group<type_count>, 1> groups{ [] {
 			array<type_group<type_count>, 1> return_values{};
 			return return_values;
@@ -244,7 +244,6 @@ namespace rt_tm {
 			using source01_type	  = get_type_from_enum<op_type::rope, 0, 0>::type;
 			using source02_type	  = get_type_from_enum<op_type::rope, 0, 1>::type;
 			using source02_type	  = get_type_from_enum<op_type::rope, 0, 2>::type;
-			using dst_type		  = get_type_from_enum<op_type::rope, 0, 3>::type;
 		}
 	};
 
