@@ -40,6 +40,7 @@ namespace rt_tm {
 
 		static constexpr size_t get_smart_total_bytes() {
 			size_t total = 0;
+			/*
 			total += total_bytes_size<typename layer_type::token_embedding_type>::impl();
 			total += total_bytes_size<typename layer_type::rope_freqs_type>::impl();
 			total += total_bytes_size<typename layer_type::output_norm_type>::impl();
@@ -97,7 +98,7 @@ namespace rt_tm {
 			total += total_bytes_size<typename layer_type::output_norm_mul_type>::impl();
 			total += total_bytes_size<typename layer_type::output_mul_mat_type>::impl();
 			total += total_bytes_size<typename layer_type::logits_softmax_type>::impl();
-			total += total_bytes_size<typename layer_type::sample_multinomial_type>::impl();
+			total += total_bytes_size<typename layer_type::sample_multinomial_type>::impl();*/
 			return total;
 		}
 		static constexpr size_t total_required_bytes{ get_smart_total_bytes() };
