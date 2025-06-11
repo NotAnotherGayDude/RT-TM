@@ -31,7 +31,7 @@ namespace rt_tm {
 	template<> struct arch_traits<model_arch::llama> {
 	  protected:
 	  public:
-		using enum_type = llama_op_types;
+		using op_type_type = llama_op_types;
 		static constexpr model_arch arch{ model_arch::llama };
 		static constexpr size_t max_inputs{ 3 };
 	};

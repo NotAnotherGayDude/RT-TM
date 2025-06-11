@@ -33,21 +33,21 @@ namespace rt_tm {
 				using model_type = model<impl_indices{ .cpu_index = 2 }, config>;
 				using base_type	 = model_type::base_type;
 				std::unique_ptr<base_type> return_value{};
-				model_type* new_model{ new model_type{} };
+				model_type* new_model{ new model_type{ path } };
 				return_value.reset(new_model);
 				return return_value;
 			} else if (cpu_arch_index_holder::cpu_arch_index == 1) {
 				using model_type = model<impl_indices{ .cpu_index = 1 }, config>;
 				using base_type	 = model_type::base_type;
 				std::unique_ptr<base_type> return_value{};
-				model_type* new_model{ new model_type{} };
+				model_type* new_model{ new model_type{ path } };
 				return_value.reset(new_model);
 				return return_value;
 			} else {
 				using model_type = model<impl_indices{ .cpu_index = 0 }, config>;
 				using base_type	 = model_type::base_type;
 				std::unique_ptr<base_type> return_value{};
-				model_type* new_model{ new model_type{} };
+				model_type* new_model{ new model_type{ path } };
 				return_value.reset(new_model);
 				return return_value;
 			}

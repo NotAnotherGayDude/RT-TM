@@ -20,6 +20,7 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
+#include <rt_tm/common/tokenizer.hpp>
 #include <rt_tm/common/config.hpp>
 #include <iterator>
 
@@ -33,12 +34,22 @@ namespace rt_tm {
 		size_t max_tokens{};
 	};
 
-	struct input_session {
-		RT_TM_FORCE_INLINE input_session(const input_session_config&) {};
+	template<typename model_type> struct input_session : public tokenizer<model_type::model_traits_type::arch> {
+		RT_TM_FORCE_INLINE input_session(const input_session_config&, model_type& model) : model_ptr{ &model } {};
+
+		RT_TM_FORCE_INLINE bool process_input() {
+			this->tokenize(input, model_ptr->template get_core<model_type::op_type_type::inp_tokens>().data);
+			model_ptr->execute_tasks();
+			return false;
+		}
 
 		RT_TM_FORCE_INLINE operator bool() {
 			return false;
 		}
+
+	  protected:
+		model_type* model_ptr{};
+		std::string input{};
 	};
 
 }

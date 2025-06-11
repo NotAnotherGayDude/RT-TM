@@ -23,10 +23,19 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/string_literal.hpp>
 #include <rt_tm/common/data_types.hpp>
 #include <rt_tm/common/concepts.hpp>
+#include <iostream>
 #include <cstdint>
 #include <thread>
+#include <mutex>
 
 namespace rt_tm {
+
+	inline std::mutex mutex{};
+
+	RT_TM_FORCE_INLINE void log(std::string_view string) {
+		std::unique_lock lock{ mutex };
+		std::cout << string << std::endl;
+	}
 
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
@@ -237,9 +246,9 @@ namespace rt_tm {
 
 	  protected:
 		template<typename model_generateion_type_newer, typename model_size_type_newer> friend struct model_base;
-		friend consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch, kv_cache_strategy cache_strategy,
-			bool use_gradient_checkpointing, rope_scaling_type rope_scaling, bool use_rotary_embeddings, size_t kv_cache_block_size, bool use_flash_attention,
-			norm_type rms_norm_type, float norm_epsilon, bool exceptions);
+		friend consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch, bool exceptions,
+			kv_cache_strategy cache_strategy, bool use_gradient_checkpointing, rope_scaling_type rope_scaling, bool use_rotary_embeddings, size_t kv_cache_block_size,
+			bool use_flash_attention, norm_type rms_norm_type, float norm_epsilon);
 
 		constexpr model_config(auto model_generation_new, auto model_size_new, kernel_type_profile kernel_profile_new, model_arch arch_new, kv_cache_strategy cache_strategy_new,
 			bool use_gradient_checkpointing_new, rope_scaling_type rope_scaling_new, bool use_rotary_embeddings_new, size_t kv_cache_block_size_new, bool use_flash_attention_new,

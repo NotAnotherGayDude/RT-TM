@@ -25,7 +25,6 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/input_session.hpp>
 #include <rt_tm/common/memory_buffer.hpp>
 #include <rt_tm/common/arch_traits.hpp>
-#include <rt_tm/cpu/device.hpp>
 
 namespace rt_tm {
 	/*
@@ -34,12 +33,12 @@ namespace rt_tm {
 	template<model_arch arch, auto depth_new> struct op_graph_bases_op;
 
 	template<auto type_new> struct op_graph_bases_op<model_arch::llama, type_new> {
-		using enum_type																	   = decltype(type_new);
+		using op_type_type																	   = decltype(type_new);
 		RT_TM_FORCE_INLINE op_graph_bases_op() noexcept									   = default;
 		RT_TM_FORCE_INLINE op_graph_bases_op& operator=(const op_graph_bases_op&) noexcept = delete;
 		RT_TM_FORCE_INLINE op_graph_bases_op(const op_graph_bases_op&) noexcept			   = delete;
 		//std::vector<core<static_cast<llama_op_names>(type_new)>> ops{};
-		RT_TM_FORCE_INLINE core_base* emplace_back(enum_type args) {
+		RT_TM_FORCE_INLINE core_base* emplace_back(op_type_type args) {
 			if (args == type_new) {
 				//auto& new_ref = ops.emplace_back();
 				return nullptr;
@@ -57,11 +56,11 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE op_graph_bases& operator=(const op_graph_bases&) = delete;
 		RT_TM_FORCE_INLINE op_graph_bases(const op_graph_bases&)			= delete;
 
-		template<typename op_entity_type, typename enum_type> RT_TM_FORCE_INLINE core_base* emplace_back(enum_type args) {
+		template<typename op_entity_type, typename op_type_type> RT_TM_FORCE_INLINE core_base* emplace_back(op_type_type args) {
 			return op_entity_type::emplace_back(args);
 		}
 
-		template<typename enum_type> RT_TM_FORCE_INLINE core_base* emplace_back(enum_type args) {
+		template<typename op_type_type> RT_TM_FORCE_INLINE core_base* emplace_back(op_type_type args) {
 			core_base* result = nullptr;
 
 			((result = emplace_back_impl<bases>(args)) || ...);
@@ -70,7 +69,7 @@ namespace rt_tm {
 		}
 
 	  private:
-		template<typename base_type, typename enum_type> RT_TM_FORCE_INLINE core_base* emplace_back_impl(enum_type args) {
+		template<typename base_type, typename op_type_type> RT_TM_FORCE_INLINE core_base* emplace_back_impl(op_type_type args) {
 			if constexpr (requires { base_type::emplace_back(args); }) {
 				return base_type::emplace_back(args);
 			} else {
@@ -92,7 +91,7 @@ namespace rt_tm {
 
 	template<model_config config, impl_indices indices_new> struct op_graph_base<config, arch_traits<model_arch::llama>, indices_new>
 		: public device_registry<device_type::cpu, arch_traits<model_arch::llama>, config, indices_new>,
-		  op_graph_bases_t<config, arch_traits<model_arch::llama>::enum_type> {
+		  op_graph_bases_t<config, arch_traits<model_arch::llama>::op_type_type> {
 	  public:
 		inline static constexpr impl_indices indices{ indices_new };
 		op_graph_config config_val{};

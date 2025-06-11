@@ -41,7 +41,9 @@ namespace rt_tm {
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-		RT_TM_FORCE_INLINE constexpr array(const std::initializer_list<value_type>& list) {
+		RT_TM_FORCE_INLINE constexpr array(){};
+
+		RT_TM_FORCE_INLINE constexpr array(std::initializer_list<value_type> list) {
 			for (size_t x = 0; x < list.size(); ++x) {
 				data_val[x] = list.begin()[x];
 			}

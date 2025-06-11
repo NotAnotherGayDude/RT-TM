@@ -49,6 +49,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_1B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_1B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -67,6 +68,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_3B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_3B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -85,6 +87,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_7B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_7B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -103,6 +106,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_8B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_8B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -121,6 +125,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_11B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_11B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -139,6 +144,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_13B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_13B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -157,6 +163,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_70B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_70B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -175,6 +182,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_90B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_90B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -193,6 +201,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_405B, llama_model_generation::v1_v2> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v1_v2 };
 		static constexpr auto model_size{ llama_model_size::llama_405B };
 		static constexpr size_t vocab_size			 = 32000;
@@ -211,6 +220,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_1B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_1B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -229,6 +239,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_3B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_3B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -247,6 +258,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_7B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_7B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -265,6 +277,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_8B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_8B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -283,6 +296,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_11B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_11B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -301,6 +315,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_13B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_13B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -319,6 +334,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_70B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_70B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -337,6 +353,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_90B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_90B };
 		static constexpr size_t vocab_size			 = 128256;
@@ -355,6 +372,7 @@ namespace rt_tm {
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_405B, llama_model_generation::v3> {
 		using op_type_type = llama_op_types;
+		static constexpr auto arch{ model_arch::llama };
 		static constexpr auto model_generation{ llama_model_generation::v3 };
 		static constexpr auto model_size{ llama_model_size::llama_405B };
 		static constexpr size_t vocab_size			 = 128256;

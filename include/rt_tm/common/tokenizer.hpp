@@ -17,3 +17,24 @@ Signed,
 RealTimeChris (Chris M.)
 2025
 */
+
+#pragma once
+
+#include <rt_tm/common/tokenizer.hpp>
+#include <rt_tm/common/config.hpp>
+#include <iterator>
+
+namespace rt_tm {
+
+	template<model_arch arch> struct tokenizer;
+
+	template<> struct tokenizer<model_arch::llama> {
+		RT_TM_FORCE_INLINE tokenizer() noexcept = default;
+
+		template<typename token_input_type> RT_TM_FORCE_INLINE void tokenize(std::string_view input, token_input_type* destination) {
+			return;
+		}
+	};
+
+
+}

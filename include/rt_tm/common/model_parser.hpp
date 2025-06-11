@@ -23,7 +23,6 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/type_traits.hpp>
 #include <rt_tm/common/model_graph.hpp>
 #include <rt_tm/common/debugging_io.hpp>
-#include <rt_tm/common/produce_op.hpp>
 #include <rt_tm/common/core_base.hpp>
 #include <unordered_set>
 #include <variant>

@@ -22,27 +22,34 @@ RealTimeChris (Chris M.)
 
 #include <rt_tm/common/kernel_traits.hpp>
 #include <rt_tm/common/common.hpp>
-#include <rt_tm/common/core.hpp>
+#include <rt_tm/common/core_traits.hpp>
 #include <rt_tm/cpu/cpu_arch.hpp>
 
 namespace rt_tm {
 
-	template<auto... value> struct error_printer_impl;
-
-	template<bool value, auto... value_to_test> struct static_assert_printer {
-		RT_TM_FORCE_INLINE static constexpr bool impl() {
-			if constexpr (!value) {
-				error_printer_impl<value_to_test...>::failure_value;
-				return false;
-			} else {
-				return true;
-			}
+	template<impl_indices indices_new, device_type dev_type, kernel_type type, single_input core_type> struct kernel_dispatcher
+		: public kernel_traits<type, core_type, typename core_type::input_type01> {
+		RT_TM_FORCE_INLINE static void impl(core_type& params) {
+			kernel_dispatcher_impl<indices_new.cpu_index, type, typename core_type::transform_type, typename core_type::output_type,
+				typename core_type::input_type01::output_type>::impl(params.count, params.data, get_adjacent_value<core_type, 0>::impl(params).data);
 		}
 	};
 
-	template<device_type dev_type, impl_indices indices_new, kernel_type type, core_type... core_types> struct kernel_dispatcher {
-		RT_TM_FORCE_INLINE static void impl(core_types&... params) {
-			kernel_dispatcher_impl<indices_new.cpu_index, type, typename core_types::output_type...>::impl(params...);
+	template<impl_indices indices_new, device_type dev_type, kernel_type type, double_input core_type> struct kernel_dispatcher<indices_new, dev_type, type, core_type>
+		: public kernel_traits<type, core_type, typename core_type::input_type01, typename core_type::input_type02> {
+		RT_TM_FORCE_INLINE static void impl(core_type& params) {
+			kernel_dispatcher_impl<indices_new.cpu_index, type, typename core_type::transform_type, typename core_type::output_type, typename core_type::input_type01::output_type,
+				typename core_type::input_type02::output_type>::impl(params.count, params.data, get_adjacent_value<core_type, 0>::impl(params).data,
+				get_adjacent_value<core_type, 1>::impl(params).data);
+		}
+	};
+
+	template<impl_indices indices_new, device_type dev_type, kernel_type type, triple_input core_type> struct kernel_dispatcher<indices_new, dev_type, type, core_type>
+		: public kernel_traits<type, core_type, typename core_type::input_type01, typename core_type::input_type02, typename core_type::input_type03> {
+		RT_TM_FORCE_INLINE static void impl(core_type& params) {
+			kernel_dispatcher_impl<indices_new.cpu_index, type, typename core_type::transform_type, typename core_type::output_type, typename core_type::input_type01::output_type,
+				typename core_type::input_type02::output_type, typename core_type::input_type03::output_type>::impl(params.count, params.data,
+				get_adjacent_value<core_type, 0>::impl(params).data, get_adjacent_value<core_type, 1>::impl(params).data, get_adjacent_value<core_type, 2>::impl(params).data);
 		}
 	};
 

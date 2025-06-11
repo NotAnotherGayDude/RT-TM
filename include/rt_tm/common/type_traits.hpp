@@ -35,15 +35,15 @@ namespace rt_tm {
 		data_type type{};
 	};
 
+	template<typename data_type> struct type_traits;
+
 	template<typename derived_type> struct total_bytes_size {
 		RT_TM_FORCE_INLINE constexpr static size_t total_byte_size(const array<size_t, 4>& dims) {
-			size_t total_elements{ dims[0] * dims[1] * dims[2] * dims[3] };
-			size_t num_blocks = (total_elements + derived_type::block_size - 1) / derived_type::block_size;
+			size_t total_elements = dims[0] * dims[1] * dims[2] * dims[3];
+			size_t num_blocks	  = (total_elements + derived_type::block_size - 1) / derived_type::block_size;
 			return num_blocks * derived_type::type_size;
 		}
 	};
-
-	template<typename data_type> struct type_traits;
 
 	template<> struct type_traits<int8_t> : public total_bytes_size<type_traits<int8_t>> {
 		using value_type = int8_t;
@@ -75,7 +75,7 @@ namespace rt_tm {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<uint16_t> : public total_bytes_size<type_traits<uint16_t>> {
+	template<> struct type_traits<int16_t> : public total_bytes_size<type_traits<int16_t>> {
 		using value_type = fp16_t;
 		using quant_type = fp16_t;
 		inline static constexpr data_type type{ data_type::f16 };

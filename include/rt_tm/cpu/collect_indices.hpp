@@ -23,6 +23,5 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/common.hpp>
 #include <rt_tm/common/core_base.hpp>
 #include <rt_tm/common/memory_buffer.hpp>
-#include <rt_tm/cpu/device.hpp>
 
 namespace rt_tm {}
