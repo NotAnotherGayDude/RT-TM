@@ -139,7 +139,7 @@ namespace rt_tm {
 	}
 
 	template<typename index_sequence> struct op_holder;
-
+	/*
 	template<size_t... inputs> struct op_holder<std::index_sequence<inputs...>> {
 		using tuple_thread_t = tuple<std::vector<cpu_op_core_thread<inputs + 1>>...>;
 		using tuple_core_t	 = tuple<std::vector<cpu_op_core<inputs + 1>>...>;
@@ -375,6 +375,6 @@ namespace rt_tm {
 		std::unique_ptr<std::latch> main_thread_latch{};
 		std::vector<std::thread> threads{};
 		std::atomic_bool stop{};
-	};
+	};*/
 
 }

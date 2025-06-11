@@ -576,18 +576,18 @@ namespace rt_tm {
 	template<> struct string_to_tensor_name<model_arch::llama> {
 		RT_TM_FORCE_INLINE static size_t impl(std::string_view input) noexcept {
 			if (input == "token_embd.weight")
-				return static_cast<size_t>(tensor_type::token_embd);
+				return static_cast<size_t>(llama_op_types::token_embd_weight);
 			if (input == "rope_freqs.weight")
-				return static_cast<size_t>(tensor_type::rope_freqs);
+				return static_cast<size_t>(llama_op_types::rope_freqs_weight);
 			if (input == "output_norm.weight")
-				return static_cast<size_t>(tensor_type::output_norm);
+				return static_cast<size_t>(llama_op_types::output_norm_weight);
 			if (input == "output.weight")
-				return static_cast<size_t>(tensor_type::output);
+				return static_cast<size_t>(llama_op_types::output_weight);
 
 			if (input.find(".attn_q.weight") != std::string_view::npos)
-				return static_cast<size_t>(tensor_type::attn_q);
+				return static_cast<size_t>(llama_op_types::attn_q_weight);
 			if (input.find(".attn_norm.weight") != std::string_view::npos)
-				return static_cast<size_t>(tensor_type::attn_norm);
+				return static_cast<size_t>(llama_op_types::attn_norm_weight);
 
 			if (input.starts_with("blk.") && input.ends_with(".weight")) {
 				auto second_dot = input.find('.', 4);
@@ -595,27 +595,27 @@ namespace rt_tm {
 					auto suffix = input.substr(second_dot + 1);
 
 					if (suffix == "attn_q.weight")
-						return static_cast<size_t>(tensor_type::attn_q);
+						return static_cast<size_t>(llama_op_types::attn_q_weight);
 					if (suffix == "attn_norm.weight")
-						return static_cast<size_t>(tensor_type::attn_norm);
+						return static_cast<size_t>(llama_op_types::attn_norm);
 					if (suffix == "attn_k.weight")
-						return static_cast<size_t>(tensor_type::attn_k);
+						return static_cast<size_t>(llama_op_types::attn_k_weight);
 					if (suffix == "attn_v.weight")
-						return static_cast<size_t>(tensor_type::attn_v);
+						return static_cast<size_t>(llama_op_types::attn_v_weight);
 					if (suffix == "ffn_down.weight")
-						return static_cast<size_t>(tensor_type::ffn_down);
+						return static_cast<size_t>(llama_op_types::ffn_down_weight);
 					if (suffix == "ffn_gate.weight")
-						return static_cast<size_t>(tensor_type::ffn_gate);
+						return static_cast<size_t>(llama_op_types::ffn_gate_weight);
 					if (suffix == "attn_output.weight")
-						return static_cast<size_t>(tensor_type::attn_out);
+						return static_cast<size_t>(llama_op_types::attn_output_weight);
 					if (suffix == "ffn_norm.weight")
-						return static_cast<size_t>(tensor_type::ffn_norm);
+						return static_cast<size_t>(llama_op_types::ffn_norm_weight);
 					if (suffix == "ffn_up.weight")
-						return static_cast<size_t>(tensor_type::ffn_up);
+						return static_cast<size_t>(llama_op_types::ffn_up_weight);
 				}
 			}
 
-			return static_cast<size_t>(tensor_type::count);
+			return static_cast<size_t>(llama_op_types::count);
 		}
 	};
 
@@ -771,16 +771,16 @@ namespace rt_tm {
 				k_cache.allocated_dims = { { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 } };
 				k_cache.data_type_val  = data_type::float_16;
 				k_cache.op_id		   = op_id_counter++;
-				k_cache.type		   = kernel_type::noop;
-				k_cache.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::)][x];
+				k_cache.type		   = kernel_type::none;
+				k_cache.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::)][x];
 				model.cores.emplace_back(k_cache);
 				core_base_creation_data v_cache{};
 				v_cache.allocated_dims = { { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 } };
 				v_cache.allocated_dims = { { combined_kv_head_dim, effective_context_length_per_layer, 1, 1 } };
 				v_cache.data_type_val  = data_type::float_16;
 				v_cache.op_id		   = op_id_counter++;
-				v_cache.type		   = kernel_type::noop;
-				v_cache.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::cache_v)][x];
+				v_cache.type		   = kernel_type::none;
+				v_cache.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::cache_v)][x];
 				model.cores.emplace_back(v_cache);
 			}
 
@@ -807,8 +807,8 @@ namespace rt_tm {
 			}
 
 			core_base_creation_data input_tokens{};
-			input_tokens.type			= kernel_type::noop;
-			input_tokens.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::input_tokens)][0];
+			input_tokens.type			= kernel_type::none;
+			input_tokens.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::input_tokens)][0];
 			input_tokens.allocated_dims = { 2, 1, 1, 1 };
 			input_tokens.allocated_dims = { 2, 1, 1, 1 };
 			input_tokens.data_type_val	= data_type::int_32;
@@ -818,34 +818,34 @@ namespace rt_tm {
 			tensor_map[0][model.cores.back().name] = &model.cores.back();
 
 			core_base_creation_data inp_embd_op{ produce_op<arch_traits<model_arch::llama>, kernel_type::get_rows>::impl(*tensor_map[0].at("token_embd.weight"), input_tokens,
-				op_id_counter++, tensor_type::input_embedding, 0) };
+				op_id_counter++, llama_op_types::input_embedding, 0) };
 			model.cores.emplace_back(inp_embd_op);
 			core_base_creation_data* current_input	  = &model.cores.back();
 			tensor_map[0][model.cores.back().name] = &model.cores.back();
 
 			for (size_t block_idXd = 0; block_idXd < block_count; ++block_idXd) {
 				core_base_creation_data inp_embd_op{ produce_op<arch_traits<model_arch::llama>, kernel_type::rms_norm>::impl(*current_input, op_id_counter++,
-					tensor_type::norm, block_idXd, rms_norm_epsilon) };
+					llama_op_types::norm, block_idXd, rms_norm_epsilon) };
 				model.cores.emplace_back(inp_embd_op);
 				tensor_map[block_idXd][model.cores.back().name] = &model.cores.back();
 
 				core_base_creation_data attn_norm_op{ produce_op<arch_traits<model_arch::llama>, kernel_type::mul>::impl(inp_embd_op,
-					*tensor_map[0].at("blk." + std::to_string(block_idXd) + ".attn_norm.weight"), op_id_counter++, tensor_type::attn_norm, block_idXd) };
+					*tensor_map[0].at("blk." + std::to_string(block_idXd) + ".attn_norm.weight"), op_id_counter++, llama_op_types::attn_norm, block_idXd) };
 				model.cores.emplace_back(std::move(attn_norm_op));
 				tensor_map[block_idXd][model.cores.back().name] = &model.cores.back();
 
 				core_base_creation_data q_proj{ produce_op<arch_traits<model_arch::llama>, kernel_type::mul_mat>::impl(attn_norm_op,
-					*tensor_map[0].at("blk." + std::to_string(block_idXd) + ".attn_q.weight"), op_id_counter++, tensor_type::q_proj, block_idXd) };
+					*tensor_map[0].at("blk." + std::to_string(block_idXd) + ".attn_q.weight"), op_id_counter++, llama_op_types::q_proj, block_idXd) };
 				model.cores.emplace_back(std::move(q_proj));
 				tensor_map[block_idXd][model.cores.back().name] = &model.cores.back();
 
-				core_base_creation_data q_reshape{ produce_op<arch_traits<model_arch::llama>, kernel_type::reshape>::impl(q_proj, op_id_counter++, tensor_type::q_reshape,
+				core_base_creation_data q_reshape{ produce_op<arch_traits<model_arch::llama>, kernel_type::reshape>::impl(q_proj, op_id_counter++, llama_op_types::q_reshape,
 					block_idXd, head_dim, head_count, 2) };
 				model.cores.emplace_back(std::move(q_reshape));
 				tensor_map[block_idXd][model.cores.back().name] = &model.cores.back();
 
 				core_base_creation_data rope_q{ produce_op<arch_traits<model_arch::llama>, kernel_type::rope>::impl(q_reshape, input_tokens, op_id_counter++,
-					tensor_type::rope_q, block_idXd, rope_dimension_count, rope_type, context_length, rope_freq_base, rope_freq_scale, rope_ext_factor, rope_attn_factor,
+					llama_op_types::rope_q, block_idXd, rope_dimension_count, rope_type, context_length, rope_freq_base, rope_freq_scale, rope_ext_factor, rope_attn_factor,
 					rope_beta_fast, rope_beta_slow, false) };
 				model.cores.emplace_back(std::move(rope_q));
 				tensor_map[block_idXd][model.cores.back().name] = &model.cores.back();
@@ -855,7 +855,7 @@ namespace rt_tm {
 				core_base_creation_data qcur_op{};
 				qcur_op.type		  = kernel_type::mul_mat;
 				qcur_op.op_id		  = op_id_counter++;
-				qcur_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::query_current)][block_idXd];
+				qcur_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::query_current)][block_idXd];
 				qcur_op.allocated_dims		  = { embedding_length, 2, 1, 1 };
 				qcur_op.data_type_val = attn_norm_out->data_type_val;
 				qcur_op.input_ops	  = { { attn_norm_out, tensor_map.at("blk." + std::to_string(block_idXd) + ".attn_q.weight") } };
@@ -869,7 +869,7 @@ namespace rt_tm {
 				core_base_creation_data kcur_op{};
 				kcur_op.type		  = kernel_type::mul_mat;
 				kcur_op.op_id		  = op_id_counter++;
-				kcur_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::key_current)][block_idXd];
+				kcur_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::key_current)][block_idXd];
 				kcur_op.allocated_dims		  = { head_count_kv * head_dim, 2, 1, 1 };
 				kcur_op.data_type_val = attn_norm_out->data_type_val;
 				kcur_op.input_ops	  = { { attn_norm_out, tensor_map.at("blk." + std::to_string(block_idXd) + ".attn_k.weight") } };
@@ -883,7 +883,7 @@ namespace rt_tm {
 				core_base_creation_data vcur_op{};
 				vcur_op.type		  = kernel_type::mul_mat;
 				vcur_op.op_id		  = op_id_counter++;
-				vcur_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_current)][block_idXd];
+				vcur_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_current)][block_idXd];
 				vcur_op.allocated_dims		  = { head_count_kv * head_dim, 2, 1, 1 };
 				vcur_op.data_type_val = attn_norm_out->data_type_val;
 				vcur_op.input_ops	  = { { attn_norm_out,  tensor_map.at("blk." + std::to_string(block_idXd) + ".attn_v.weight") } };
@@ -897,7 +897,7 @@ namespace rt_tm {
 				core_base_creation_data qcur_reshaped_op{};
 				qcur_reshaped_op.type		   = kernel_type::reshape;
 				qcur_reshaped_op.op_id		   = op_id_counter++;
-				qcur_reshaped_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::query_reshaped)][block_idXd];
+				qcur_reshaped_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::query_reshaped)][block_idXd];
 				qcur_reshaped_op.allocated_dims		   = { head_dim, head_count, 2, 1 };
 				qcur_reshaped_op.data_type_val = qcur_out->data_type_val;
 				qcur_reshaped_op.input_ops	   = { { qcur_out } };
@@ -910,7 +910,7 @@ namespace rt_tm {
 				core_base_creation_data kcur_reshaped_op{};
 				kcur_reshaped_op.type		   = kernel_type::reshape;
 				kcur_reshaped_op.op_id		   = op_id_counter++;
-				kcur_reshaped_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::key_reshaped)][block_idXd];
+				kcur_reshaped_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::key_reshaped)][block_idXd];
 				kcur_reshaped_op.allocated_dims		   = { head_dim, head_count_kv, 2, 1 };
 				kcur_reshaped_op.data_type_val = kcur_out->data_type_val;
 				kcur_reshaped_op.input_ops	   = { { kcur_out } };
@@ -923,7 +923,7 @@ namespace rt_tm {
 				core_base_creation_data vcur_reshaped_op{};
 				vcur_reshaped_op.type		   = kernel_type::reshape;
 				vcur_reshaped_op.op_id		   = op_id_counter++;
-				vcur_reshaped_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_reshaped)][block_idXd];
+				vcur_reshaped_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_reshaped)][block_idXd];
 				vcur_reshaped_op.allocated_dims		   = { head_count_kv * head_dim, 2, 1, 1 };
 				vcur_reshaped_op.data_type_val = vcur_out->data_type_val;
 				vcur_reshaped_op.input_ops	   = { { vcur_out } };
@@ -936,7 +936,7 @@ namespace rt_tm {
 				core_base_creation_data qcur_rope_op{};
 				qcur_rope_op.type		   = kernel_type::rope;
 				qcur_rope_op.op_id		   = op_id_counter++;
-				qcur_rope_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::query_rope)][block_idXd];
+				qcur_rope_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::query_rope)][block_idXd];
 				qcur_rope_op.allocated_dims		   = qcur_reshaped->allocated_dims;
 				qcur_rope_op.data_type_val = qcur_reshaped->data_type_val;
 				qcur_rope_op.input_ops	   = { { qcur_reshaped, tensor_map.at("rope_dims.weight"), tensor_map.at("rope_freqs.weight") } };
@@ -950,7 +950,7 @@ namespace rt_tm {
 				core_base_creation_data kcur_rope_op{};
 				kcur_rope_op.type		   = kernel_type::rope;
 				kcur_rope_op.op_id		   = op_id_counter++;
-				kcur_rope_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::key_rope)][block_idXd];
+				kcur_rope_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::key_rope)][block_idXd];
 				kcur_rope_op.allocated_dims		   = kcur_reshaped->allocated_dims;
 				kcur_rope_op.data_type_val = kcur_reshaped->data_type_val;
 				kcur_rope_op.input_ops	   = { { kcur_reshaped,  tensor_map.at("rope_freqs.weight") } };
@@ -964,7 +964,7 @@ namespace rt_tm {
 				core_base_creation_data cache_k_view_op{};
 				cache_k_view_op.type		  = kernel_type::view;
 				cache_k_view_op.op_id		  = op_id_counter++;
-				cache_k_view_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::key_cache_view)][block_idXd];
+				cache_k_view_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::key_cache_view)][block_idXd];
 				cache_k_view_op.allocated_dims		  = { context_length, 1, 1, 1 };
 				cache_k_view_op.data_type_val = data_type::float_16;
 				cache_k_view_op.input_ops	  = { tensor_map.at("cache_k_l" + std::to_string(block_idXd)) };
@@ -976,7 +976,7 @@ namespace rt_tm {
 				core_base_creation_data cache_k_copy_op{};
 				cache_k_copy_op.type		  = kernel_type::copy;
 				cache_k_copy_op.op_id		  = op_id_counter++;
-				cache_k_copy_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::key_cache_copy)][block_idXd];
+				cache_k_copy_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::key_cache_copy)][block_idXd];
 				cache_k_copy_op.allocated_dims		  = kcur_rope->allocated_dims;
 				cache_k_copy_op.data_type_val = kcur_rope->data_type_val;
 				cache_k_copy_op.input_ops	  = { kcur_rope };
@@ -987,7 +987,7 @@ namespace rt_tm {
 				core_base_creation_data vcur_reshaped2_op{};
 				vcur_reshaped2_op.type			= kernel_type::reshape;
 				vcur_reshaped2_op.op_id			= op_id_counter++;
-				vcur_reshaped2_op.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_reshaped)][block_idXd];
+				vcur_reshaped2_op.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_reshaped)][block_idXd];
 				vcur_reshaped2_op.allocated_dims			= { head_count_kv * head_dim, 2, 1, 1 };
 				vcur_reshaped2_op.data_type_val = vcur_reshaped->data_type_val;
 				vcur_reshaped2_op.input_ops		= { vcur_reshaped };
@@ -1000,7 +1000,7 @@ namespace rt_tm {
 				core_base_creation_data vcur_transposed_op{};
 				vcur_transposed_op.type			 = kernel_type::transpose;
 				vcur_transposed_op.op_id		 = op_id_counter++;
-				vcur_transposed_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_transposed)][block_idXd];
+				vcur_transposed_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_transposed)][block_idXd];
 				vcur_transposed_op.allocated_dims			 = { 2, head_count_kv * head_dim, 1, 1 };
 				vcur_transposed_op.data_type_val = vcur_reshaped2->data_type_val;
 				vcur_transposed_op.input_ops	 = { vcur_reshaped2 };
@@ -1012,7 +1012,7 @@ namespace rt_tm {
 				core_base_creation_data cache_v_view_op{};
 				cache_v_view_op.type		  = kernel_type::view;
 				cache_v_view_op.op_id		  = op_id_counter++;
-				cache_v_view_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_cache_view)][block_idXd];
+				cache_v_view_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_cache_view)][block_idXd];
 				cache_v_view_op.allocated_dims		  = { 2, head_count_kv * head_dim, 1, 1 };
 				cache_v_view_op.data_type_val = data_type::float_16;
 				cache_v_view_op.input_ops	  = { tensor_map.at("cache_v_l" + std::to_string(block_idXd)) };
@@ -1024,7 +1024,7 @@ namespace rt_tm {
 				core_base_creation_data cache_v_copy_op{};
 				cache_v_copy_op.type		  = kernel_type::copy;
 				cache_v_copy_op.op_id		  = op_id_counter++;
-				cache_v_copy_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_cache_copy)][block_idXd];
+				cache_v_copy_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_cache_copy)][block_idXd];
 				cache_v_copy_op.allocated_dims		  = vcur_transposed->allocated_dims;
 				cache_v_copy_op.data_type_val = vcur_transposed->data_type_val;
 				cache_v_copy_op.input_ops	  = { vcur_transposed };
@@ -1035,7 +1035,7 @@ namespace rt_tm {
 				core_base_creation_data cache_v_view2_op{};
 				cache_v_view2_op.type		   = kernel_type::view;
 				cache_v_view2_op.op_id		   = op_id_counter++;
-				cache_v_view2_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_cache_view)][block_idXd];
+				cache_v_view2_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_cache_view)][block_idXd];
 				cache_v_view2_op.allocated_dims		   = { 2, head_count_kv * head_dim, 1, 1 };
 				cache_v_view2_op.data_type_val = cache_v_view->data_type_val;
 				cache_v_view2_op.input_ops	   = { cache_v_view };
@@ -1047,7 +1047,7 @@ namespace rt_tm {
 				core_base_creation_data cache_v_permuted_op{};
 				cache_v_permuted_op.type		  = kernel_type::permute;
 				cache_v_permuted_op.op_id		  = op_id_counter++;
-				cache_v_permuted_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::value_cache_permuted)][block_idXd];
+				cache_v_permuted_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::value_cache_permuted)][block_idXd];
 				cache_v_permuted_op.allocated_dims		  = { 1, 1, head_count_kv, head_dim };
 				cache_v_permuted_op.data_type_val = cache_v_view2->data_type_val;
 				cache_v_permuted_op.input_ops	  = { cache_v_view2 };
@@ -1059,7 +1059,7 @@ namespace rt_tm {
 				core_base_creation_data cache_k_view2_op{};
 				cache_k_view2_op.type		   = kernel_type::view;
 				cache_k_view2_op.op_id		   = op_id_counter++;
-				cache_k_view2_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::key_cache_view)][block_idXd];
+				cache_k_view2_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::key_cache_view)][block_idXd];
 				cache_k_view2_op.allocated_dims		   = { 1, 1, head_count_kv, head_dim };
 				cache_k_view2_op.data_type_val = cache_k_view->data_type_val;
 				cache_k_view2_op.input_ops	   = { cache_k_view };
@@ -1071,7 +1071,7 @@ namespace rt_tm {
 				core_base_creation_data cache_k_permuted_op{};
 				cache_k_permuted_op.type		  = kernel_type::permute;
 				cache_k_permuted_op.op_id		  = op_id_counter++;
-				cache_k_permuted_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::key_cache_permuted)][block_idXd];
+				cache_k_permuted_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::key_cache_permuted)][block_idXd];
 				cache_k_permuted_op.allocated_dims		  = { head_dim, head_count, head_count_kv, 1 };
 				cache_k_permuted_op.data_type_val = cache_k_view2->data_type_val;
 				cache_k_permuted_op.input_ops	  = { cache_k_view2 };
@@ -1083,7 +1083,7 @@ namespace rt_tm {
 				core_base_creation_data qcur_permuted_op{};
 				qcur_permuted_op.type		   = kernel_type::permute;
 				qcur_permuted_op.op_id		   = op_id_counter++;
-				qcur_permuted_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::query_permuted)][block_idXd];
+				qcur_permuted_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::query_permuted)][block_idXd];
 				qcur_permuted_op.allocated_dims		   = { 1, head_count, 1, head_dim };
 				qcur_permuted_op.data_type_val = qcur_rope->data_type_val;
 				qcur_permuted_op.input_ops	   = { qcur_rope };
@@ -1096,7 +1096,7 @@ namespace rt_tm {
 				core_base_creation_data attn_scores_op{};
 				attn_scores_op.type			 = kernel_type::mul_mat;
 				attn_scores_op.op_id		 = op_id_counter++;
-				attn_scores_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::attention_scores)][block_idXd];
+				attn_scores_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::attention_scores)][block_idXd];
 				attn_scores_op.allocated_dims			 = { 1, head_count, 1, 1 };
 				attn_scores_op.data_type_val = qcur_permuted->data_type_val;
 				attn_scores_op.input_ops	 = { qcur_permuted,  cache_k_permuted };
@@ -1110,7 +1110,7 @@ namespace rt_tm {
 				core_base_creation_data softmaXd_op{};
 				softmaXd_op.type		  = kernel_type::softmax;
 				softmaXd_op.op_id		  = op_id_counter++;
-				softmaXd_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::attention_weights)][block_idXd];
+				softmaXd_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::attention_weights)][block_idXd];
 				softmaXd_op.allocated_dims		  = attn_scores->allocated_dims;
 				softmaXd_op.data_type_val = attn_scores->data_type_val;
 				softmaXd_op.input_ops	  = { attn_scores };
@@ -1122,7 +1122,7 @@ namespace rt_tm {
 				core_base_creation_data attn_weighted_op{};
 				attn_weighted_op.type		   = kernel_type::mul_mat;
 				attn_weighted_op.op_id		   = op_id_counter++;
-				attn_weighted_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::attention_output)][block_idXd];
+				attn_weighted_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::attention_output)][block_idXd];
 				attn_weighted_op.allocated_dims		   = { 1, head_count, 1, head_dim };
 				attn_weighted_op.data_type_val = softmaXd_out->data_type_val;
 				attn_weighted_op.input_ops	   = { softmaXd_out,  cache_v_permuted };
@@ -1136,7 +1136,7 @@ namespace rt_tm {
 				core_base_creation_data attn_permuted_op{};
 				attn_permuted_op.type		   = kernel_type::permute;
 				attn_permuted_op.op_id		   = op_id_counter++;
-				attn_permuted_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::attention_result)][0];
+				attn_permuted_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::attention_result)][0];
 				attn_permuted_op.allocated_dims		   = { 1, 1, head_count, head_dim };
 				attn_permuted_op.data_type_val = attn_weighted->data_type_val;
 				attn_permuted_op.input_ops	   = { attn_weighted };
@@ -1148,7 +1148,7 @@ namespace rt_tm {
 				core_base_creation_data kqv_out_op{};
 				kqv_out_op.type			 = kernel_type::cont;
 				kqv_out_op.op_id		 = op_id_counter++;
-				kqv_out_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::attention_final)][block_idXd];
+				kqv_out_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::attention_final)][block_idXd];
 				kqv_out_op.allocated_dims			 = { embedding_length, 2, 1, 1 };
 				kqv_out_op.data_type_val = attn_permuted->data_type_val;
 				kqv_out_op.input_ops	 = { attn_permuted };
@@ -1160,7 +1160,7 @@ namespace rt_tm {
 				core_base_creation_data attn_out_op{};
 				attn_out_op.type		  = kernel_type::mul_mat;
 				attn_out_op.op_id		  = op_id_counter++;
-				attn_out_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::attention_projection)][block_idXd];
+				attn_out_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::attention_projection)][block_idXd];
 				attn_out_op.allocated_dims		  = { embedding_length, 2, 1, 1 };
 				attn_out_op.data_type_val = kqv_out->data_type_val;
 				attn_out_op.input_ops	  = { kqv_out,  tensor_map.at("blk." + std::to_string(block_idXd) + ".attn_output.weight") };
@@ -1174,7 +1174,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_inp_op{};
 				ffn_inp_op.type			 = kernel_type::add;
 				ffn_inp_op.op_id		 = op_id_counter++;
-				ffn_inp_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::ffn_input)][block_idXd];
+				ffn_inp_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::ffn_input)][block_idXd];
 				ffn_inp_op.allocated_dims			 = current_input->allocated_dims;
 				ffn_inp_op.data_type_val = current_input->data_type_val;
 				ffn_inp_op.input_ops	 = { current_input,  attn_out };
@@ -1187,7 +1187,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_norm_rms_op{};
 				ffn_norm_rms_op.type		  = kernel_type::rms_norm;
 				ffn_norm_rms_op.op_id		  = op_id_counter++;
-				ffn_norm_rms_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::layer_norm)][block_idXd];
+				ffn_norm_rms_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::layer_norm)][block_idXd];
 				ffn_norm_rms_op.allocated_dims		  = ffn_inp->allocated_dims;
 				ffn_norm_rms_op.data_type_val = ffn_inp->data_type_val;
 				ffn_norm_rms_op.input_ops	  = { ffn_inp };
@@ -1200,7 +1200,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_norm_op{};
 				ffn_norm_op.type		  = kernel_type::mul;
 				ffn_norm_op.op_id		  = op_id_counter++;
-				ffn_norm_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::ffn_norm)][block_idXd];
+				ffn_norm_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::ffn_norm)][block_idXd];
 				ffn_norm_op.allocated_dims		  = ffn_norm_rms->allocated_dims;
 				ffn_norm_op.data_type_val = ffn_norm_rms->data_type_val;
 				ffn_norm_op.input_ops	  = { ffn_norm_rms,  tensor_map.at("blk." + std::to_string(block_idXd) + ".ffn_norm.weight") };
@@ -1213,7 +1213,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_gate_op{};
 				ffn_gate_op.type		  = kernel_type::mul_mat;
 				ffn_gate_op.op_id		  = op_id_counter++;
-				ffn_gate_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::ffn_gate)][block_idXd];
+				ffn_gate_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::ffn_gate)][block_idXd];
 				ffn_gate_op.allocated_dims		  = { feed_forward_length, 2, 1, 1 };
 				ffn_gate_op.data_type_val = ffn_norm_out->data_type_val;
 				ffn_gate_op.input_ops	  = { ffn_norm_out,  tensor_map.at("blk." + std::to_string(block_idXd) + ".ffn_gate.weight") };
@@ -1227,7 +1227,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_up_op{};
 				ffn_up_op.type			= kernel_type::mul_mat;
 				ffn_up_op.op_id			= op_id_counter++;
-				ffn_up_op.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::ffn_up_projection)][block_idXd];
+				ffn_up_op.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::ffn_up_projection)][block_idXd];
 				ffn_up_op.allocated_dims			= { feed_forward_length, 2, 1, 1 };
 				ffn_up_op.data_type_val = ffn_norm_out->data_type_val;
 				ffn_up_op.input_ops		= { ffn_norm_out,  tensor_map.at("blk." + std::to_string(block_idXd) + ".ffn_up.weight") };
@@ -1241,7 +1241,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_silu_op{};
 				ffn_silu_op.type		  = kernel_type::silu;
 				ffn_silu_op.op_id		  = op_id_counter++;
-				ffn_silu_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::ffn_activation)][block_idXd];
+				ffn_silu_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::ffn_activation)][block_idXd];
 				ffn_silu_op.allocated_dims		  = ffn_gate_out->allocated_dims;
 				ffn_silu_op.data_type_val = ffn_gate_out->data_type_val;
 				ffn_silu_op.input_ops	  = { ffn_gate_out };
@@ -1253,7 +1253,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_gate_par_op{};
 				ffn_gate_par_op.type		  = kernel_type::mul;
 				ffn_gate_par_op.op_id		  = op_id_counter++;
-				ffn_gate_par_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::ffn_gated_output)][block_idXd];
+				ffn_gate_par_op.name		  = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::ffn_gated_output)][block_idXd];
 				ffn_gate_par_op.allocated_dims		  = ffn_silu_out->allocated_dims;
 				ffn_gate_par_op.data_type_val = ffn_silu_out->data_type_val;
 				ffn_gate_par_op.input_ops	  = { ffn_silu_out,  ffn_up_out };
@@ -1266,7 +1266,7 @@ namespace rt_tm {
 				core_base_creation_data ffn_out_op{};
 				ffn_out_op.type			 = kernel_type::mul_mat;
 				ffn_out_op.op_id		 = op_id_counter++;
-				ffn_out_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::ffn_projection)][block_idXd];
+				ffn_out_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::ffn_projection)][block_idXd];
 				ffn_out_op.allocated_dims			 = { embedding_length, 2, 1, 1 };
 				ffn_out_op.data_type_val = ffn_gate_par_out->data_type_val;
 				ffn_out_op.input_ops	 = { ffn_gate_par_out,  tensor_map.at("blk." + std::to_string(block_idXd) + ".ffn_down.weight") };
@@ -1280,7 +1280,7 @@ namespace rt_tm {
 				core_base_creation_data l_out_op{};
 				l_out_op.type		   = kernel_type::add;
 				l_out_op.op_id		   = op_id_counter++;
-				l_out_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::layer_output)][block_idXd];
+				l_out_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::layer_output)][block_idXd];
 				l_out_op.allocated_dims		   = ffn_inp->allocated_dims;
 				l_out_op.data_type_val = ffn_inp->data_type_val;
 				l_out_op.input_ops	   = { ffn_inp,  ffn_out };
@@ -1299,7 +1299,7 @@ namespace rt_tm {
 			core_base_creation_data final_norm_rms_op{};
 			final_norm_rms_op.type			= kernel_type::rms_norm;
 			final_norm_rms_op.op_id			= op_id_counter++;
-			final_norm_rms_op.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::final_norm)][0];
+			final_norm_rms_op.name			= arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::final_norm)][0];
 			final_norm_rms_op.allocated_dims			= current_input->allocated_dims;
 			final_norm_rms_op.data_type_val = current_input->data_type_val;
 			final_norm_rms_op.input_ops		= { current_input };
@@ -1312,7 +1312,7 @@ namespace rt_tm {
 			core_base_creation_data result_norm_op{};
 			result_norm_op.type			 = kernel_type::mul;
 			result_norm_op.op_id		 = op_id_counter++;
-			result_norm_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::output_norm)][0];
+			result_norm_op.name			 = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::output_norm)][0];
 			result_norm_op.allocated_dims			 = final_norm_rms->allocated_dims;
 			result_norm_op.data_type_val = final_norm_rms->data_type_val;
 			result_norm_op.input_ops	 = { final_norm_rms,  tensor_map.at("output_norm.weight") };
@@ -1325,7 +1325,7 @@ namespace rt_tm {
 			core_base_creation_data result_output_op{};
 			result_output_op.type		   = kernel_type::mul_mat;
 			result_output_op.op_id		   = op_id_counter++;
-			result_output_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(tensor_type::logits_output)][0];
+			result_output_op.name		   = arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(llama_op_types::logits_output)][0];
 			result_output_op.allocated_dims		   = { vocab_size, 1, 1, 1 };
 			result_output_op.data_type_val = result_norm->data_type_val;
 			result_output_op.input_ops	   = { result_norm,  tensor_map.at("output.weight") };
@@ -1377,7 +1377,7 @@ namespace rt_tm {
 				core_base_creation_data new_core{};
 				//new_core.name = arch_traits<model_arch::llama>::tensor_names[string_to_tensor_name<model_arch::llama>::impl(gguf_file.tensor_infos[x].name)]
 				//[extract_layer_number(gguf_file.tensor_infos[x].name)];
-				new_core.type		   = kernel_type::noop;
+				new_core.type		   = kernel_type::none;
 				new_core.depth		   = 0;
 				new_core.op_id		   = x;
 				new_core.data_type_val = gguf_file.tensor_infos[x].type;

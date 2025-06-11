@@ -20,7 +20,7 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
-#include <rt_tm/op_graph.hpp>
+#include <rt_tm/common/model.hpp>
 #include <rt_tm/common/model_parser.hpp>
 #include <rt_tm/common/common.hpp>
 #include <cstdint>
@@ -28,12 +28,8 @@ RealTimeChris (Chris M.)
 namespace rt_tm {
 
 	template<model_config config> struct harbinger {
-		template<model_format format> RT_TM_FORCE_INLINE static model_graph<config> parse_model_graph(std::string_view path) {
-			return model_parser<config, config.arch, format>::parse_model(path);
-		}
-
-		RT_TM_FORCE_INLINE static op_graph<config> create_op_graph(op_graph_config graph_config, const model_graph<config>&) {
-			return op_graph<config>{ graph_config };
+		template<model_format format> RT_TM_FORCE_INLINE static auto parse_model_graph(std::string_view path) {
+			//return std::make_unique<model_base<typename model_config::model_generation_type, typename model_config::model_size_type>>(model<model_config>{});
 		}
 
 		RT_TM_FORCE_INLINE static cli_params parse_cli_arguments(const std::string& command_line) {

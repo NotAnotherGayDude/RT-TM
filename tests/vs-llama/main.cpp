@@ -592,8 +592,22 @@ int32_t run_llama(int argc, char** argv, std::string& output, size_t& token_coun
 	return 0;
 }
 
+template<typename value_type> struct test_struct {
+	using type = value_type;
+};
+
+template<typename type01, typename type02> void test_function_01() {
+	std::cout << typeid(type01).name() << std::endl;
+	std::cout << typeid(type02).name() << std::endl;
+}
+
+template<typename...enum_type> void test_function() {
+	test_function_01<typename enum_type::type...>();
+}
+
 int main(int argc, char** argv) {
 	try {
+		test_function<test_struct<int32_t>, test_struct<int64_t>>();
 		std::string return_value{};
 		bnch_swt::benchmark_stage<"rt_tm-vs_llama.cpp", 2, 1, true, "Token">::runBenchmark<"llama.cpp", "cyan">([&] {
 			return_value.clear();

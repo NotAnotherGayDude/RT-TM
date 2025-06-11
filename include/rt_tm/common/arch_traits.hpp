@@ -30,14 +30,8 @@ namespace rt_tm {
 
 	template<> struct arch_traits<model_arch::llama> {
 	  protected:
-		static constexpr array llama_tensor_types{ tensor_type::input_tokens, tensor_type::token_embd, tensor_type::output_norm, tensor_type::output, tensor_type::rope_freqs,
-			tensor_type::attn_norm, tensor_type::attn_q, tensor_type::attn_k, tensor_type::attn_v, tensor_type::attn_out, tensor_type::attn_rot_embd, tensor_type::ffn_gate_inp,
-			tensor_type::ffn_norm, tensor_type::ffn_gate, tensor_type::ffn_down, tensor_type::ffn_up, tensor_type::ffn_gate_exp, tensor_type::ffn_down_exp, tensor_type::ffn_up_exp,
-			tensor_type::ffn_gate_exps, tensor_type::ffn_down_exps, tensor_type::ffn_up_exps };
-
 	  public:
-		using enum_type = tensor_type;
-		static constexpr auto tensor_types{ llama_tensor_types };
+		using enum_type = llama_op_types;
 		static constexpr model_arch arch{ model_arch::llama };
 		static constexpr size_t max_inputs{ 3 };
 	};

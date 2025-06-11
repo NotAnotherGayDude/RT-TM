@@ -28,7 +28,7 @@ RealTimeChris (Chris M.)
 #include <rt_tm/cpu/device.hpp>
 
 namespace rt_tm {
-
+	/*
 	enum class model_name { Meta_Llama_3_1_8B_Instruct_Q8_0_gguf };
 
 	template<model_arch arch, auto depth_new> struct op_graph_bases_op;
@@ -257,6 +257,6 @@ namespace rt_tm {
 		std::unique_ptr<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 0ull }>> op_graph00{};
 		std::unique_ptr<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 1ull }>> op_graph01{};
 		std::unique_ptr<op_graph_base<config, arch_traits<config.arch>, impl_indices{ .cpu_index = 2ull }>> op_graph02{};
-	};
+	};*/
 
 }

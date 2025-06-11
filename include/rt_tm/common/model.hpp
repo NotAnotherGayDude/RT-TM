@@ -45,20 +45,19 @@ namespace rt_tm {
 		virtual ~model_base()		 = default;
 	};
 
-	template<model_config config> struct model : public model_base<decltype(config.model_size), decltype(config.model_generation)> {
-		using model_traits_type					  = model_traits<config.arch, config.model_size, config.model_generation>;
+	template<model_config config> struct model : public model_base<decltype(config.model_size), decltype(config.model_generation)>,
+												 public get_core_traits_base_t<typename op_type_type<config.arch>::type,
+													 model_traits<config.arch, config.model_size, config.model_generation>, kernel_type_profile_traits<config.kernel_profile>> {
+		using model_traits_type				  = model_traits<config.arch, config.model_size, config.model_generation>;
 		using kernel_type_profile_traits_type = kernel_type_profile_traits<config.kernel_profile>;
-		static constexpr auto block_count{ model_traits_type::block_count };
-		using blocks_type = block_holder<config, model_traits_type, kernel_type_profile_traits_type, std::make_index_sequence<block_count>>;
+		static constexpr size_t total_required_bytes{ collect_required_bytes<typename model_traits_type::op_type_type, model_traits_type, kernel_type_profile_traits_type>::impl() };
 		memory_buffer<config> memory{};
 		void execute_model() {
-			// Perform all of the necessary stuff to execute the model - along with all of the constexpr value stored globally inside the class LOL!.
+			// Perform all of the necessary stuff to execute the model - along with all of the constexpr values stored globally inside the class LOL!.
 			// Because we only pay the "virtual overhead @ the top here == totally negligible.
 		};
-		blocks_type blocks{};
 		RT_TM_FORCE_INLINE model() {
-			memory.init(blocks.total_bytes);
-			blocks.map_memory(memory);
+			memory.init(total_required_bytes);
 		}
 	};
 

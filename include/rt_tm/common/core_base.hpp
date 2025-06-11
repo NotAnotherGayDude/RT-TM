@@ -54,17 +54,18 @@ namespace rt_tm {
 		}
 
 		RT_TM_INLINE size_t core_block_size() const {
-			return get_type_traits(data_type_val).block_size;
+			return {};//get_type_traits(data_type_val).block_size;
 		}
 
 		RT_TM_INLINE size_t core_type_size() const {
-			return get_type_traits(data_type_val).type_size;
+			return {};//get_type_traits(data_type_val).type_size;
 		}
 
 		RT_TM_INLINE size_t core_row_size(int64_t dims_new) const {
 			return core_type_size() * dims_new / core_block_size();
 		}
 	};
+	/*
 
 	struct core_base {
 		mutable array<size_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
@@ -102,6 +103,6 @@ namespace rt_tm {
 
 	  protected:
 		constexpr core_base() noexcept = default;
-	};
+	};*/
 
 }

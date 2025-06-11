@@ -24,16 +24,16 @@ RealTimeChris (Chris M.)
 #include <rt_tm/cpu/thread_pool.hpp>
 
 namespace rt_tm {
-
+	/*
 	template<device_type dev, typename arch_traits, model_config config, impl_indices indices> struct device;
 
 	template<device_type dev, typename arch_traits, model_config config, impl_indices indices> struct device_registry;
 
 	template<model_config config, typename arch_traits, impl_indices indices> struct device<device_type::cpu, arch_traits, config, indices> {
-		using thread_pool_t	  = thread_pool<arch_traits::max_inputs, indices>;
+		//using thread_pool_t	  = thread_pool<arch_traits::max_inputs, indices>;
 		using memory_buffer_t = memory_buffer<config>;
 
-		thread_pool_t thread_pool_val{};
+		//thread_pool_t thread_pool_val{};
 		memory_buffer_t tensor_buffer{};
 		memory_buffer_t scratch_buffer{};
 		memory_buffer_t param_buffer{};
@@ -71,6 +71,6 @@ namespace rt_tm {
 		}
 
 		std::vector<std::unique_ptr<device<device_type::cpu, arch_traits, config, indices>>> devices{};
-	};
+	};*/
 
 }

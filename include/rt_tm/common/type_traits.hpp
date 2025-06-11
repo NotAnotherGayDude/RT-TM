@@ -36,10 +36,10 @@ namespace rt_tm {
 	};
 
 	template<typename derived_type> struct total_bytes_size {
-		RT_TM_FORCE_INLINE constexpr size_t total_byte_size(const array<size_t,4>& dims) {
+		RT_TM_FORCE_INLINE constexpr static size_t total_byte_size(const array<size_t,4>& dims) {
 			size_t total_elements{ dims[0] * dims[1] * dims[2] * dims[3] };
-			size_t num_blocks = (total_elements + static_cast<derived_type*>(this)->block_size - 1) / static_cast<derived_type*>(this)->block_size;
-			return num_blocks * static_cast<derived_type*>(this)->type_size;
+			size_t num_blocks = (total_elements + derived_type::block_size - 1) / derived_type::block_size;
+			return num_blocks * derived_type::type_size;
 		}
 	};
 
@@ -48,7 +48,7 @@ namespace rt_tm {
 	template<> struct type_traits<int8_t> : public total_bytes_size<type_traits<int8_t>> {
 		using value_type = int8_t;
 		using quant_type = int8_t;
-		inline static constexpr data_type type{ data_type::int_8 };
+		inline static constexpr data_type type{ data_type::i8 };
 		inline static constexpr uint64_t type_size{ sizeof(int8_t) };
 		inline static constexpr bool is_quantized{ false };
 		inline static constexpr uint64_t block_size{ 1 };
@@ -58,7 +58,7 @@ namespace rt_tm {
 	template<> struct type_traits<int32_t> : public total_bytes_size<type_traits<int32_t>> {
 		using value_type = int32_t;
 		using quant_type = int32_t;
-		inline static constexpr data_type type{ data_type::int_32 };
+		inline static constexpr data_type type{ data_type::i32 };
 		inline static constexpr uint64_t type_size{ sizeof(int32_t) };
 		inline static constexpr bool is_quantized{ false };
 		inline static constexpr uint64_t block_size{ 1 };
@@ -68,7 +68,7 @@ namespace rt_tm {
 	template<> struct type_traits<float> : public total_bytes_size<type_traits<float>> {
 		using value_type = float;
 		using quant_type = float;
-		inline static constexpr data_type type{ data_type::float_32 };
+		inline static constexpr data_type type{ data_type::f32 };
 		inline static constexpr uint64_t type_size{ sizeof(float) };
 		inline static constexpr bool is_quantized{ false };
 		inline static constexpr uint64_t block_size{ 1 };
@@ -78,7 +78,7 @@ namespace rt_tm {
 	template<> struct type_traits<uint16_t> : public total_bytes_size<type_traits<uint16_t>> {
 		using value_type = fp16_t;
 		using quant_type = fp16_t;
-		inline static constexpr data_type type{ data_type::float_16 };
+		inline static constexpr data_type type{ data_type::f16 };
 		inline static constexpr uint64_t type_size{ sizeof(fp16_t) };
 		inline static constexpr bool is_quantized{ false };
 		inline static constexpr uint64_t block_size{ 1 };
@@ -102,96 +102,5 @@ namespace rt_tm {
 		inline static constexpr uint64_t block_size{ 0 };
 		inline static constexpr uint64_t n_rows{ 0 };
 	};
-
-	static constexpr bool is_it_a_type(size_t index) {
-		switch (index) {
-			case 0: {
-				return true;
-			}
-			case 1: {
-				return true;
-			}
-			case 8: {
-				return true;
-			}
-			case 24: {
-				return true;
-			}
-			case 26: {
-				return true;
-			}
-			case 30: {
-				return true;
-			}
-			case 36: {
-				return true;
-			}
-			case 37: {
-				return true;
-			}
-			case 38: {
-				return true;
-			}
-			case 39: {
-				return true;
-			}
-			default: {
-				return false;
-			}
-		}
-	}
-
-	template<size_t index = 0> static constexpr auto get_type_traits_dynamic(array<type_traits_dynamic, static_cast<size_t>(data_type::count)> array_of_traits = {}) {
-		if constexpr (index < static_cast<size_t>(data_type::count)) {
-			if constexpr (is_it_a_type(index)) {
-				//using type_traits = type_traits<static_cast<data_type>(index)>;
-				/*
-				array_of_traits[index] = { .type_name = nullptr,
-					.block_size						  = type_traits::block_size,
-					.type_size						  = type_traits::type_size,
-					.is_quantized					  = type_traits::is_quantized,
-					.n_rows							  = type_traits::n_rows,
-					.type							  = type_traits::type };
-
-				switch (static_cast<data_type>(index)) {
-					case data_type::int_8:
-						array_of_traits[index].type_name = "i8";
-						break;
-					case data_type::int_16:
-						array_of_traits[index].type_name = "i16";
-						break;
-					case data_type::int_32:
-						array_of_traits[index].type_name = "i32";
-						break;
-					case data_type::int_64:
-						array_of_traits[index].type_name = "i64";
-						break;
-					case data_type::float_16:
-						array_of_traits[index].type_name = "f16";
-						break;
-					case data_type::float_32:
-						array_of_traits[index].type_name = "f32";
-						break;
-					case data_type::float_64:
-						array_of_traits[index].type_name = "f64";
-						break;
-					case data_type::q8_0:
-						array_of_traits[index].type_name = "q8_0";
-						break;
-					case data_type::count:
-					default:
-						break;
-				}*/
-			}
-			return get_type_traits_dynamic<index + 1>(array_of_traits);
-		}
-		return array_of_traits;
-	}
-
-	inline static constexpr auto array_of_type_traits{ get_type_traits_dynamic() };
-
-	RT_TM_FORCE_INLINE constexpr type_traits_dynamic get_type_traits(data_type type) {
-		return array_of_type_traits[static_cast<size_t>(type)];
-	}
 
 }

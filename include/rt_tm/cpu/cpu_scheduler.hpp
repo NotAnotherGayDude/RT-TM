@@ -27,9 +27,9 @@ RealTimeChris (Chris M.)
 namespace rt_tm {
 
 	template<typename derived_type> struct cpu_scheduler {
-		RT_TM_FORCE_INLINE void schedule_execution(std::vector<core_base*>& ops) {
+		//RT_TM_FORCE_INLINE void schedule_execution(std::vector<core_base*>& ops) {
 
-		};
+		//};
 	};
 
 }

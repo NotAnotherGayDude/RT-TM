@@ -108,7 +108,7 @@ namespace rt_tm {
 		}
 	};
 
-	std::string map_rt_tm_to_ggml(tensor_type , size_t ) {
+	std::string map_rt_tm_to_ggml(llama_op_types, size_t ) {
 		return {};
 		//arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(rt_tm_enum)][layer_index].operator const char*();
 	}
@@ -127,7 +127,7 @@ namespace rt_tm {
 
 		std::string_view base_name = (dash_pos != std::string_view::npos) ? rt_tm_name.substr(0, dash_pos) : rt_tm_name;
 		if (base_name == "inp_tokens")
-			return map_rt_tm_to_ggml(tensor_type::input_tokens, layer_index);
+			return map_rt_tm_to_ggml(llama_op_types::inp_tokens, layer_index);
 		return static_cast<std::string>(rt_tm_name);
 	}
 
@@ -144,7 +144,7 @@ namespace rt_tm {
 		kernel_type op{};
 
 		intermediary_tensor() noexcept = default;
-
+		/*
 		intermediary_tensor(const core_base& other) {
 			//size_t nbytes{ other.core_total_byte_size() };
 			for (size_t x = 0; x < 4; ++x) {
@@ -154,7 +154,7 @@ namespace rt_tm {
 			type = other.data_type_val;
 			name = { other.name };
 		}
-
+		*/
 		intermediary_tensor(const core_base_creation_data& other) {
 			//size_t nbytes{ other.core_total_byte_size() };
 			for (size_t x = 0; x < 4; ++x) {

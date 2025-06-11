@@ -40,13 +40,10 @@ namespace rt_tm {
 		}
 	};
 
-	template<device_type dev_type, impl_indices indices_new, kernel_type type, typename... operand_types> struct kernel_dispatcher {
-		static constexpr bool specialized{ false };
-		//kernel_traits<type, operand_types...>;
-		template<typename... value_types> RT_TM_FORCE_INLINE static void impl(core<value_types...>& params) {
-			//kernel_dispatcher_impl<indices_new, type, value_types::output_type...>::impl();
+	template<device_type dev_type, impl_indices indices_new, kernel_type type, core_type...core_types> struct kernel_dispatcher {
+		RT_TM_FORCE_INLINE static void impl(core_types&... params) {
+			kernel_dispatcher_impl<indices_new.cpu_index, type, typename core_types::output_type...>::impl(params...);
 		}
-		//static_assert(specialized, "Sorry, but you need to specialize kernel_dispatcher for one of your kernel calls.");
 	};
 
 }

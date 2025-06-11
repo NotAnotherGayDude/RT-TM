@@ -24,7 +24,7 @@ RealTimeChris (Chris M.)
 #include <latch>
 
 namespace rt_tm {
-
+	/*
 	struct cpu_op_core_input {
 		RT_TM_FORCE_INLINE cpu_op_core_input() noexcept = default;
 		RT_TM_FORCE_INLINE cpu_op_core_input(core_base& other) : core_base_ptr{ &other } {};
@@ -73,6 +73,6 @@ namespace rt_tm {
 		std::vector<cpu_op_core_thread_base*> cpu_op_core_thread_ptrs{};
 		std::latch* start_latch{};
 		std::latch* end_latch{};
-	};
+	};*/
 
 }

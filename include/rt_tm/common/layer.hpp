@@ -34,110 +34,110 @@ namespace rt_tm {
 	struct layer<config, model_arch::llama, model_traits_type, kernel_type_profile_traits_type> {
 		/*
 		using token_embedding_type =
-			core_traits<op_types::per_model_token_embd, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::per_model_token_embd, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
 		using rope_freqs_type =
-			core_traits<op_types::per_model_rope_freqs, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::per_model_rope_freqs, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
 		using output_norm_type =
-			core_traits<op_types::per_model_output_norm, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
-		using output_type = core_traits<op_types::per_model_output, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::per_model_output_norm, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
+		using output_type = core_traits<llama_op_types::per_model_output, kernel_type::noop, llama_layer_type::per_model, model_traits_type, kernel_type_profile_traits_type>;
 		using input_tokens_type =
-			core_traits<op_types::token_embedding_input_tokens, kernel_type::noop, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::token_embedding_input_tokens, kernel_type::noop, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
 		using pos_embd_type =
-			core_traits<op_types::token_embedding_pos_embd, kernel_type::noop, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::token_embedding_pos_embd, kernel_type::noop, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_mask_type =
-			core_traits<op_types::token_embedding_attn_mask, kernel_type::noop, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::token_embedding_attn_mask, kernel_type::noop, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
 		using token_embd_type =
-			core_traits<op_types::token_embedding_inp_embd, kernel_type::get_rows, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::token_embedding_inp_embd, kernel_type::get_rows, llama_layer_type::token_embedding, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_norm_weight_type =
-			core_traits<op_types::attention_block_attn_norm, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_norm, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_q_weight_type =
-			core_traits<op_types::attention_block_attn_q, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_q, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_k_weight_type =
-			core_traits<op_types::attention_block_attn_k, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_k, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_v_weight_type =
-			core_traits<op_types::attention_block_attn_v, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_v, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_out_weight_type =
-			core_traits<op_types::attention_block_attn_out, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_out, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using k_cache_weight_type =
-			core_traits<op_types::attention_block_k_cache, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_k_cache, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using v_cache_weight_type =
-			core_traits<op_types::attention_block_v_cache, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_v_cache, kernel_type::noop, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_norm_rms_type =
-			core_traits<op_types::attention_block_norm, kernel_type::rms_norm, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_norm, kernel_type::rms_norm, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_norm_type =
-			core_traits<op_types::attention_block_attn_norm, kernel_type::mul, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_norm, kernel_type::mul, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_q_type =
-			core_traits<op_types::attention_block_attn_q, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_q, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_k_type =
-			core_traits<op_types::attention_block_attn_k, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_k, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_v_type =
-			core_traits<op_types::attention_block_attn_v, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_v, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_q_type =
-			core_traits<op_types::attention_block_attn_q, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_q, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_k_type =
-			core_traits<op_types::attention_block_attn_k, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_k, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_v_type =
-			core_traits<op_types::attention_block_attn_v, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_v, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_q_type =
-			core_traits<op_types::attention_block_attn_q, kernel_type::rope, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_q, kernel_type::rope, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_k_type =
-			core_traits<op_types::attention_block_attn_k, kernel_type::rope, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_k, kernel_type::rope, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using k_cache_type =
-			core_traits<op_types::attention_block_k_cache, kernel_type::view, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_k_cache, kernel_type::view, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using k_cache_type =
-			core_traits<op_types::attention_block_k_cache, kernel_type::copy, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_k_cache, kernel_type::copy, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using v_cache_type =
-			core_traits<op_types::attention_block_v_cache, kernel_type::view, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_v_cache, kernel_type::view, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using v_cache_type =
-			core_traits<op_types::attention_block_v_cache, kernel_type::copy, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_v_cache, kernel_type::copy, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using v_cache_type =
-			core_traits<op_types::attention_block_v_cache, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_v_cache, kernel_type::reshape, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using v_cache_type =
-			core_traits<op_types::attention_block_v_cache, kernel_type::transpose, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_v_cache, kernel_type::transpose, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using k_cache_type =
-			core_traits<op_types::attention_block_k_cache, kernel_type::permute, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_k_cache, kernel_type::permute, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using v_cache_type =
-			core_traits<op_types::attention_block_v_cache, kernel_type::permute, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_v_cache, kernel_type::permute, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_q_type =
-			core_traits<op_types::attention_block_attn_q, kernel_type::permute, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_q, kernel_type::permute, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attn_scores_type =
-			core_traits<op_types::attention_block_attn_scores, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
-		using attn_weights_softmax_type = core_traits<op_types::attention_block_attn_weights, kernel_type::softmax, llama_layer_type::attention_block, model_traits_type,
+			core_traits<llama_op_types::attention_block_attn_scores, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+		using attn_weights_softmax_type = core_traits<llama_op_types::attention_block_attn_weights, kernel_type::softmax, llama_layer_type::attention_block, model_traits_type,
 			kernel_type_profile_traits_type>;
-			core_traits<op_types::attention_block_attn_out, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_attn_out, kernel_type::mul_mat, llama_layer_type::attention_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_norm_weight_type =
-			core_traits<op_types::ffn_block_ffn_norm, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_norm, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_gate_weight_type =
-			core_traits<op_types::ffn_block_ffn_gate, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
-		using ffn_up_weight_type = core_traits<op_types::ffn_block_ffn_up, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_gate, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+		using ffn_up_weight_type = core_traits<llama_op_types::ffn_block_ffn_up, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_down_weight_type =
-			core_traits<op_types::ffn_block_ffn_down, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_down, kernel_type::noop, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_norm_rms_type =
-			core_traits<op_types::ffn_block_norm, kernel_type::rms_norm, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
-		using ffn_norm_type = core_traits<op_types::ffn_block_ffn_norm, kernel_type::mul, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_norm, kernel_type::rms_norm, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+		using ffn_norm_type = core_traits<llama_op_types::ffn_block_ffn_norm, kernel_type::mul, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_gate_type =
-			core_traits<op_types::ffn_block_ffn_gate, kernel_type::mul_mat, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_gate, kernel_type::mul_mat, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_up_type =
-			core_traits<op_types::ffn_block_ffn_up, kernel_type::mul_mat, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_up, kernel_type::mul_mat, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_gate_silu_type =
-			core_traits<op_types::ffn_block_ffn_gate, kernel_type::silu, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_gate, kernel_type::silu, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_intermediate_type =
-			core_traits<op_types::ffn_block_ffn_intermediate, kernel_type::mul, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_intermediate, kernel_type::mul, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using ffn_down_type =
-			core_traits<op_types::ffn_block_ffn_down, kernel_type::mul_mat, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::ffn_block_ffn_down, kernel_type::mul_mat, llama_layer_type::ffn_block, model_traits_type, kernel_type_profile_traits_type>;
 		using attention_residual_type =
-			core_traits<op_types::attention_block_residual, kernel_type::add, llama_layer_type::residual, model_traits_type, kernel_type_profile_traits_type>;
-		using ffn_residual_type = core_traits<op_types::ffn_block_residual, kernel_type::add, llama_layer_type::residual, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::attention_block_residual, kernel_type::add, llama_layer_type::residual, model_traits_type, kernel_type_profile_traits_type>;
+		using ffn_residual_type = core_traits<llama_op_types::ffn_block_residual, kernel_type::add, llama_layer_type::residual, model_traits_type, kernel_type_profile_traits_type>;
 		using norm_rms_type =
-			core_traits<op_types::output_layer_norm, kernel_type::rms_norm, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::output_layer_norm, kernel_type::rms_norm, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
 		using output_norm_type =
-			core_traits<op_types::output_layer_output_norm, kernel_type::mul, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::output_layer_output_norm, kernel_type::mul, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
 		using output_type =
-			core_traits<op_types::output_layer_output, kernel_type::mul_mat, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::output_layer_output, kernel_type::mul_mat, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
 		using logits_softmax_type =
-			core_traits<op_types::output_layer_logits, kernel_type::softmax, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::output_layer_logits, kernel_type::softmax, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
 		using sampletinomial_type =
-			core_traits<op_types::output_layer_sampletinomial, kernel_type::noop, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
+			core_traits<llama_op_types::output_layer_sampletinomial, kernel_type::noop, llama_layer_type::lm_head, model_traits_type, kernel_type_profile_traits_type>;
 
 		template<typename memory_buffer_type> RT_TM_FORCE_INLINE void map_memory(memory_buffer_type& memory_buffer) {
 			memory_map<token_embedding_type>::impl(token_embedding, memory_buffer.claim_memory(token_embedding.total_required_bytes));
