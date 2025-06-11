@@ -22,7 +22,7 @@ RealTimeChris (Chris M.)
 
 #include <rt_tm/common/kernel_traits.hpp>
 #include <rt_tm/common/common.hpp>
-#include <rt_tm/cpu/cpu_op_core.hpp>
+#include <rt_tm/common/core.hpp>
 #include <rt_tm/cpu/cpu_arch.hpp>
 
 namespace rt_tm {
@@ -40,7 +40,7 @@ namespace rt_tm {
 		}
 	};
 
-	template<device_type dev_type, impl_indices indices_new, kernel_type type, core_type...core_types> struct kernel_dispatcher {
+	template<device_type dev_type, impl_indices indices_new, kernel_type type, core_type... core_types> struct kernel_dispatcher {
 		RT_TM_FORCE_INLINE static void impl(core_types&... params) {
 			kernel_dispatcher_impl<indices_new.cpu_index, type, typename core_types::output_type...>::impl(params...);
 		}

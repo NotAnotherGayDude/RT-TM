@@ -25,7 +25,4 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/arch_traits.hpp>
 #include <rt_tm/common/monolithic_dispatcher.hpp>
 
-namespace rt_tm {
-
-
-}
+namespace rt_tm {}

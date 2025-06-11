@@ -27,7 +27,7 @@ namespace rt_tm {
 
 	struct input_session_config {
 		RT_TM_FORCE_INLINE input_session_config& operator=(const input_session_config&) = delete;
-		RT_TM_FORCE_INLINE input_session_config(const input_session_config&) = delete;
+		RT_TM_FORCE_INLINE input_session_config(const input_session_config&)			= delete;
 		RT_TM_FORCE_INLINE input_session_config(std::istream& stream_new, size_t max_tokens_new) : stream{ stream_new }, max_tokens{ max_tokens_new } {};
 		std::istream& stream;
 		size_t max_tokens{};

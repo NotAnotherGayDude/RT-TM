@@ -22,7 +22,6 @@ RealTimeChris (Chris M.)
 
 #include <rt_tm/common/monolithic_dispatcher.hpp>
 #include <rt_tm/cpu/cpu_scheduler.hpp>
-#include <rt_tm/cpu/cpu_op_core.hpp>
 #include <rt_tm/common/common.hpp>
 #include <rt_tm/common/tuple.hpp>
 #include <thread>
@@ -138,181 +137,12 @@ namespace rt_tm {
 #endif
 	}
 
-	template<typename index_sequence> struct op_holder;
-	/*
-	template<size_t... inputs> struct op_holder<std::index_sequence<inputs...>> {
-		using tuple_thread_t = tuple<std::vector<cpu_op_core_thread<inputs + 1>>...>;
-		using tuple_core_t	 = tuple<std::vector<cpu_op_core<inputs + 1>>...>;
-		tuple_thread_t thread_ops{};
-		tuple_core_t core_ops{};
-
-		template<size_t current_index = 0> RT_TM_FORCE_INLINE cpu_op_core_thread_base* emplace_back_core_thread(size_t index) {
-			if constexpr (current_index < sizeof...(inputs)) {
-				if (current_index == index) {
-					auto& vec									   = get<current_index>(thread_ops);
-					cpu_op_core_thread<current_index + 1>& new_ref = vec.emplace_back();
-					return static_cast<cpu_op_core_thread_base*>(&new_ref);
-				} else {
-					return emplace_back_core_thread<current_index + 1>(index);
-				}
-			} else {
-				return nullptr;
-			}
-		}
-
-		template<size_t current_index = 0> RT_TM_FORCE_INLINE cpu_op_core_thread_base* get_core_thread(size_t input_count, size_t index) {
-			if constexpr (current_index < sizeof...(inputs)) {
-				if (current_index == input_count) {
-					auto& vec									   = get<current_index>(thread_ops);
-					cpu_op_core_thread<current_index + 1>& new_ref = vec[index];
-					return static_cast<cpu_op_core_thread_base*>(&new_ref);
-				} else {
-					return get_core_thread<current_index + 1>(input_count, index);
-				}
-			} else {
-				return nullptr;
-			}
-		}
-
-		template<size_t current_index = 0> RT_TM_FORCE_INLINE cpu_op_core_base* emplace_back_core(size_t index) {
-			if constexpr (current_index < sizeof...(inputs)) {
-				if (current_index == index) {
-					auto& vec								= get<current_index>(core_ops);
-					cpu_op_core<current_index + 1>& new_ref = vec.emplace_back();
-					return static_cast<cpu_op_core_base*>(&new_ref);
-				} else {
-					return emplace_back_core<current_index + 1>(index);
-				}
-			}
-			return nullptr;
-		}
-
-		template<size_t current_index = 0> RT_TM_FORCE_INLINE cpu_op_core_base* get_core(size_t input_count, size_t index) {
-			if constexpr (current_index < sizeof...(inputs)) {
-				if (current_index == input_count) {
-					auto& vec								= get<current_index>(core_ops);
-					cpu_op_core<current_index + 1>& new_ref = vec[index];
-					return static_cast<cpu_op_core_base*>(&new_ref);
-				} else {
-					return get_core<current_index + 1>(input_count, index);
-				}
-			} else {
-				return nullptr;
-			}
-		}
-	};
-
-	template<size_t max_inputs, impl_indices indices, size_t depth_new> struct scheduler_depth : public cpu_scheduler<scheduler_depth<max_inputs, indices, depth_new>>,
-																								 public op_holder<std::make_index_sequence<max_inputs>> {
-		static constexpr size_t depth{ depth_new };
-		RT_TM_FORCE_INLINE scheduler_depth(size_t max_depth, size_t thread_count) {};
-		//RT_TM_FORCE_INLINE scheduler_depth() noexcept								   = default;
-		RT_TM_FORCE_INLINE scheduler_depth& operator=(const scheduler_depth&) noexcept = delete;
-		RT_TM_FORCE_INLINE scheduler_depth(const scheduler_depth&) noexcept			   = delete;
-
-		RT_TM_FORCE_INLINE bool schedule_execution(std::vector<core_base*>& ops) {
-			if (depth < max_depth) {
-				this->emplace_back_core(2);
-				this->emplace_back_core_thread(2)->thread_index;
-				this->get_core_thread(2, 2);
-				this->get_core(2, 2);
-				end_latch	= std::make_unique<std::latch>(static_cast<ptrdiff_t>(op_threads.size()));
-				start_latch = std::make_unique<std::latch>(static_cast<ptrdiff_t>(op_threads.size()));
-				for (size_t x = 0; x < op_thread_chains.size(); ++x) {
-					op_thread_chains[x].end_latch	= end_latch.get();
-					op_thread_chains[x].start_latch = start_latch.get();
-				}
-				return true;
-			}
-			return false;
-		}
-
-		RT_TM_FORCE_INLINE bool reset_state() {
-			if (depth < max_depth) {
-				end_latch	= std::make_unique<std::latch>(static_cast<ptrdiff_t>(op_threads.size()));
-				start_latch = std::make_unique<std::latch>(static_cast<ptrdiff_t>(op_threads.size()));
-				for (size_t x = 0; x < op_thread_chains.size(); ++x) {
-					op_thread_chains[x].end_latch	= end_latch.get();
-					op_thread_chains[x].start_latch = start_latch.get();
-				}
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		RT_TM_FORCE_INLINE bool thread_function(size_t thread_index) {
-			if (depth < max_depth) {
-				cpu_op_core_thread_chain& op_chain{ op_thread_chains[thread_index] };
-				for (size_t x = 0; x < op_chain.cpu_op_core_thread_ptrs.size() - 1; ++x) {
-					cpu_op_core_thread_base* new_task{ static_cast<cpu_op_core_thread_base*>(op_thread_chains[thread_index].cpu_op_core_thread_ptrs[x]) };
-					new_task->thread_count;
-					//op_dispatcher_final<rt_tm::device_type::cpu, indices>::impl(new_task);
-				}
-				op_chain.start_latch->arrive_and_wait();
-				//op_dispatcher_final<rt_tm::device_type::cpu, indices>::impl(op_chain.cpu_op_core_thread_ptrs[op_chain.cpu_op_core_thread_ptrs.size() - 1]);
-				op_chain.end_latch->arrive_and_wait();
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-	  protected:
-		std::vector<cpu_op_core_thread_chain> op_thread_chains{};
-		std::vector<cpu_op_core_thread_base*> op_threads{};
-		std::vector<cpu_op_core_base*> op_bases{};
-		std::unique_ptr<std::latch> start_latch{};
-		std::unique_ptr<std::latch> end_latch{};
-		size_t thread_count{};
-		size_t max_depth{};
-	};
-
-	template<typename... bases> struct scheduler_depths : public bases... {
-		RT_TM_FORCE_INLINE scheduler_depths(size_t max_depth, size_t thread_count) : bases{ max_depth, thread_count }... {};
-		RT_TM_FORCE_INLINE scheduler_depths& operator=(scheduler_depths&&)		= delete;
-		RT_TM_FORCE_INLINE scheduler_depths(scheduler_depths&&)					= delete;
-		RT_TM_FORCE_INLINE scheduler_depths& operator=(const scheduler_depths&) = delete;
-		RT_TM_FORCE_INLINE scheduler_depths(const scheduler_depths&)			= delete;
-		template<typename op_entity_type, typename... arg_types> RT_TM_FORCE_INLINE bool iterate_values_impl(arg_types&&... args) {
-			return op_entity_type::thread_function(std::forward<arg_types>(args)...);
-		}
-
-		template<typename... arg_types> RT_TM_FORCE_INLINE void iterate_values(arg_types&&... args) {
-			(iterate_values_impl<bases>(args...) && ...);
-		}
-
-		template<typename op_entity_type, typename... arg_types> RT_TM_FORCE_INLINE bool reset_state_impl(arg_types&&... args) {
-			return op_entity_type::reset_state(std::forward<arg_types>(args)...);
-		}
-
-		template<typename... arg_types> RT_TM_FORCE_INLINE void reset_state(arg_types&&... args) {
-			(reset_state_impl<bases>(args...) && ...);
-		}
-
-		template<typename op_entity_type, typename... arg_types> RT_TM_FORCE_INLINE bool schedule_execution_impl(arg_types&&... args) {
-			return op_entity_type::schedule_execution(std::forward<arg_types>(args)...);
-		}
-
-		template<typename... arg_types> RT_TM_FORCE_INLINE void schedule_execution(arg_types&&... args) {
-			(schedule_execution_impl<bases>(args...) && ...);
-		}
-	};
-
-	template<size_t max_inputs, impl_indices indices, typename index_sequence> struct get_scheduler_base;
-
-	template<size_t max_inputs, impl_indices indices, size_t... index> struct get_scheduler_base<max_inputs, indices, std::index_sequence<index...>> {
-		using type = scheduler_depths<scheduler_depth<max_inputs, indices, index>...>;
-	};
-
-	template<size_t max_inputs, impl_indices indices> using scheduler_base_t = typename get_scheduler_base<max_inputs, indices, std::make_index_sequence<64>>::type;
-
-	template<size_t max_inputs, impl_indices indices> struct thread_pool : public scheduler_base_t<max_inputs, indices> {
+	template<typename derived_type, impl_indices indices> struct thread_pool {
 		RT_TM_FORCE_INLINE thread_pool() noexcept							   = delete;
 		RT_TM_FORCE_INLINE thread_pool& operator=(const thread_pool&) noexcept = delete;
 		RT_TM_FORCE_INLINE thread_pool(const thread_pool&) noexcept			   = delete;
 
-		RT_TM_FORCE_INLINE thread_pool(size_t thread_count_new) : scheduler_base_t<max_inputs, indices>{ thread_count_new, thread_count_new } {
+		RT_TM_FORCE_INLINE thread_pool(size_t thread_count_new) {
 			worker_latches.resize(thread_count_new);
 			threads.resize(thread_count_new);
 			main_thread_latch = std::make_unique<std::latch>(static_cast<ptrdiff_t>(thread_count_new));
@@ -320,15 +150,15 @@ namespace rt_tm {
 				worker_latches[x] = std::make_unique<std::latch>(static_cast<ptrdiff_t>(1));
 				threads[x]		  = std::thread{ [&, x] {
 					if (x < (thread_count_new % 3) == 0) {
-						thread_function<true>(x);
+						thread_function_impl<true>(x);
 					} else {
-						thread_function<false>(x);
+						thread_function_impl<false>(x);
 					}
 				} };
 			}
 		}
 
-		template<bool raise_priority> RT_TM_FORCE_INLINE void thread_function(size_t thread_index) {
+		template<bool raise_priority> RT_TM_FORCE_INLINE void thread_function_impl(size_t thread_index) {
 			if (thread_index % 2 == 0) {
 				pin_thread_to_core(thread_index % 2);
 			}
@@ -337,11 +167,15 @@ namespace rt_tm {
 				if constexpr (raise_priority) {
 					raise_current_thread_priority();
 				}
-				this->iterate_values(threads.size());
+				if (!stop.load(std::memory_order_acquire)) {
+					static_cast<derived_type*>(this)->impl<thread_function>(thread_index);
+				}
 				if constexpr (raise_priority) {
 					reset_current_thread_priority();
 				}
-				main_thread_latch->count_down();
+				if (!main_thread_latch->try_wait()) {
+					main_thread_latch->count_down();
+				}
 				worker_latches[thread_index] = std::make_unique<std::latch>(static_cast<ptrdiff_t>(1));
 			}
 		}
@@ -375,6 +209,6 @@ namespace rt_tm {
 		std::unique_ptr<std::latch> main_thread_latch{};
 		std::vector<std::thread> threads{};
 		std::atomic_bool stop{};
-	};*/
+	};
 
 }

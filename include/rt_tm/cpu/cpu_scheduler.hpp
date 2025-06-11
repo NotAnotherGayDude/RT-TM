@@ -22,7 +22,6 @@ RealTimeChris (Chris M.)
 
 #include <rt_tm/common/common.hpp>
 #include <rt_tm/common/core_base.hpp>
-#include <rt_tm/cpu/cpu_op_core.hpp>
 
 namespace rt_tm {
 

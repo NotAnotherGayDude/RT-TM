@@ -609,17 +609,20 @@ int main(int argc, char** argv) {
 	try {
 		test_function<test_struct<int32_t>, test_struct<int64_t>>();
 		std::string return_value{};
+		/*
 		bnch_swt::benchmark_stage<"rt_tm-vs_llama.cpp", 2, 1, true, "Token">::runBenchmark<"llama.cpp", "cyan">([&] {
 			return_value.clear();
 			size_t token_count{};
 			run_llama(argc, argv, return_value, token_count);
 			return token_count - 1;
-		});
+		});*/
 		//rt_tm::kernel_dispatcher<rt_tm::device_type::cpu, rt_tm::impl_indices{}, rt_tm::kernel_type::mul_mat, int32_t> kernel{};
 		static constexpr auto model_config =
 			rt_tm::generate_model_config(rt_tm::llama_model_generation::v3, rt_tm::llama_model_size::llama_8B, rt_tm::kernel_type_profile::q8_gqa, rt_tm::model_arch::llama);
-		rt_tm::model<model_config> model_graph{};
-		rt_tm::op_graph_config graph_config{ .num_threads = 12 };
+		rt_tm::model<rt_tm::impl_indices{ .cpu_index = 1 }, model_config> model_graph{};
+		auto new_model = rt_tm::harbinger<model_config>::parse_model_graph<rt_tm::model_format::gguf>(argv[0]);
+		new_model->execute_model();
+		model_graph.execute_model();
 		//rt_tm::op_graph<model_config> op_graph{ rt_tm::harbinger<model_config>::create_op_graph(graph_config, model_graph) };
 		//rt_tm::input_session_config session_config{ std::cin, 1024 };
 		//rt_tm::input_session input_session{ session_config };

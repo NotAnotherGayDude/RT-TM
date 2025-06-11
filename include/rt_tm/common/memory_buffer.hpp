@@ -76,7 +76,7 @@ namespace rt_tm {
 			return data_val;
 		}
 
-		RT_TM_FORCE_INLINE pointer claim_memory(size_t amount_to_claim) noexcept {
+		RT_TM_FORCE_INLINE void* claim_memory(size_t amount_to_claim) noexcept {
 			size_t alignment = alignments[cpu_arch_index_holder::cpu_arch_index];
 
 			size_t aligned_amount = roundUpToMultiple(amount_to_claim, alignment);

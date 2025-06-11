@@ -108,7 +108,7 @@ namespace rt_tm {
 		}
 	};
 
-	std::string map_rt_tm_to_ggml(llama_op_types, size_t ) {
+	std::string map_rt_tm_to_ggml(llama_op_types, size_t) {
 		return {};
 		//arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(rt_tm_enum)][layer_index].operator const char*();
 	}

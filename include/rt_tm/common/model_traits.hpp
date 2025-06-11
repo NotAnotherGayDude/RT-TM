@@ -23,7 +23,6 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/kernel_type_profile_traits.hpp>
 #include <rt_tm/common/arch_traits.hpp>
 #include <rt_tm/common/tuple.hpp>
-#include <rt_tm/common/block.hpp>
 
 namespace rt_tm {
 

@@ -28,5 +28,4 @@ RealTimeChris (Chris M.)
 #include <string>
 #include <array>
 
-namespace rt_tm {
-}
+namespace rt_tm {}

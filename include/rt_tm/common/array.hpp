@@ -60,11 +60,11 @@ namespace rt_tm {
 		}
 
 		RT_TM_FORCE_INLINE constexpr iterator end() noexcept {
-			return iterator(data_val);
+			return iterator(data_val + size_val);
 		}
 
 		RT_TM_FORCE_INLINE constexpr const_iterator end() const noexcept {
-			return const_iterator(data_val);
+			return const_iterator(data_val + size_val);
 		}
 
 		RT_TM_FORCE_INLINE constexpr reverse_iterator rbegin() noexcept {
@@ -113,7 +113,7 @@ namespace rt_tm {
 
 		RT_TM_FORCE_INLINE constexpr reference at(size_type position) {
 			if (size_new <= position) {
-				std::runtime_error{ "invalid array<T, N> subscript" };
+				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
 
 			return data_val[position];
@@ -121,7 +121,7 @@ namespace rt_tm {
 
 		RT_TM_FORCE_INLINE constexpr const_reference at(size_type position) const {
 			if (size_new <= position) {
-				std::runtime_error{ "invalid array<T, N> subscript" };
+				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
 
 			return data_val[position];
@@ -256,11 +256,11 @@ namespace rt_tm {
 		}
 
 		RT_TM_FORCE_INLINE constexpr reference at(size_type) {
-			std::runtime_error{ "invalid array<T, N> subscript" };
+			throw std::runtime_error{ "invalid array<T, N> subscript" };
 		}
 
 		RT_TM_FORCE_INLINE constexpr const_reference at(size_type) const {
-			std::runtime_error{ "invalid array<T, N> subscript" };
+			throw std::runtime_error{ "invalid array<T, N> subscript" };
 		}
 
 		RT_TM_FORCE_INLINE constexpr reference operator[](size_type) noexcept {

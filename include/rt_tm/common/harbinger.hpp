@@ -29,7 +29,28 @@ namespace rt_tm {
 
 	template<model_config config> struct harbinger {
 		template<model_format format> RT_TM_FORCE_INLINE static auto parse_model_graph(std::string_view path) {
-			//return std::make_unique<model_base<typename model_config::model_generation_type, typename model_config::model_size_type>>(model<model_config>{});
+			if (cpu_arch_index_holder::cpu_arch_index == 2) {
+				using model_type = model<impl_indices{ .cpu_index = 2 }, config>;
+				using base_type	 = model_type::base_type;
+				std::unique_ptr<base_type> return_value{};
+				model_type* new_model{ new model_type{} };
+				return_value.reset(new_model);
+				return return_value;
+			} else if (cpu_arch_index_holder::cpu_arch_index == 1) {
+				using model_type = model<impl_indices{ .cpu_index = 1 }, config>;
+				using base_type	 = model_type::base_type;
+				std::unique_ptr<base_type> return_value{};
+				model_type* new_model{ new model_type{} };
+				return_value.reset(new_model);
+				return return_value;
+			} else {
+				using model_type = model<impl_indices{ .cpu_index = 0 }, config>;
+				using base_type	 = model_type::base_type;
+				std::unique_ptr<base_type> return_value{};
+				model_type* new_model{ new model_type{} };
+				return_value.reset(new_model);
+				return return_value;
+			}
 		}
 
 		RT_TM_FORCE_INLINE static cli_params parse_cli_arguments(const std::string& command_line) {

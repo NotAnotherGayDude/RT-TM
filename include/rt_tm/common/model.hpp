@@ -22,9 +22,9 @@ RealTimeChris (Chris M.)
 
 #include <rt_tm/common/arch_traits.hpp>
 #include <rt_tm/common/model_traits.hpp>
+#include <rt_tm/cpu/thread_pool.hpp>
 #include <rt_tm/common/h_params.hpp>
 #include <rt_tm/common/tuple.hpp>
-#include <rt_tm/common/block.hpp>
 
 namespace rt_tm {
 
@@ -37,7 +37,7 @@ namespace rt_tm {
 		return config;
 	}
 
-	template<model_config config> struct model;
+	template<impl_indices indices, model_config config> struct model;
 
 	template<typename model_generation_type, typename model_size_type> struct model_base {
 		model_config<model_generation_type, model_size_type> config{};
@@ -45,19 +45,31 @@ namespace rt_tm {
 		virtual ~model_base()		 = default;
 	};
 
-	template<model_config config> struct model : public model_base<decltype(config.model_size), decltype(config.model_generation)>,
-												 public get_core_traits_base_t<typename op_type_type<config.arch>::type,
-													 model_traits<config.arch, config.model_size, config.model_generation>, kernel_type_profile_traits<config.kernel_profile>> {
+	template<impl_indices indices, model_config config> struct model
+		: public model_base<decltype(config.model_size), decltype(config.model_generation)>,
+		  public get_core_traits_base_t<typename op_type_type<config.arch>::type, model_traits<config.arch, config.model_size, config.model_generation>,
+			  kernel_type_profile_traits<config.kernel_profile>>,
+		  public thread_pool<model<indices, config>, indices> {
 		using model_traits_type				  = model_traits<config.arch, config.model_size, config.model_generation>;
 		using kernel_type_profile_traits_type = kernel_type_profile_traits<config.kernel_profile>;
-		static constexpr size_t total_required_bytes{ collect_required_bytes<typename model_traits_type::op_type_type, model_traits_type, kernel_type_profile_traits_type>::impl() };
+		using base_type						  = model_base<decltype(config.model_size), decltype(config.model_generation)>;
+		static constexpr size_t total_required_bytes{
+			collect_required_bytes<typename model_traits_type::op_type_type, model_traits_type, kernel_type_profile_traits_type>::impl()
+		};
 		memory_buffer<config> memory{};
-		void execute_model() {
+		RT_TM_FORCE_INLINE void execute_model() {
+			this->execute_tasks();
 			// Perform all of the necessary stuff to execute the model - along with all of the constexpr values stored globally inside the class LOL!.
 			// Because we only pay the "virtual overhead @ the top here == totally negligible.
 		};
-		RT_TM_FORCE_INLINE model() {
+		RT_TM_FORCE_INLINE model& operator=(model&&)	  = delete;
+		RT_TM_FORCE_INLINE model(model&&)				  = delete;
+		RT_TM_FORCE_INLINE model& operator=(const model&) = delete;
+		RT_TM_FORCE_INLINE model(const model&)			  = delete;
+		RT_TM_FORCE_INLINE model(size_t thread_count = std::thread::hardware_concurrency()) : thread_pool<model, indices>{ thread_count } {
 			memory.init(total_required_bytes);
+			this->impl<memory_mapper>(memory);
+			this->impl<execution_plammer>(thread_count);
 		}
 	};
 

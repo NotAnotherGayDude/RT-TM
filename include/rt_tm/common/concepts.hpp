@@ -81,7 +81,7 @@ namespace rt_tm {
 
 	template<typename value_type>
 	concept array_type = vector_subscriptable<value_type> && has_data<value_type> && has_size<value_type>;
-		
+
 	template<typename value_type>
 	concept core_traits_type = requires(value_type) {
 		typename value_type::output_type;

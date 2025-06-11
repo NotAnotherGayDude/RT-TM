@@ -33,12 +33,12 @@ namespace rt_tm {
 	concept core_type = is_specialization_v<value_type, core>;
 
 	template<core_traits_type output_type> struct core<output_type> : output_type {
-		using traits_type		 = output_type;
+		using traits_type = output_type;
 		RT_TM_FORCE_INLINE core() noexcept {};
 	};
 
 	template<core_traits_type output_type, core_type input_type01> struct core<output_type, input_type01> : output_type {
-		using traits_type = output_type;
+		using traits_type		 = output_type;
 		using kernel_traits_type = kernel_traits<output_type::type, output_type, input_type01>;
 		RT_TM_FORCE_INLINE core() noexcept {};
 		RT_TM_FORCE_INLINE core(input_type01& input01_new) : input01{ &input01_new } {};
@@ -46,7 +46,7 @@ namespace rt_tm {
 	};
 
 	template<core_traits_type output_type, core_type input_type01, core_type input_type02> struct core<output_type, input_type01, input_type02> : public output_type {
-		using traits_type = output_type;
+		using traits_type		 = output_type;
 		using kernel_traits_type = kernel_traits<output_type::type, output_type, input_type01, input_type02>;
 		RT_TM_FORCE_INLINE core() noexcept {};
 		RT_TM_FORCE_INLINE core(input_type01& input01_new, input_type02& input02_new) : input01{ &input01_new }, input02{ &input02_new } {};
@@ -55,9 +55,8 @@ namespace rt_tm {
 	};
 
 	template<core_traits_type output_type, core_type input_type01, core_type input_type02, core_type input_type03>
-	struct core<output_type, input_type01, input_type02, input_type03>
-		: public output_type {
-		using traits_type = output_type;
+	struct core<output_type, input_type01, input_type02, input_type03> : public output_type {
+		using traits_type		 = output_type;
 		using kernel_traits_type = kernel_traits<output_type::type, output_type, input_type01, input_type02, input_type03>;
 		RT_TM_FORCE_INLINE core() noexcept {};
 		RT_TM_FORCE_INLINE core(input_type01& input01_new, input_type02& input02_new, input_type03& input03_new)

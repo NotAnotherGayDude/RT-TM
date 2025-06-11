@@ -24,19 +24,16 @@ RealTimeChris (Chris M.)
 #include <rt_tm/cpu/thread_pool.hpp>
 
 namespace rt_tm {
-	/*
-	template<device_type dev, typename arch_traits, model_config config, impl_indices indices> struct device;
 
-	template<device_type dev, typename arch_traits, model_config config, impl_indices indices> struct device_registry;
+	template<device_type dev, typename derived_type, model_config config, impl_indices indices> struct device;
 
-	template<model_config config, typename arch_traits, impl_indices indices> struct device<device_type::cpu, arch_traits, config, indices> {
-		//using thread_pool_t	  = thread_pool<arch_traits::max_inputs, indices>;
+	template<device_type dev, typename derived_type, model_config config, impl_indices indices> struct device_registry;
+
+	template<model_config config, typename derived_type, impl_indices indices> struct device<device_type::cpu, derived_type, config, indices> {
+		using thread_pool_t	  = thread_pool<derived_type, indices>;
 		using memory_buffer_t = memory_buffer<config>;
 
-		//thread_pool_t thread_pool_val{};
-		memory_buffer_t tensor_buffer{};
-		memory_buffer_t scratch_buffer{};
-		memory_buffer_t param_buffer{};
+		thread_pool_t thread_pool_val{};
 
 		RT_TM_INLINE device() noexcept						   = default;
 		RT_TM_INLINE device& operator=(const device&) noexcept = delete;
@@ -44,8 +41,8 @@ namespace rt_tm {
 
 		RT_TM_FORCE_INLINE device(size_t thread_count) : thread_pool_val{ thread_count } {};
 
-		RT_TM_FORCE_INLINE void schedule_execution(std::vector<core_base*>& ops) {
-			thread_pool_val.schedule_execution(ops);
+		RT_TM_FORCE_INLINE void schedule_execution() {
+			thread_pool_val.schedule_execution();
 		}
 
 		RT_TM_FORCE_INLINE void execute_tasks() {
@@ -57,20 +54,20 @@ namespace rt_tm {
 		}
 	};
 
-	template<model_config config, typename arch_traits, impl_indices indices> struct device_registry<device_type::cpu, arch_traits, config, indices> {
+	template<model_config config, typename derived_type, impl_indices indices> struct device_registry<device_type::cpu, derived_type, config, indices> {
 		RT_TM_INLINE device_registry() noexcept									 = default;
 		RT_TM_INLINE device_registry& operator=(const device_registry&) noexcept = delete;
 		RT_TM_INLINE device_registry(const device_registry&) noexcept			 = delete;
 
 		RT_TM_FORCE_INLINE device_registry(size_t thread_count) {
-			devices.emplace_back(std::make_unique<device<device_type::cpu, arch_traits, config, indices>>(thread_count));
+			devices.emplace_back(std::make_unique<device<device_type::cpu, derived_type, config, indices>>(thread_count));
 		}
 
 		RT_TM_FORCE_INLINE auto& get_devices() {
 			return devices;
 		}
 
-		std::vector<std::unique_ptr<device<device_type::cpu, arch_traits, config, indices>>> devices{};
-	};*/
+		std::vector<std::unique_ptr<device<device_type::cpu, derived_type, config, indices>>> devices{};
+	};
 
 }
