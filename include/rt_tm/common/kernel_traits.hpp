@@ -56,9 +56,9 @@ namespace rt_tm {
 		using input_type02					  = typename input02::output_type;
 		using output_type					  = typename output::output_type;
 		static constexpr bool is_broadcasting		   = (input02_dims[1] == 1 && input01_dims[1] > 1);
-		static constexpr size_t total_elements		   = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
-		static constexpr size_t input01_total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t input02_total_elements = input02_dims[0] * input02_dims[1] * input02_dims[2] * input02_dims[3];
+		static constexpr uint64_t total_elements		   = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t input01_total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t input02_total_elements = input02_dims[0] * input02_dims[1] * input02_dims[2] * input02_dims[3];
 		static_assert(static_assert_printer<(total_elements == input01_total_elements), kernel_traits, output, input01, input02>::impl,
 			"MUL: Total element count must match between inputs");
 		static_assert(static_assert_printer < (total_elements == input02_total_elements) || is_broadcasting, kernel_traits, output, input01, input02 > ::impl,
@@ -80,8 +80,8 @@ namespace rt_tm {
 		static constexpr auto output_dims			  = output::dims;
 		using input_type01							  = typename input01::output_type;
 		using output_type							  = typename output::output_type;
-		static constexpr size_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
 		static_assert(static_assert_printer<(input_total_elements == output_total_elements), kernel_traits, output, input01>::impl,
 			"RMS_NORM: Total element count must match between input and output");
 	};
@@ -98,7 +98,7 @@ namespace rt_tm {
 		static constexpr auto output_dims	   = output::dims;
 		using input_type01					   = typename input01::output_type;
 		using output_type					   = typename output::output_type;
-		static constexpr size_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
 	};
 
 	template<typename output, typename input01, typename input02> struct kernel_traits<kernel_type::softmax, output, input01, input02> {
@@ -127,8 +127,8 @@ namespace rt_tm {
 		static constexpr auto output_dims  = output::dims;
 		using input_type01				   = typename input01::output_type;
 		using output_type				   = typename output::output_type;
-		static constexpr size_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
 		static_assert(static_assert_printer<(input_total_elements == output_total_elements), kernel_traits, output, input01>::impl,
 			"RESHAPE: Total element count must be preserved");
 	};
@@ -140,8 +140,8 @@ namespace rt_tm {
 		static constexpr auto output_dims  = output::dims;
 		using input_type01				   = typename input01::output_type;
 		using output_type				   = typename output::output_type;
-		static constexpr size_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
 		static_assert(static_assert_printer<(input_total_elements == output_total_elements), kernel_traits, output, input01>::impl,
 			"TRANSPOSE: Total element count must be preserved");
 	};
@@ -153,8 +153,8 @@ namespace rt_tm {
 		static constexpr auto output_dims  = output::dims;
 		using input_type01				   = typename input01::output_type;
 		using output_type				   = typename output::output_type;
-		static constexpr size_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
 		static_assert(static_assert_printer<(input_total_elements == output_total_elements), kernel_traits, output, input01>::impl,
 			"PERMUTE: Total element count must be preserved");
 	};
@@ -166,11 +166,11 @@ namespace rt_tm {
 		static constexpr auto output_dims			  = output::dims;
 		using input_type01							  = typename input01::output_type;
 		using output_type							  = typename output::output_type;
-		static constexpr size_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
 		static_assert(static_assert_printer<(input_total_elements == output_total_elements), kernel_traits, output, input01>::impl,
 			"CONT: Total element count must match between input and output");
-		static constexpr size_t total_elements = input_total_elements;
+		static constexpr uint64_t total_elements = input_total_elements;
 	};
 
 	template<typename output, typename input01> struct kernel_traits<kernel_type::view, output, input01> {
@@ -180,8 +180,8 @@ namespace rt_tm {
 		static constexpr auto output_dims  = output::dims;
 		using input_type01				   = typename input01::output_type;
 		using output_type				   = typename output::output_type;
-		static constexpr size_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t input_total_elements  = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t output_total_elements = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
 		static_assert(static_assert_printer<(input_total_elements >= output_total_elements), kernel_traits, output, input01>::impl,
 			"VIEW: Output cannot have more elements than input");
 	};
@@ -210,12 +210,12 @@ namespace rt_tm {
 		using input_type01				   = typename input01::output_type;
 		using input_type02				   = typename input02::output_type;
 		using output_type				   = typename output::output_type;
-		static constexpr size_t M		   = input01_dims[0];
-		static constexpr size_t K		   = input01_dims[1];
-		static constexpr size_t N		   = input02_dims[1];
-		static constexpr size_t batch_size = input01_dims[2] * input01_dims[3];
-		static constexpr size_t expected_output_elements = M * (input02_dims[1] == 1 ? 1 : N) * batch_size;
-		static constexpr size_t actual_output_elements	 = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
+		static constexpr uint64_t M		   = input01_dims[0];
+		static constexpr uint64_t K		   = input01_dims[1];
+		static constexpr uint64_t N		   = input02_dims[1];
+		static constexpr uint64_t batch_size = input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t expected_output_elements = M * (input02_dims[1] == 1 ? 1 : N) * batch_size;
+		static constexpr uint64_t actual_output_elements	 = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3];
 	};
 
 	template<typename output, typename input01, typename input02> struct kernel_traits<kernel_type::get_rows, output, input01, input02> {
@@ -237,9 +237,9 @@ namespace rt_tm {
 		using input_type01				   = typename input01::output_type;
 		using input_type02				   = typename input02::output_type;
 		using output_type				   = typename output::output_type;
-		static constexpr size_t vocab_size		= input01_dims[0];
-		static constexpr size_t embedding_dim	= input01_dims[1];
-		static constexpr size_t sequence_length = input02_dims[0];
+		static constexpr uint64_t vocab_size		= input01_dims[0];
+		static constexpr uint64_t embedding_dim	= input01_dims[1];
+		static constexpr uint64_t sequence_length = input02_dims[0];
 	};
 
 	template<typename output, typename input01, typename input02, typename input03> struct kernel_traits<kernel_type::rope, output, input01, input02, input03> {
@@ -261,9 +261,9 @@ namespace rt_tm {
 		using input_type02						= typename input02::output_type;
 		using input_type03						= typename input03::output_type;
 		using output_type						= typename output::output_type;
-		static constexpr size_t head_dim		= input01::dims[0];
-		static constexpr size_t sequence_length = input01::dims[1];
-		static constexpr size_t num_heads		= input01::dims[2];
+		static constexpr uint64_t head_dim		= input01::dims[0];
+		static constexpr uint64_t sequence_length = input01::dims[1];
+		static constexpr uint64_t num_heads		= input01::dims[2];
 	};
 
 	template<typename output, typename input01, typename input02> struct kernel_traits<kernel_type::add, output, input01, input02> {
@@ -288,7 +288,7 @@ namespace rt_tm {
 		using input_type01					   = typename input01::output_type;
 		using input_type02					   = typename input02::output_type;
 		using output_type					   = typename output::output_type;
-		static constexpr size_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
 	};
 
 	template<typename output, typename input01, typename input02> struct kernel_traits<kernel_type::sub, output, input01, input02> {
@@ -313,7 +313,7 @@ namespace rt_tm {
 		using input_type01					   = typename input01::output_type;
 		using input_type02					   = typename input02::output_type;
 		using output_type					   = typename output::output_type;
-		static constexpr size_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
 	};
 
 	template<typename input01, typename input02> struct kernel_traits<kernel_type::copy, input01, input02> {
@@ -323,11 +323,11 @@ namespace rt_tm {
 		static constexpr auto input02_dims		= input02::dims;
 		using input_type01						= typename input01::output_type;
 		using input_type02						= typename input02::output_type;
-		static constexpr size_t source_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
-		static constexpr size_t dest_elements	= input02_dims[0] * input02_dims[1] * input02_dims[2] * input02_dims[3];
+		static constexpr uint64_t source_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t dest_elements	= input02_dims[0] * input02_dims[1] * input02_dims[2] * input02_dims[3];
 		static_assert(static_assert_printer<(source_elements == dest_elements), kernel_traits, input01, input02>::impl,
 			"COPY: Source and destination must have same total element count");
-		static constexpr size_t total_elements = source_elements;
+		static constexpr uint64_t total_elements = source_elements;
 	};
 
 	template<typename input01> struct kernel_traits<kernel_type::none, input01> {
@@ -335,7 +335,7 @@ namespace rt_tm {
 		static constexpr auto input01_dims	   = input01::dims;
 		using input_type01					   = typename input01::output_type;
 		using output_type					   = typename input01::output_type;
-		static constexpr size_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
+		static constexpr uint64_t total_elements = input01_dims[0] * input01_dims[1] * input01_dims[2] * input01_dims[3];
 	};
 
 }

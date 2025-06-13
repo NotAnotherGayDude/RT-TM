@@ -32,7 +32,7 @@ namespace rt_tm {
 		using value_type = uint8_t;
 		using alloc		 = allocator<value_type>;
 		using pointer	 = value_type*;
-		using size_type	 = size_t;
+		using size_type	 = uint64_t;
 
 		RT_TM_FORCE_INLINE memory_buffer() noexcept = default;
 
@@ -52,7 +52,7 @@ namespace rt_tm {
 			*this = std::move(other);
 		}
 
-		RT_TM_FORCE_INLINE void init(size_t size) noexcept {
+		RT_TM_FORCE_INLINE void init(uint64_t size) noexcept {
 			if (data_val) {
 				clear();
 			}
@@ -76,10 +76,10 @@ namespace rt_tm {
 			return data_val;
 		}
 
-		RT_TM_FORCE_INLINE void* claim_memory(size_t amount_to_claim) noexcept {
-			size_t alignment = alignments[cpu_arch_index_holder::cpu_arch_index];
+		RT_TM_FORCE_INLINE void* claim_memory(uint64_t amount_to_claim) noexcept {
+			uint64_t alignment = alignments[cpu_arch_index_holder::cpu_arch_index];
 
-			size_t aligned_amount = roundUpToMultiple(amount_to_claim, alignment);
+			uint64_t aligned_amount = roundUpToMultiple(amount_to_claim, alignment);
 
 			if (current_offset + aligned_amount > size_val) {
 				if constexpr (config.exceptions) {

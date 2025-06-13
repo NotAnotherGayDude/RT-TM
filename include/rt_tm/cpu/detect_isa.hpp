@@ -55,7 +55,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace rt_tm {
 
-	enum class instruction_set : uint64_t {
+	enum class instruction_set : size_t {
 		DEFAULT		= 0x0,
 		NEON		= 0x1,
 		SVE			= 0x2,
@@ -82,18 +82,18 @@ namespace rt_tm {
 	#include <cstring>
 
 	static instruction_set get_detect_supported_architectures() {
-		uint64_t host_isa = 0x0;
+		size_t host_isa = 0x0;
 
 		int neon_supported = 0;
 		size_t size		   = sizeof(neon_supported);
 		if (sysctlbyname("hw.optional.neon", &neon_supported, &size, NULL, 0) == 0 && neon_supported) {
-			host_isa |= static_cast<uint64_t>(instruction_set::NEON);
+			host_isa |= static_cast<size_t>(instruction_set::NEON);
 		}
 
 		int sve_supported = 0;
 		size			  = sizeof(sve_supported);
 		if (sysctlbyname("hw.optional.sve", &sve_supported, &size, NULL, 0) == 0 && sve_supported) {
-			host_isa |= static_cast<uint64_t>(instruction_set::SVE);
+			host_isa |= static_cast<size_t>(instruction_set::SVE);
 		}
 
 		return static_cast<instruction_set>(host_isa);
@@ -101,23 +101,23 @@ namespace rt_tm {
 
 #elif defined(RT_TM_ARCH_X86_64)
 
-	inline static constexpr uint64_t cpuid_avx2_bit		   = 1 << 5;
-	inline static constexpr uint64_t cpuid_bmi1_bit		   = 1 << 3;
-	inline static constexpr uint64_t cpuid_bmi2_bit		   = 1 << 8;
-	inline static constexpr uint64_t cpuid_avx512f_bit	   = 1 << 16;
-	inline static constexpr uint64_t cpuid_avx512dq_bit	   = 1 << 17;
-	inline static constexpr uint64_t cpuid_avx512ifma_bit  = 1 << 21;
-	inline static constexpr uint64_t cpuid_avx512pf_bit	   = 1 << 26;
-	inline static constexpr uint64_t cpuid_avx512er_bit	   = 1 << 27;
-	inline static constexpr uint64_t cpuid_avx512cd_bit	   = 1 << 28;
-	inline static constexpr uint64_t cpuid_avx512bw_bit	   = 1 << 30;
-	inline static constexpr uint64_t cpuid_avx512vl_bit	   = 1U << 31;
-	inline static constexpr uint64_t cpuid_avx512vbmi2_bit = 1 << 6;
-	inline static constexpr uint64_t cpuid_avx256_saved	   = uint64_t(1) << 2;
-	inline static constexpr uint64_t cpuid_avx512_saved	   = uint64_t(7) << 5;
-	inline static constexpr uint64_t cpuid_sse42_bit	   = 1 << 20;
-	inline static constexpr uint64_t cpuid_osxsave		   = (uint64_t(1) << 26) | (uint64_t(1) << 27);
-	inline static constexpr uint64_t cpuid_pclmulqdq_bit   = 1 << 1;
+	inline static constexpr size_t cpuid_avx2_bit		   = 1 << 5;
+	inline static constexpr size_t cpuid_bmi1_bit		   = 1 << 3;
+	inline static constexpr size_t cpuid_bmi2_bit		   = 1 << 8;
+	inline static constexpr size_t cpuid_avx512f_bit	   = 1 << 16;
+	inline static constexpr size_t cpuid_avx512dq_bit	   = 1 << 17;
+	inline static constexpr size_t cpuid_avx512ifma_bit  = 1 << 21;
+	inline static constexpr size_t cpuid_avx512pf_bit	   = 1 << 26;
+	inline static constexpr size_t cpuid_avx512er_bit	   = 1 << 27;
+	inline static constexpr size_t cpuid_avx512cd_bit	   = 1 << 28;
+	inline static constexpr size_t cpuid_avx512bw_bit	   = 1 << 30;
+	inline static constexpr size_t cpuid_avx512vl_bit	   = 1U << 31;
+	inline static constexpr size_t cpuid_avx512vbmi2_bit = 1 << 6;
+	inline static constexpr size_t cpuid_avx256_saved	   = size_t(1) << 2;
+	inline static constexpr size_t cpuid_avx512_saved	   = size_t(7) << 5;
+	inline static constexpr size_t cpuid_sse42_bit	   = 1 << 20;
+	inline static constexpr size_t cpuid_osxsave		   = (size_t(1) << 26) | (size_t(1) << 27);
+	inline static constexpr size_t cpuid_pclmulqdq_bit   = 1 << 1;
 
 	RT_TM_FORCE_INLINE static void get_cpu_id(int32_t* eax, int32_t* ebx, int32_t* ecx, int32_t* edx) {
 	#if defined(_MSC_VER)
@@ -130,7 +130,7 @@ namespace rt_tm {
 	#elif defined(HAVE_GCC_GET_CPUID) && defined(USE_GCC_GET_CPUID)
 		__get_cpuid(*eax, eax, ebx, ecx, edx);
 	#else
-		uint64_t a = *eax, b, c = *ecx, d;
+		size_t a = *eax, b, c = *ecx, d;
 		asm volatile("cpuid\n\t" : "+a"(a), "=b"(b), "+c"(c), "=d"(d));
 		*eax = a;
 		*ebx = b;
@@ -139,32 +139,32 @@ namespace rt_tm {
 	#endif
 	}
 
-	RT_TM_FORCE_INLINE static uint64_t xgetbv() {
+	RT_TM_FORCE_INLINE static size_t xgetbv() {
 	#if defined(_MSC_VER)
 		return _xgetbv(0);
 	#else
-		uint64_t xcr0_lo, xcr0_hi;
+		size_t xcr0_lo, xcr0_hi;
 		asm volatile("xgetbv\n\t" : "=a"(xcr0_lo), "=d"(xcr0_hi) : "c"(0));
-		return xcr0_lo | (uint64_t(xcr0_hi) << 32);
+		return xcr0_lo | (size_t(xcr0_hi) << 32);
 	#endif
 	}
 
 	RT_TM_FORCE_INLINE static instruction_set get_detect_supported_architectures() {
 		int32_t eax, ebx, ecx, edx;
-		uint64_t host_isa = 0x0;
+		size_t host_isa = 0x0;
 
 		eax = 0x1;
 		ecx = 0x0;
 		get_cpu_id(&eax, &ebx, &ecx, &edx);
 
 		if (ecx & cpuid_sse42_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::SSE42);
+			host_isa |= static_cast<size_t>(instruction_set::SSE42);
 		} else {
 			return static_cast<instruction_set>(host_isa);
 		}
 
 		if (ecx & cpuid_pclmulqdq_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::PCLMULQDQ);
+			host_isa |= static_cast<size_t>(instruction_set::PCLMULQDQ);
 		}
 
 
@@ -172,7 +172,7 @@ namespace rt_tm {
 			return static_cast<instruction_set>(host_isa);
 		}
 
-		uint64_t xcr0 = xgetbv();
+		size_t xcr0 = xgetbv();
 
 		if ((xcr0 & cpuid_avx256_saved) == 0) {
 			return static_cast<instruction_set>(host_isa);
@@ -182,14 +182,14 @@ namespace rt_tm {
 		ecx = 0x0;
 		get_cpu_id(&eax, &ebx, &ecx, &edx);
 		if (ebx & cpuid_avx2_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX2);
+			host_isa |= static_cast<size_t>(instruction_set::AVX2);
 		}
 		if (ebx & cpuid_bmi1_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::BMI1);
+			host_isa |= static_cast<size_t>(instruction_set::BMI1);
 		}
 
 		if (ebx & cpuid_bmi2_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::BMI2);
+			host_isa |= static_cast<size_t>(instruction_set::BMI2);
 		}
 
 		if (!((xcr0 & cpuid_avx512_saved) == cpuid_avx512_saved)) {
@@ -197,39 +197,39 @@ namespace rt_tm {
 		}
 
 		if (ebx & cpuid_avx512f_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512F);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512F);
 		}
 
 		if (ebx & cpuid_avx512dq_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512DQ);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512DQ);
 		}
 
 		if (ebx & cpuid_avx512ifma_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512IFMA);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512IFMA);
 		}
 
 		if (ebx & cpuid_avx512pf_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512PF);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512PF);
 		}
 
 		if (ebx & cpuid_avx512er_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512ER);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512ER);
 		}
 
 		if (ebx & cpuid_avx512cd_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512CD);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512CD);
 		}
 
 		if (ebx & cpuid_avx512bw_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512BW);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512BW);
 		}
 
 		if (ebx & cpuid_avx512vl_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512VL);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512VL);
 		}
 
 		if (ecx & cpuid_avx512vbmi2_bit) {
-			host_isa |= static_cast<uint64_t>(instruction_set::AVX512VBMI2);
+			host_isa |= static_cast<size_t>(instruction_set::AVX512VBMI2);
 		}
 
 		return static_cast<instruction_set>(host_isa);
@@ -237,8 +237,8 @@ namespace rt_tm {
 
 #else
 
-	RT_TM_FORCE_INLINE static uint64_t get_detect_supported_architectures() {
-		return static_cast<uint64_t>(instruction_set::DEFAULT);
+	RT_TM_FORCE_INLINE static size_t get_detect_supported_architectures() {
+		return static_cast<size_t>(instruction_set::DEFAULT);
 	}
 
 #endif
@@ -249,13 +249,13 @@ namespace rt_tm {
 #elif defined(RT_TM_FALLBACK)
 		return 0;
 #else
-		if (static_cast<uint64_t>(set) & static_cast<uint64_t>(instruction_set::AVX512F)) {
+		if (static_cast<size_t>(set) & static_cast<size_t>(instruction_set::AVX512F)) {
 			return 2;
-		} else if (static_cast<uint64_t>(set) & static_cast<uint64_t>(instruction_set::AVX2)) {
+		} else if (static_cast<size_t>(set) & static_cast<size_t>(instruction_set::AVX2)) {
 			return 1;
-		} else if (static_cast<uint64_t>(set) & static_cast<uint64_t>(instruction_set::SVE)) {
+		} else if (static_cast<size_t>(set) & static_cast<size_t>(instruction_set::SVE)) {
 			return 2;
-		} else if (static_cast<uint64_t>(set) & static_cast<uint64_t>(instruction_set::NEON)) {
+		} else if (static_cast<size_t>(set) & static_cast<size_t>(instruction_set::NEON)) {
 			return 1;
 		} else {
 			return 0;

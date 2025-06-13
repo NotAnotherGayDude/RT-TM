@@ -30,7 +30,7 @@ namespace rt_tm {
 
 	RT_TM_FORCE_INLINE consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch, bool exceptions = false,
 		kv_cache_strategy cache_strategy = kv_cache_strategy::paged, bool use_gradient_checkpointing = false, rope_scaling_type rope_scaling = rope_scaling_type::linear,
-		bool use_rotary_embeddings = true, size_t kv_cache_block_size = 16, bool use_flash_attention = true, norm_type rms_norm_type = norm_type::rms_standard,
+		bool use_rotary_embeddings = true, uint64_t kv_cache_block_size = 16, bool use_flash_attention = true, norm_type rms_norm_type = norm_type::rms_standard,
 		float norm_epsilon = 1e-6f) {
 		model_config<decltype(model_generation), decltype(model_size)> config{ model_generation, model_size, kernel_profile, arch, cache_strategy, use_gradient_checkpointing,
 			rope_scaling, use_rotary_embeddings, kv_cache_block_size, use_flash_attention, rms_norm_type, norm_epsilon, exceptions };
@@ -57,14 +57,14 @@ namespace rt_tm {
 		using op_type_type						  = typename model_traits_type::op_type_type;
 		using kernel_type_profile_traits_type = kernel_type_profile_traits<config.kernel_profile>;
 		using base_type						  = model_base<decltype(config.model_size), decltype(config.model_generation)>;
-		inline static constexpr size_t total_required_bytes{
+		inline static constexpr uint64_t total_required_bytes{
 			collect_required_bytes<indices, typename model_traits_type::op_type_type, model<indices, config>, model_traits_type, kernel_type_profile_traits_type>::impl()
 		};
 		RT_TM_FORCE_INLINE model& operator=(model&&)	  = delete;
 		RT_TM_FORCE_INLINE model(model&&)				  = delete;
 		RT_TM_FORCE_INLINE model& operator=(const model&) = delete;
 		RT_TM_FORCE_INLINE model(const model&)			  = delete;
-		RT_TM_FORCE_INLINE model(const std::string_view& path_to_model_file, size_t thread_count = 32)
+		RT_TM_FORCE_INLINE model(const std::string_view&, uint64_t thread_count = 32)
 			: thread_pool<indices, model<indices, config>, model_traits<config.arch, config.model_size, config.model_generation>,
 				  kernel_type_profile_traits<config.kernel_profile>>{ thread_count } {
 			memory.init(total_required_bytes);

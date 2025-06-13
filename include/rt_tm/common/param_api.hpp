@@ -58,17 +58,17 @@ namespace rt_tm {
 	template<typename derived_type> struct param_api {
 		template<typename value_type, auto offset> RT_TM_FORCE_INLINE const value_type& get_value() const {
 			const value_type* ptr = static_cast<const value_type*>(static_cast<const void*>(static_cast<const derived_type*>(this)->aux_params.data()));
-			return ptr[static_cast<size_t>(offset) / sizeof(value_type)];
+			return ptr[static_cast<uint64_t>(offset) / sizeof(value_type)];
 		}
 
 		template<typename value_type, auto offset> RT_TM_FORCE_INLINE value_type& get_value() {
 			value_type* ptr = static_cast<value_type*>(static_cast<void*>(static_cast<derived_type*>(this)->aux_params.data()));
-			return ptr[static_cast<size_t>(offset) / sizeof(value_type)];
+			return ptr[static_cast<uint64_t>(offset) / sizeof(value_type)];
 		}
 
 		template<auto offset, typename value_type> RT_TM_FORCE_INLINE void set_value(value_type value) {
 			static_cast<derived_type*>(this)->aux_params.resize(static_cast<derived_type*>(this)->aux_params.size() + sizeof(value_type));
-			std::memcpy(static_cast<derived_type*>(this)->aux_params.data() + static_cast<size_t>(offset), &value, sizeof(value));
+			std::memcpy(static_cast<derived_type*>(this)->aux_params.data() + static_cast<uint64_t>(offset), &value, sizeof(value));
 		}
 	};
 

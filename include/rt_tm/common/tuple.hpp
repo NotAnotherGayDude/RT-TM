@@ -73,7 +73,7 @@ namespace rt_tm {
 
 	template<typename value_type> using type_t = typename value_type::type;
 
-	template<size_t index> using tag = std::integral_constant<size_t, index>;
+	template<uint64_t index> using tag = std::integral_constant<uint64_t, index>;
 
 	template<typename tup> using base_list_t = typename std::decay_t<tup>::base_list;
 
@@ -98,7 +98,7 @@ namespace rt_tm {
 		using bases::decl_elem...;
 	};
 
-	template<size_t index, typename value_type> struct tuple_elem {
+	template<uint64_t index, typename value_type> struct tuple_elem {
 		static value_type decl_elem(tag<index>);
 		using type = value_type;
 
@@ -117,21 +117,21 @@ namespace rt_tm {
 
 	template<typename index_sequence, typename... value_type> struct get_tuple_base;
 
-	template<size_t... index, typename... value_type> struct get_tuple_base<std::index_sequence<index...>, value_type...> {
+	template<uint64_t... index, typename... value_type> struct get_tuple_base<std::index_sequence<index...>, value_type...> {
 		using type = type_map<tuple_elem<index, value_type>...>;
 	};
 
 	template<typename... value_type> using tuple_base_t = typename get_tuple_base<std::make_index_sequence<sizeof...(value_type)>, value_type...>::type;
 
 	template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
-		static constexpr size_t index = sizeof...(value_type);
+		static constexpr uint64_t index = sizeof...(value_type);
 		using super					  = tuple_base_t<value_type...>;
 		using super::operator[];
 		using super::decl_elem;
 	};
 
 	template<> struct tuple<> : tuple_base_t<> {
-		static constexpr size_t index = 0;
+		static constexpr uint64_t index = 0;
 		using super					  = tuple_base_t<>;
 		using base_list				  = type_list<>;
 		using element_list			  = type_list<>;
@@ -139,7 +139,7 @@ namespace rt_tm {
 
 	template<typename... types> tuple(types&&...) -> tuple<std::remove_cvref_t<types>...>;
 
-	template<size_t index, indexable tup> static constexpr decltype(auto) get(tup&& tupleVal) {
+	template<uint64_t index, indexable tup> static constexpr decltype(auto) get(tup&& tupleVal) {
 		return static_cast<tup&&>(tupleVal)[tag<index>()];
 	}
 
@@ -189,17 +189,17 @@ namespace rt_tm {
 
 	template<typename... value_type> struct tuple_size;
 
-	template<size_t index, typename... value_type> struct tuple_element;
+	template<uint64_t index, typename... value_type> struct tuple_element;
 
-	template<size_t index, typename... value_type> struct tuple_element<index, tuple<value_type...>> {
+	template<uint64_t index, typename... value_type> struct tuple_element<index, tuple<value_type...>> {
 		using type = decltype(tuple<std::remove_cvref_t<value_type>...>::decl_elem(tag<index>()));
 	};
 
-	template<size_t index, typename tuple_type> using tuple_element_t = typename tuple_element<index, tuple_type>::type;
+	template<uint64_t index, typename tuple_type> using tuple_element_t = typename tuple_element<index, tuple_type>::type;
 
-	template<typename... value_type> struct tuple_size<tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+	template<typename... value_type> struct tuple_size<tuple<value_type...>> : std::integral_constant<uint64_t, sizeof...(value_type)> {};
 
-	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : std::integral_constant<uint64_t, sizeof...(value_type)> {};
 
 	template<typename... value_type> static constexpr auto tuple_size_v = tuple_size<std::remove_cvref_t<value_type>...>::value;
 }

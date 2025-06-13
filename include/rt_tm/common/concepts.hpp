@@ -144,4 +144,10 @@ namespace rt_tm {
 	template<typename T>
 	concept is_valid_activation_type = is_fp_type<T> || is_quantized_type<T>;
 
+	// from
+	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
+	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
+
+	template<template<typename...> typename value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
+
 }

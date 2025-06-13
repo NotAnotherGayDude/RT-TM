@@ -25,7 +25,7 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<typename value_type_new, size_t size> class array_iterator {
+	template<typename value_type_new, uint64_t size> class array_iterator {
 	  public:
 		using iterator_concept	= std::contiguous_iterator_tag;
 		using iterator_category = std::random_access_iterator_tag;

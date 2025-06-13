@@ -31,7 +31,7 @@ namespace rt_tm {
 	template<> struct tokenizer<model_arch::llama> {
 		RT_TM_FORCE_INLINE tokenizer() noexcept = default;
 
-		template<typename token_input_type> RT_TM_FORCE_INLINE void tokenize(std::string_view input, token_input_type* destination) {
+		template<typename token_input_type> RT_TM_FORCE_INLINE void tokenize(std::string_view, token_input_type*) {
 			return;
 		}
 	};

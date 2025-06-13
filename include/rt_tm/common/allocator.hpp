@@ -26,7 +26,7 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<typename value_type> RT_TM_FORCE_INLINE constexpr value_type roundUpToMultiple(value_type value, value_type multiple) noexcept {
+	template<typename value_type01, typename value_type02> RT_TM_FORCE_INLINE constexpr value_type01 roundUpToMultiple(value_type01 value, value_type02 multiple) noexcept {
 		if ((multiple & (multiple - 1)) == 0) {
 			auto mulSub1{ multiple - 1 };
 			auto notMulSub1{ ~mulSub1 };
@@ -44,7 +44,7 @@ namespace rt_tm {
 		using const_pointer	   = const value_type_new*;
 		using reference		   = value_type_new&;
 		using const_reference  = const value_type_new&;
-		using size_type		   = std::size_t;
+		using size_type		   = std::uint64_t;
 		using difference_type  = std::ptrdiff_t;
 		using allocator_traits = std::allocator_traits<allocator<value_type>>;
 
@@ -57,19 +57,19 @@ namespace rt_tm {
 		template<typename U> allocator(const allocator<U>&) noexcept {
 		}
 
-		RT_TM_FORCE_INLINE static pointer allocate(size_type count) noexcept {
-			if RT_TM_UNLIKELY (count == 0) {
+		RT_TM_FORCE_INLINE static pointer allocate(size_type count_new) noexcept {
+			if RT_TM_UNLIKELY (count_new == 0) {
 				return nullptr;
 			}
-			size_t alignment{ alignments[cpu_arch_index_holder::cpu_arch_index] };
+			uint64_t alignment{ alignments[cpu_arch_index_holder::cpu_arch_index] };
 #if defined(RT_TM_PLATFORM_WINDOWS) || defined(RT_TM_PLATFORM_LINUX)
-			return static_cast<value_type*>(_mm_malloc(roundUpToMultiple(count * sizeof(value_type), alignment), alignment));
+			return static_cast<value_type*>(_mm_malloc(roundUpToMultiple(count_new * sizeof(value_type), alignment), alignment));
 #else
-			return static_cast<value_type*>(aligned_alloc(alignment, roundUpToMultiple(count * sizeof(value_type), alignment)));
+			return static_cast<value_type*>(aligned_alloc(alignment, roundUpToMultiple(count_new * sizeof(value_type), alignment)));
 #endif
 		}
 
-		RT_TM_FORCE_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
+		RT_TM_FORCE_INLINE void deallocate(pointer ptr, uint64_t = 0) noexcept {
 			if RT_TM_LIKELY (ptr) {
 #if defined(RT_TM_PLATFORM_WINDOWS) || defined(RT_TM_PLATFORM_LINUX)
 				_mm_free(ptr);

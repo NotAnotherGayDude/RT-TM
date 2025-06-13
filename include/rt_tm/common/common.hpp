@@ -25,6 +25,7 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/concepts.hpp>
 #include <iostream>
 #include <cstdint>
+#include <chrono>
 #include <thread>
 #include <mutex>
 #include <latch>
@@ -32,18 +33,24 @@ RealTimeChris (Chris M.)
 namespace rt_tm {
 
 	struct alignas(64) latch_wrapper {
-		RT_TM_FORCE_INLINE latch_wrapper() noexcept = default;
-		RT_TM_FORCE_INLINE latch_wrapper(size_t count) : sync_flag{ static_cast<ptrdiff_t>(count) } {};
+		RT_TM_FORCE_INLINE latch_wrapper() noexcept								   = default;
+		RT_TM_FORCE_INLINE latch_wrapper& operator=(const latch_wrapper&) noexcept = delete;
+		RT_TM_FORCE_INLINE latch_wrapper(const latch_wrapper&) noexcept			   = delete;
+		RT_TM_FORCE_INLINE latch_wrapper(uint64_t count) : sync_flag{ static_cast<ptrdiff_t>(count) } {
+		}
 		alignas(64) std::latch sync_flag{ 0 };
 	};
 
 	struct alignas(64) latch_wrapper_holder {
-		RT_TM_FORCE_INLINE latch_wrapper_holder() noexcept = default;
-		RT_TM_FORCE_INLINE latch_wrapper_holder(size_t count) : sync_flag{ std::make_unique<latch_wrapper>(count) } {};
-		RT_TM_FORCE_INLINE void reset(size_t count) {
+		RT_TM_FORCE_INLINE latch_wrapper_holder() noexcept										 = default;
+		RT_TM_FORCE_INLINE latch_wrapper_holder& operator=(const latch_wrapper_holder&) noexcept = delete;
+		RT_TM_FORCE_INLINE latch_wrapper_holder(const latch_wrapper_holder&) noexcept			 = delete;
+		RT_TM_FORCE_INLINE latch_wrapper_holder& operator=(latch_wrapper_holder&&) noexcept		 = default;
+		RT_TM_FORCE_INLINE latch_wrapper_holder(latch_wrapper_holder&&) noexcept				 = default;
+		RT_TM_FORCE_INLINE void reset(uint64_t count) {
 			sync_flag = std::make_unique<latch_wrapper>(count);
-		};
-		alignas(64) std::unique_ptr<latch_wrapper> sync_flag{};
+		}
+
 		RT_TM_FORCE_INLINE bool try_wait() {
 			return sync_flag->sync_flag.try_wait();
 		}
@@ -60,6 +67,106 @@ namespace rt_tm {
 			sync_flag->sync_flag.wait();
 		}
 
+		alignas(64) std::unique_ptr<latch_wrapper> sync_flag{};
+	};
+
+	template<typename value_type>
+	concept time_t = is_specialization_v<value_type, std::chrono::duration>;
+
+	template<time_t value_type = std::chrono::nanoseconds> class stop_watch {
+	  public:
+		using hr_clock = std::conditional_t<std::chrono::high_resolution_clock::is_steady, std::chrono::high_resolution_clock, std::chrono::steady_clock>;
+		static constexpr bool lock_free{ std::atomic<value_type>::is_always_lock_free };
+		using time_type = std::conditional_t<lock_free, value_type, uint64_t>;
+
+		RT_TM_FORCE_INLINE stop_watch(uint64_t newTime) noexcept {
+			total_time_units.store(time_type{ newTime }, std::memory_order_release);
+		}
+
+		RT_TM_FORCE_INLINE stop_watch& operator=(stop_watch&& other) noexcept {
+			if RT_TM_LIKELY (this != &other) {
+				total_time_units.store(other.total_time_units.load(std::memory_order_acquire), std::memory_order_release);
+				start_time_units.store(other.start_time_units.load(std::memory_order_acquire), std::memory_order_release);
+			}
+			return *this;
+		}
+
+		RT_TM_FORCE_INLINE stop_watch(stop_watch&& other) noexcept {
+			*this = std::move(other);
+		}
+
+		RT_TM_FORCE_INLINE stop_watch& operator=(const stop_watch& other) noexcept {
+			if RT_TM_LIKELY (this != &other) {
+				total_time_units.store(other.total_time_units.load(std::memory_order_acquire), std::memory_order_release);
+				start_time_units.store(other.start_time_units.load(std::memory_order_acquire), std::memory_order_release);
+			}
+			return *this;
+		}
+
+		RT_TM_FORCE_INLINE stop_watch(const stop_watch& other) noexcept {
+			*this = other;
+		}
+
+		RT_TM_FORCE_INLINE bool has_time_elapsed() noexcept {
+			return ((get_current_time() - start_time_units.load(std::memory_order_acquire)) >= total_time_units.load(std::memory_order_acquire));
+		}
+
+		RT_TM_FORCE_INLINE void add_time() noexcept {
+			std::unique_lock lock{ mutex };
+			values.emplace_back(total_time_elapsed());
+			lock.release();
+			reset();
+		}
+
+		RT_TM_FORCE_INLINE uint64_t get_average(time_type newTimeValue = time_type{}) noexcept {
+			std::unique_lock lock{ mutex };
+			uint64_t total_time{};
+			for (auto& value: values) {
+				total_time += get_value_as_uint(value);
+			}
+			return total_time / ((values.size() > 0) ? values.size() : 1);
+		}
+
+		RT_TM_FORCE_INLINE void reset(time_type newTimeValue = time_type{}) noexcept {
+			if RT_TM_LIKELY (newTimeValue != time_type{}) {
+				total_time_units.store(newTimeValue, std::memory_order_release);
+			}
+			start_time_units.store(get_current_time(), std::memory_order_release);
+		}
+
+		RT_TM_FORCE_INLINE uint64_t get_total_wait_time() const noexcept {
+			return get_value_as_uint(total_time_units.load(std::memory_order_acquire));
+		}
+
+		RT_TM_FORCE_INLINE time_type total_time_elapsed() noexcept { 
+			return get_current_time() - start_time_units.load(std::memory_order_acquire);
+		}
+
+		RT_TM_FORCE_INLINE uint64_t total_time_elapsed_uint64() noexcept {
+			return get_value_as_uint(get_current_time()) - get_value_as_uint(start_time_units.load(std::memory_order_acquire));
+		}
+
+	  protected:
+		std::atomic<time_type> total_time_units{};
+		std::atomic<time_type> start_time_units{};
+		std::vector<time_type> values{};
+		std::mutex mutex{};
+
+		RT_TM_FORCE_INLINE time_type get_current_time() {
+			if constexpr (lock_free) {
+				return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch());
+			} else {
+				return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()).count();
+			}
+		}
+
+		RT_TM_FORCE_INLINE uint64_t get_value_as_uint(time_type time) {
+			if constexpr (lock_free) {
+				return time.count();
+			} else {
+				return time;
+			}
+		}
 	};
 
 	inline std::mutex mutex{};
@@ -69,36 +176,22 @@ namespace rt_tm {
 		std::cout << string << std::endl;
 	}
 
-	// from
-	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
-	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
-
-	template<template<typename...> typename value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
-
-	template<size_t N, auto lambda, typename... args> inline constexpr void for_each(args&&... arg_vals) {
-		if constexpr (N > 0) {
-			[&]<size_t... I>(std::index_sequence<I...>) {
-				( void )(lambda.template operator()<I>(std::forward<args>(arg_vals)...), ...);
-			}(std::make_index_sequence<N>{});
-		}
-	}
-
 	template<auto current_index, auto enum_count> RT_TM_FORCE_INLINE constexpr std::string_view get_enum_name() {
 		std::string_view return_string{ std::source_location::current().function_name() };
-		auto new_size	 = std::size("get_enum_name<");
-		size_t new_index = return_string.find("get_enum_name<") + new_size - 1;
-		return_string	 = return_string.substr(new_index, return_string.size() - new_index);
-		return_string	 = return_string.substr(0, return_string.find(','));
+		auto new_size	   = std::size("get_enum_name<");
+		uint64_t new_index = return_string.find("get_enum_name<") + new_size - 1;
+		return_string	   = return_string.substr(new_index, return_string.size() - new_index);
+		return_string	   = return_string.substr(0, return_string.find(','));
 		return return_string;
 	}
 
 	template<auto current_index, auto enum_count> RT_TM_FORCE_INLINE std::string print_enum_value(auto enum_val) {
-		if constexpr (static_cast<size_t>(current_index) < static_cast<size_t>(enum_count)) {
-			if (static_cast<size_t>(current_index) == static_cast<size_t>(enum_val)) {
+		if constexpr (static_cast<uint64_t>(current_index) < static_cast<uint64_t>(enum_count)) {
+			if (static_cast<uint64_t>(current_index) == static_cast<uint64_t>(enum_val)) {
 				constexpr std::string_view string{ get_enum_name<current_index, enum_count>() };
 				return static_cast<std::string>(string);
 			} else {
-				return print_enum_value<static_cast<decltype(enum_count)>(static_cast<size_t>(current_index) + 1), enum_count>(enum_val);
+				return print_enum_value<static_cast<decltype(enum_count)>(static_cast<uint64_t>(current_index) + 1), enum_count>(enum_val);
 			}
 		} else {
 			return {};
@@ -208,7 +301,7 @@ namespace rt_tm {
 		count,
 	};
 
-	enum class kernel_type_profile : size_t {
+	enum class kernel_type_profile : uint64_t {
 		fp16_mha,
 		fp16_moe,
 		bf16_mha,
@@ -224,7 +317,7 @@ namespace rt_tm {
 		count,
 	};
 
-	enum class norm_type : size_t {
+	enum class norm_type : uint64_t {
 		rms_standard,
 		rms_parallel,
 		rms_grouped,
@@ -235,7 +328,7 @@ namespace rt_tm {
 		count,
 	};
 
-	enum class kv_cache_strategy : size_t {
+	enum class kv_cache_strategy : uint64_t {
 		contiguous,
 		paged,
 		compressed,
@@ -244,7 +337,7 @@ namespace rt_tm {
 		count,
 	};
 
-	enum class rope_scaling_type : size_t {
+	enum class rope_scaling_type : uint64_t {
 		none,
 		linear,
 		dynamic,
@@ -270,7 +363,7 @@ namespace rt_tm {
 		bool use_gradient_checkpointing{};
 		rope_scaling_type rope_scaling{};
 		bool use_rotary_embeddings{};
-		size_t kv_cache_block_size{};
+		uint64_t kv_cache_block_size{};
 		bool use_flash_attention{};
 		norm_type rms_norm_type{};
 		float norm_epsilon{};
@@ -279,11 +372,11 @@ namespace rt_tm {
 	  protected:
 		template<typename model_generateion_type_newer, typename model_size_type_newer> friend struct model_base;
 		friend consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch, bool exceptions,
-			kv_cache_strategy cache_strategy, bool use_gradient_checkpointing, rope_scaling_type rope_scaling, bool use_rotary_embeddings, size_t kv_cache_block_size,
+			kv_cache_strategy cache_strategy, bool use_gradient_checkpointing, rope_scaling_type rope_scaling, bool use_rotary_embeddings, uint64_t kv_cache_block_size,
 			bool use_flash_attention, norm_type rms_norm_type, float norm_epsilon);
 
 		constexpr model_config(auto model_generation_new, auto model_size_new, kernel_type_profile kernel_profile_new, model_arch arch_new, kv_cache_strategy cache_strategy_new,
-			bool use_gradient_checkpointing_new, rope_scaling_type rope_scaling_new, bool use_rotary_embeddings_new, size_t kv_cache_block_size_new, bool use_flash_attention_new,
+			bool use_gradient_checkpointing_new, rope_scaling_type rope_scaling_new, bool use_rotary_embeddings_new, uint64_t kv_cache_block_size_new, bool use_flash_attention_new,
 			norm_type rms_norm_type_new, float norm_epsilon_new, bool exceptions_new)
 			: model_generation(model_generation_new), model_size(model_size_new), kernel_profile(kernel_profile_new), arch(arch_new), cache_strategy(cache_strategy_new),
 			  use_gradient_checkpointing(use_gradient_checkpointing_new), rope_scaling(rope_scaling_new), use_rotary_embeddings(use_rotary_embeddings_new),
@@ -295,15 +388,15 @@ namespace rt_tm {
 
 	struct cli_params {
 		std::string model_file{};
-		size_t thread_count{};
+		uint64_t thread_count{};
 	};
 
 	struct impl_indices {
-		size_t cpu_index{};
-		size_t gpu_index{};
+		uint64_t cpu_index{};
+		uint64_t gpu_index{};
 	};
 
 	struct op_graph_config {
-		size_t num_threads{ std::thread::hardware_concurrency() };
+		uint64_t num_threads{ std::thread::hardware_concurrency() };
 	};
 }

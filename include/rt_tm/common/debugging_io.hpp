@@ -54,7 +54,7 @@ namespace rt_tm {
 			const std::streamsize size = file.tellg();
 			file.seekg(0, std::ios::beg);
 			if (size != -1) {
-				contents.resize(static_cast<size_t>(size));
+				contents.resize(static_cast<uint64_t>(size));
 				if (!file.read(contents.data(), size)) {
 					if constexpr (exceptions) {
 						throw std::runtime_error("Failed to read file: " + filePath.string());
@@ -69,7 +69,7 @@ namespace rt_tm {
 			return contents;
 		}
 
-		size_t size() const noexcept {
+		uint64_t size() const noexcept {
 			return contents.size();
 		}
 
@@ -79,7 +79,7 @@ namespace rt_tm {
 
 	template<bool exceptions> class file_saver {
 	  public:
-		file_saver(const std::filesystem::path& path, const void* data, size_t size) {
+		file_saver(const std::filesystem::path& path, const void* data, uint64_t size) {
 			if (!data || size == 0) {
 				if constexpr (exceptions) {
 					throw std::runtime_error("Cannot save null or empty data to file: " + path.string());
@@ -108,14 +108,14 @@ namespace rt_tm {
 		}
 	};
 
-	std::string map_rt_tm_to_ggml(llama_op_types, size_t) {
+	std::string map_rt_tm_to_ggml(llama_op_types, uint64_t) {
 		return {};
-		//arch_traits<model_arch::llama>::tensor_names[static_cast<size_t>(rt_tm_enum)][layer_index].operator const char*();
+		//arch_traits<model_arch::llama>::tensor_names[static_cast<uint64_t>(rt_tm_enum)][layer_index].operator const char*();
 	}
 
 	std::string convert_rt_tm_name_to_ggml(std::string_view rt_tm_name) {
-		size_t dash_pos	   = rt_tm_name.find_last_of('-');
-		size_t layer_index = 0;
+		uint64_t dash_pos	   = rt_tm_name.find_last_of('-');
+		uint64_t layer_index = 0;
 
 		if (dash_pos != std::string_view::npos) {
 			std::string_view number_part = rt_tm_name.substr(dash_pos + 1);
@@ -132,13 +132,13 @@ namespace rt_tm {
 	}
 
 	struct intermediary_tensor {
-		static constexpr size_t tensor_len_size{ sizeof(uint64_t) };
-		static constexpr size_t name_len_size{ sizeof(uint64_t) };
-		static constexpr size_t dims_size{ sizeof(size_t) * 4 };
-		static constexpr size_t type_size{ sizeof(uint32_t) };
-		static constexpr size_t op_size{ sizeof(uint32_t) };
+		static constexpr uint64_t tensor_len_size{ sizeof(uint64_t) };
+		static constexpr uint64_t name_len_size{ sizeof(uint64_t) };
+		static constexpr uint64_t dims_size{ sizeof(uint64_t) * 4 };
+		static constexpr uint64_t type_size{ sizeof(uint32_t) };
+		static constexpr uint64_t op_size{ sizeof(uint32_t) };
 		std::vector<std::string> input_names{};
-		array<size_t, 4> dims{};
+		array<uint64_t, 4> dims{};
 		std::string name{};
 		data_type type{};
 		kernel_type op{};
@@ -146,8 +146,8 @@ namespace rt_tm {
 		intermediary_tensor() noexcept = default;
 		/*
 		intermediary_tensor(const core_base& other) {
-			//size_t nbytes{ other.core_total_byte_size() };
-			for (size_t x = 0; x < 4; ++x) {
+			//uint64_t nbytes{ other.core_total_byte_size() };
+			for (uint64_t x = 0; x < 4; ++x) {
 				dims[x] = other.allocated_dims[x];
 			}
 			op	 = other.type;
@@ -156,8 +156,8 @@ namespace rt_tm {
 		}
 		*/
 		intermediary_tensor(const core_base_creation_data& other) {
-			//size_t nbytes{ other.core_total_byte_size() };
-			for (size_t x = 0; x < 4; ++x) {
+			//uint64_t nbytes{ other.core_total_byte_size() };
+			for (uint64_t x = 0; x < 4; ++x) {
 				dims[x] = other.allocated_dims[x];
 			}
 			op	 = other.type;
@@ -197,10 +197,10 @@ namespace rt_tm {
 
 		/*
 		intermediary_tensor(const ggml_tensor& other) {
-			size_t nbytes{ ggml_nbytes(&other) };
+			uint64_t nbytes{ ggml_nbytes(&other) };
 			data.resize(nbytes);
 			std::memcpy(data.data(), other.data, nbytes);
-			for (size_t x = 0; x < 4; ++x) {
+			for (uint64_t x = 0; x < 4; ++x) {
 				dims[x] = other.ne[x];
 			}
 			type = static_cast<data_type>(other.type);
@@ -313,9 +313,9 @@ namespace rt_tm {
 
 	intermediary_tensor parse_tensor_from_string(const std::string& file_contents) {
 		intermediary_tensor tensor{};
-		size_t offset = 0;
+		uint64_t offset = 0;
 
-		constexpr size_t min_header_size =
+		constexpr uint64_t min_header_size =
 			intermediary_tensor::type_size + intermediary_tensor::op_size + intermediary_tensor::dims_size + intermediary_tensor::name_len_size + sizeof(uint64_t);
 
 		if (file_contents.size() < min_header_size) {
@@ -412,7 +412,7 @@ namespace rt_tm {
 					std::cerr << "Warning: Tensor has empty name" << std::endl;
 				}
 
-				for (size_t i = 0; i < 4; ++i) {
+				for (uint64_t i = 0; i < 4; ++i) {
 					if (tensor.dims[i] > 1000000) {
 						std::cerr << "Warning: Dimension " << i << " is very large: " << tensor.dims[i] << std::endl;
 					}
@@ -423,7 +423,7 @@ namespace rt_tm {
 				std::cout << "  Type: " << static_cast<int>(tensor.type) << std::endl;
 				std::cout << "  Op: " << static_cast<int>(tensor.op) << std::endl;
 				std::cout << "  Input names count: " << tensor.input_names.size() << std::endl;
-				for (size_t i = 0; i < tensor.input_names.size(); ++i) {
+				for (uint64_t i = 0; i < tensor.input_names.size(); ++i) {
 					std::cout << "    Input " << i << ": '" << tensor.input_names[i] << "'" << std::endl;
 				}
 			}

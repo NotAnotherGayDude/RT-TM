@@ -26,11 +26,11 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<typename value_type_new, size_t size_new> struct array {
+	template<typename value_type_new, uint64_t size_new> struct array {
 	  public:
-		static constexpr size_t size_val{ size_new };
+		static constexpr uint64_t size_val{ size_new };
 		using value_type			 = value_type_new;
-		using size_type				 = size_t;
+		using size_type				 = uint64_t;
 		using difference_type		 = ptrdiff_t;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
@@ -44,7 +44,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE constexpr array(){};
 
 		RT_TM_FORCE_INLINE constexpr array(std::initializer_list<value_type> list) {
-			for (size_t x = 0; x < list.size(); ++x) {
+			for (uint64_t x = 0; x < list.size(); ++x) {
 				data_val[x] = list.begin()[x];
 			}
 		}
@@ -162,7 +162,7 @@ namespace rt_tm {
 		}
 
 		RT_TM_FORCE_INLINE constexpr friend bool operator==(const array& lhs, const array& rhs) {
-			for (size_t x = 0; x < size_val; ++x) {
+			for (uint64_t x = 0; x < size_val; ++x) {
 				if (lhs[x] != rhs[x]) {
 					return false;
 				}
@@ -180,7 +180,7 @@ namespace rt_tm {
 	template<class value_type_new> class array<value_type_new, 0> {
 	  public:
 		using value_type			 = value_type_new;
-		using size_type				 = size_t;
+		using size_type				 = uint64_t;
 		using difference_type		 = ptrdiff_t;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;

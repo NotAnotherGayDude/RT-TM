@@ -27,4 +27,3 @@ RealTimeChris (Chris M.)
 #include <rt_tm/common/array.hpp>
 #include <rt_tm/common/harbinger.hpp>
 #include <rt_tm/common/input_session.hpp>
-#include <rt_tm/op_graph.hpp>

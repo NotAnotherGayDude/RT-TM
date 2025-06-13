@@ -33,6 +33,6 @@ namespace rt_tm {
 	  public:
 		using op_type_type = llama_op_types;
 		static constexpr model_arch arch{ model_arch::llama };
-		static constexpr size_t max_inputs{ 3 };
+		static constexpr uint64_t max_inputs{ 3 };
 	};
 }

@@ -38,9 +38,9 @@ namespace rt_tm {
 	template<typename data_type> struct type_traits;
 
 	template<typename derived_type> struct total_bytes_size {
-		RT_TM_FORCE_INLINE constexpr static size_t total_byte_size(const array<size_t, 4>& dims) {
-			size_t total_elements = dims[0] * dims[1] * dims[2] * dims[3];
-			size_t num_blocks	  = (total_elements + derived_type::block_size - 1) / derived_type::block_size;
+		RT_TM_FORCE_INLINE constexpr static uint64_t total_byte_size(const array<uint64_t, 4>& dims) {
+			uint64_t total_elements = dims[0] * dims[1] * dims[2] * dims[3];
+			uint64_t num_blocks	  = (total_elements + derived_type::block_size - 1) / derived_type::block_size;
 			return num_blocks * derived_type::type_size;
 		}
 	};

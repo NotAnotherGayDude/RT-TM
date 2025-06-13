@@ -28,76 +28,76 @@ namespace rt_tm {
 
 	struct core_base_creation_data : public param_api<core_base_creation_data> {
 		std::vector<core_base_creation_data*> input_ops{};
-		array<size_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
-		std::vector<size_t> dependent_ops{};
+		array<uint64_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
+		std::vector<uint64_t> dependent_ops{};
 		std::vector<uint8_t> aux_params{};
-		size_t comparison_index{};
+		uint64_t comparison_index{};
 		data_type data_type_val{};
 		bool allocate_memory{};
 		mutable void* data{};
 		const char* name{};
 		bool blocking{};
-		size_t op_id{};
-		size_t depth{};
+		uint64_t op_id{};
+		uint64_t depth{};
 		kernel_type type{};
 
-		RT_TM_FORCE_INLINE size_t core_total_dims() const {
+		RT_TM_FORCE_INLINE uint64_t core_total_dims() const {
 			return allocated_dims[0] * allocated_dims[1] * allocated_dims[2] * allocated_dims[3];
 		}
 
-		RT_TM_FORCE_INLINE size_t core_total_byte_size() const {
-			size_t total_elements = core_total_dims();
-			size_t block_size	  = core_block_size();
-			size_t type_size	  = core_type_size();
-			size_t num_blocks	  = (total_elements + block_size - 1) / block_size;
+		RT_TM_FORCE_INLINE uint64_t core_total_byte_size() const {
+			uint64_t total_elements = core_total_dims();
+			uint64_t block_size	  = core_block_size();
+			uint64_t type_size	  = core_type_size();
+			uint64_t num_blocks	  = (total_elements + block_size - 1) / block_size;
 			return num_blocks * type_size;
 		}
 
-		RT_TM_INLINE size_t core_block_size() const {
+		RT_TM_INLINE uint64_t core_block_size() const {
 			return {};//get_type_traits(data_type_val).block_size;
 		}
 
-		RT_TM_INLINE size_t core_type_size() const {
+		RT_TM_INLINE uint64_t core_type_size() const {
 			return {};//get_type_traits(data_type_val).type_size;
 		}
 
-		RT_TM_INLINE size_t core_row_size(int64_t dims_new) const {
+		RT_TM_INLINE uint64_t core_row_size(int64_t dims_new) const {
 			return core_type_size() * dims_new / core_block_size();
 		}
 	};
 	/*
 
 	struct core_base {
-		mutable array<size_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
+		mutable array<uint64_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
 		std::vector<core_base*> input_ops{};
-		size_t comparison_index{};
+		uint64_t comparison_index{};
 		data_type data_type_val{};
 		mutable void* data{};
 		const char* name{};
-		size_t op_id{};
+		uint64_t op_id{};
 		kernel_type type{};
 
-		RT_TM_FORCE_INLINE size_t core_total_dims() const {
+		RT_TM_FORCE_INLINE uint64_t core_total_dims() const {
 			return allocated_dims[0] * allocated_dims[1] * allocated_dims[2] * allocated_dims[3];
 		}
 
-		RT_TM_FORCE_INLINE size_t core_total_byte_size() const {
-			size_t total_elements = core_total_dims();
-			size_t block_size	  = core_block_size();
-			size_t type_size	  = core_type_size();
-			size_t num_blocks	  = (total_elements + block_size - 1) / block_size;
+		RT_TM_FORCE_INLINE uint64_t core_total_byte_size() const {
+			uint64_t total_elements = core_total_dims();
+			uint64_t block_size	  = core_block_size();
+			uint64_t type_size	  = core_type_size();
+			uint64_t num_blocks	  = (total_elements + block_size - 1) / block_size;
 			return num_blocks * type_size;
 		}
 
-		RT_TM_INLINE size_t core_block_size() const {
+		RT_TM_INLINE uint64_t core_block_size() const {
 			return get_type_traits(data_type_val).block_size;
 		}
 
-		RT_TM_INLINE size_t core_type_size() const {
+		RT_TM_INLINE uint64_t core_type_size() const {
 			return get_type_traits(data_type_val).type_size;
 		}
 
-		RT_TM_INLINE size_t core_row_size(int64_t dims_new) const {
+		RT_TM_INLINE uint64_t core_row_size(int64_t dims_new) const {
 			return core_type_size() * dims_new / core_block_size();
 		}
 
