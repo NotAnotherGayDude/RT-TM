@@ -27,8 +27,40 @@ RealTimeChris (Chris M.)
 #include <cstdint>
 #include <thread>
 #include <mutex>
+#include <latch>
 
 namespace rt_tm {
+
+	struct alignas(64) latch_wrapper {
+		RT_TM_FORCE_INLINE latch_wrapper() noexcept = default;
+		RT_TM_FORCE_INLINE latch_wrapper(size_t count) : sync_flag{ static_cast<ptrdiff_t>(count) } {};
+		alignas(64) std::latch sync_flag{ 0 };
+	};
+
+	struct alignas(64) latch_wrapper_holder {
+		RT_TM_FORCE_INLINE latch_wrapper_holder() noexcept = default;
+		RT_TM_FORCE_INLINE latch_wrapper_holder(size_t count) : sync_flag{ std::make_unique<latch_wrapper>(count) } {};
+		RT_TM_FORCE_INLINE void reset(size_t count) {
+			sync_flag = std::make_unique<latch_wrapper>(count);
+		};
+		alignas(64) std::unique_ptr<latch_wrapper> sync_flag{};
+		RT_TM_FORCE_INLINE bool try_wait() {
+			return sync_flag->sync_flag.try_wait();
+		}
+
+		RT_TM_FORCE_INLINE void count_down() {
+			sync_flag->sync_flag.count_down();
+		}
+
+		RT_TM_FORCE_INLINE void arrive_and_wait() {
+			sync_flag->sync_flag.arrive_and_wait();
+		}
+
+		RT_TM_FORCE_INLINE void wait() {
+			sync_flag->sync_flag.wait();
+		}
+
+	};
 
 	inline std::mutex mutex{};
 

@@ -443,7 +443,7 @@ namespace rt_tm {
 
 	template<bool exceptions> struct debugging_io<exceptions, struct core_base_creation_data> {
 		RT_TM_FORCE_INLINE static void load_and_compare_tensors(const core_base_creation_data& core) {
-			auto new_string = file_loader<exceptions>{ std::string{ convert_rt_tm_name_to_ggml(core.name) } + ".safetensor" }.operator const std::string&();
+			const auto& new_string = file_loader<exceptions>{ std::string{ convert_rt_tm_name_to_ggml(core.name) } + ".safetensor" }.operator const std::string&();
 			if (new_string.size() > 0) {
 				intermediary_tensor new_tensor{ parse_tensor(new_string) };
 				intermediary_tensor save_tensor{ core };

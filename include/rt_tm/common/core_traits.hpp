@@ -66,7 +66,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::vocab_size, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::token_embd_weight };
@@ -87,7 +87,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::max_sequence_length, 1, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::inp_tokens };
@@ -108,7 +108,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::max_sequence_length, 1, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::inp_pos };
@@ -129,7 +129,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::max_sequence_length, 1, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::inp_out_ids };
@@ -150,7 +150,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::rope_dimension_count / 2, 1, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::rope_freqs_weight };
@@ -171,7 +171,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::vocab_size, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::output_weight };
@@ -192,7 +192,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::output_norm_weight };
@@ -213,7 +213,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::embedding_dim, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::attn_q_weight };
@@ -234,7 +234,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, (model_traits_type::head_dim * model_traits_type::head_count_kv), 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::attn_k_weight };
@@ -255,7 +255,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, (model_traits_type::head_dim * model_traits_type::head_count_kv), 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::attn_v_weight };
@@ -276,7 +276,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::embedding_dim, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::attn_output_weight };
@@ -297,7 +297,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::attn_norm_weight };
@@ -318,7 +318,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::feed_forward_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::ffn_gate_weight };
@@ -339,7 +339,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::feed_forward_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::ffn_up_weight };
@@ -360,7 +360,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::feed_forward_length, model_traits_type::embedding_dim, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::ffn_down_weight };
@@ -381,7 +381,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::ffn_norm_weight };
@@ -402,7 +402,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::cache_k };
@@ -423,7 +423,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::cache_v };
@@ -444,7 +444,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::max_sequence_length, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::kq_mask };
@@ -470,7 +470,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::global_input };
 		static constexpr kernel_type krn_type{ kernel_type::get_rows };
 		static constexpr llama_op_types type{ llama_op_types::inp_embd };
@@ -495,7 +496,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::rms_norm };
 		static constexpr llama_op_types type{ llama_op_types::norm };
@@ -521,7 +523,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul };
 		static constexpr llama_op_types type{ llama_op_types::attn_norm };
@@ -547,12 +550,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_count * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::qcur };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -573,7 +577,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::reshape };
 		static constexpr llama_op_types type{ llama_op_types::qcur_reshaped };
@@ -600,7 +604,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::rope };
 		static constexpr llama_op_types type{ llama_op_types::qcur_rope };
@@ -626,12 +631,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::kcur };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -652,7 +658,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count_kv, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::reshape };
 		static constexpr llama_op_types type{ llama_op_types::kcur_reshaped };
@@ -679,7 +685,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count_kv, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::rope };
 		static constexpr llama_op_types type{ llama_op_types::kcur_rope };
@@ -705,12 +712,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { (model_traits_type::head_dim * model_traits_type::head_count_kv), model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::vcur };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -779,7 +787,7 @@ namespace rt_tm {
 		static constexpr size_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::max_sequence_length, (model_traits_type::head_dim * model_traits_type::head_count_kv), 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::transpose };
 		static constexpr llama_op_types type{ llama_op_types::vcur_transposed };
@@ -925,12 +933,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::max_sequence_length, 1, model_traits_type::head_count, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::kq };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -953,12 +962,13 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::max_sequence_length, 1, model_traits_type::head_count, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::softmax };
 		static constexpr llama_op_types type{ llama_op_types::kq_soft_max };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -981,12 +991,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::head_dim, 1, model_traits_type::head_count, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::kqv };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -1057,12 +1068,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::kqv_out };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -1085,7 +1097,8 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::add };
 		static constexpr llama_op_types type{ llama_op_types::ffn_inp };
@@ -1110,7 +1123,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::rms_norm };
 		static constexpr llama_op_types type{ llama_op_types::norm_out };
@@ -1136,7 +1150,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul };
 		static constexpr llama_op_types type{ llama_op_types::ffn_norm };
@@ -1162,12 +1177,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::feed_forward_length, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::ffn_gate };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -1189,7 +1205,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::feed_forward_length, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::silu };
 		static constexpr llama_op_types type{ llama_op_types::ffn_silu };
@@ -1215,12 +1232,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::feed_forward_length, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::ffn_up };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -1243,7 +1261,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::feed_forward_length, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul };
 		static constexpr llama_op_types type{ llama_op_types::ffn_gate_par };
@@ -1269,12 +1288,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::ffn_out };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -1297,7 +1317,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
 		static constexpr kernel_type krn_type{ kernel_type::add };
 		static constexpr llama_op_types type{ llama_op_types::l_out };
@@ -1323,7 +1344,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::global_output };
 		static constexpr kernel_type krn_type{ kernel_type::get_rows };
 		static constexpr llama_op_types type{ llama_op_types::attn_residual };
@@ -1349,7 +1371,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::global_output };
 		static constexpr kernel_type krn_type{ kernel_type::get_rows };
 		static constexpr llama_op_types type{ llama_op_types::prev_residual };
@@ -1374,7 +1397,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::global_output };
 		static constexpr kernel_type krn_type{ kernel_type::rms_norm };
 		static constexpr llama_op_types type{ llama_op_types::final_norm };
@@ -1400,7 +1424,8 @@ namespace rt_tm {
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::global_output };
 		static constexpr kernel_type krn_type{ kernel_type::mul };
 		static constexpr llama_op_types type{ llama_op_types::result_norm };
@@ -1426,12 +1451,13 @@ namespace rt_tm {
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr array<size_t, 4> dims{ { model_traits_type::vocab_size, model_traits_type::max_sequence_length, 1, 1 } };
-		static constexpr size_t total_required_bytes{ type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0) };
+		static constexpr size_t total_required_bytes{ roundUpToMultiple(
+			type_traits<output_type>::total_byte_size(dims) + (dequantization ? type_traits<output_type>::total_byte_size(dims) : 0), 64ull) };
 		static constexpr layer_op_type layer_type{ layer_op_type::global_output };
 		static constexpr kernel_type krn_type{ kernel_type::mul_mat };
 		static constexpr llama_op_types type{ llama_op_types::result_output };
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_start{};
-		array<std::unique_ptr<std::latch>, model_traits_type::block_count> sync_flag_end{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_start{};
+		array<latch_wrapper_holder, model_traits_type::block_count> sync_flag_end{};
 		output_type* data{};
 		size_t count{};
 	};
@@ -1476,7 +1502,7 @@ namespace rt_tm {
 
 		template<template<impl_indices, typename> typename mixin_type, impl_indices indices, typename... arg_types>
 		RT_TM_FORCE_INLINE static constexpr void impl_constexpr(arg_types&&... args) {
-			(impl_internal_constexpr<mixin_type, indices, bases>(std::forward<arg_types>(args)...), ...);
+			(impl_internal_constexpr<mixin_type, indices, bases>(args...), ...);
 		}
 	};
 

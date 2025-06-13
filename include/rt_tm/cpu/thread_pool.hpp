@@ -24,6 +24,7 @@ RealTimeChris (Chris M.)
 #include <rt_tm/cpu/cpu_scheduler.hpp>
 #include <rt_tm/common/common.hpp>
 #include <rt_tm/common/tuple.hpp>
+#include <atomic>
 #include <thread>
 #include <latch>
 
@@ -181,8 +182,8 @@ namespace rt_tm {
 		static constexpr size_t block_count{ base_type::model_traits_type::block_count };
 		RT_TM_FORCE_INLINE static void impl(base_type& core, size_t thread_count) {
 			for (size_t x = 0; x < block_count; ++x) {
-				core.sync_flag_start[x] = std::make_unique<std::latch>(thread_count);
-				core.sync_flag_end[x]	= std::make_unique<std::latch>(thread_count);
+				core.sync_flag_start[x].reset(thread_count);
+				core.sync_flag_end[x].reset(thread_count);
 			}
 		}
 	};
@@ -228,6 +229,7 @@ namespace rt_tm {
 			}
 		}
 	};
+	array<size_t, 128> count{};
 
 	template<impl_indices indices, typename base_type_new> struct thread_function : public base_type_new {
 		RT_TM_FORCE_INLINE thread_function() noexcept								   = default;
@@ -238,6 +240,7 @@ namespace rt_tm {
 		using output_type															   = base_type_new::output_type;
 		using base_type																   = base_type_new;
 		RT_TM_FORCE_INLINE void thread_impl(size_t thread_index, size_t thread_count) {
+			//count.fetch_add(1, std::memory_order_release);
 			kernel_dispatcher<indices, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
 		}
 	};
@@ -251,9 +254,10 @@ namespace rt_tm {
 		using output_type															   = base_type_new::output_type;
 		using base_type																   = base_type_new;
 		RT_TM_FORCE_INLINE void thread_impl(size_t thread_index, size_t thread_count, size_t current_index = 0) {
-			this->sync_flag_start[current_index]->arrive_and_wait();
+			//count.fetch_add(1, std::memory_order_release);
+			this->sync_flag_start[current_index].arrive_and_wait();
 			kernel_dispatcher<indices, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
-			this->sync_flag_end[current_index]->arrive_and_wait();
+			this->sync_flag_end[current_index].arrive_and_wait();
 		}
 	};
 
@@ -371,10 +375,10 @@ namespace rt_tm {
 			worker_latches.resize(thread_count_new);
 			threads.resize(thread_count_new);
 			thread_count	  = thread_count_new;
-			main_thread_latch = std::make_unique<std::latch>(static_cast<ptrdiff_t>(thread_count_new));
+			main_thread_latch.reset(thread_count_new);
 			for (size_t x = 0; x < thread_count_new; ++x) {
-				worker_latches[x] = std::make_unique<std::latch>(static_cast<ptrdiff_t>(1));
-				threads[x]		  = std::thread{ [&, x] {
+				worker_latches[x].reset(1ull);
+				threads[x] = std::thread{ [&, x] {
 					if (x < (thread_count_new % 3) == 0) {
 						thread_function_impl<true>(x);
 					} else {
@@ -386,41 +390,49 @@ namespace rt_tm {
 
 		template<bool raise_priority> RT_TM_FORCE_INLINE void thread_function_impl(size_t thread_index) {
 			if (thread_index % 2 == 0) {
-				pin_thread_to_core(thread_index % 2);
+				//pin_thread_to_core(thread_index % 2);
 			}
 			while (!stop.load(std::memory_order_acquire)) {
-				worker_latches[thread_index]->wait();
+				worker_latches[thread_index].wait();
 				if constexpr (raise_priority) {
-					raise_current_thread_priority();
+					//raise_current_thread_priority();
 				}
 				if (!stop.load(std::memory_order_acquire)) {
 					threading_strategy<indices, derived_type, model_traits_type, kernel_type_profile_traits_type>::template impl<thread_function>(thread_index, thread_count);
 				}
 				if constexpr (raise_priority) {
-					reset_current_thread_priority();
+					//reset_current_thread_priority();
 				}
-				if (!main_thread_latch->try_wait()) {
-					main_thread_latch->count_down();
+				if (!main_thread_latch.try_wait()) {
+					main_thread_latch.count_down();
 				}
-				worker_latches[thread_index] = std::make_unique<std::latch>(static_cast<ptrdiff_t>(1));
+				worker_latches[thread_index].reset(1ull);
 			}
 		}
 
 		RT_TM_FORCE_INLINE void execute_tasks() {
-			main_thread_latch = std::make_unique<std::latch>(static_cast<ptrdiff_t>(threads.size()));
+			auto start		  = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			main_thread_latch.reset(threads.size());
 			for (auto& value: worker_latches) {
-				if (!value->try_wait()) {
-					value->count_down();
+				if (!value.try_wait()) {
+					value.count_down();
 				}
 			}
-			main_thread_latch->wait();
+			main_thread_latch.wait();
+			auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			std::cout << "TIME TO EXECUTE: " << (end - start).count() << std::endl;
+			for (size_t x = 0; x < count.size(); ++x) {
+				if (count[x] > 0) {
+					std::cout << "DEPTH COUNT @ " << x << ", IS: " << count[x] << std::endl;
+				}
+			}
 		}
 
 		RT_TM_FORCE_INLINE ~thread_pool() {
 			stop.store(true, std::memory_order_release);
 			for (auto& value: worker_latches) {
-				if (!value->try_wait()) {
-					value->count_down();
+				if (!value.try_wait()) {
+					value.count_down();
 				}
 			}
 			for (auto& value: threads) {
@@ -431,11 +443,11 @@ namespace rt_tm {
 		};
 
 	  protected:
-		std::vector<std::unique_ptr<std::latch>> worker_latches{};
-		std::unique_ptr<std::latch> main_thread_latch{};
+		std::vector<latch_wrapper_holder> worker_latches{};
+		latch_wrapper_holder main_thread_latch{};
 		std::vector<std::thread> threads{};
-		std::atomic_bool stop{};
-		size_t thread_count{};
+		alignas(64) std::atomic_bool stop{};
+		alignas(64) size_t thread_count{};
 	};
 
 }

@@ -64,7 +64,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE model(model&&)				  = delete;
 		RT_TM_FORCE_INLINE model& operator=(const model&) = delete;
 		RT_TM_FORCE_INLINE model(const model&)			  = delete;
-		RT_TM_FORCE_INLINE model(const std::string_view& path_to_model_file, size_t thread_count = std::thread::hardware_concurrency())
+		RT_TM_FORCE_INLINE model(const std::string_view& path_to_model_file, size_t thread_count = 32)
 			: thread_pool<indices, model<indices, config>, model_traits<config.arch, config.model_size, config.model_generation>,
 				  kernel_type_profile_traits<config.kernel_profile>>{ thread_count } {
 			memory.init(total_required_bytes);

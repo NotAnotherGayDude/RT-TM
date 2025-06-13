@@ -48,7 +48,6 @@ function(rt_tm_configure_cpu_variant target_name)
         CXX_STANDARD 23
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
-        POSITION_INDEPENDENT_CODE ON
     )
 endfunction()
 

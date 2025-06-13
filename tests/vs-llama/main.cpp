@@ -596,8 +596,10 @@ int main(int argc, char** argv) {
 	try {
 		std::string return_value{};
 		static constexpr auto model_config =
-			rt_tm::generate_model_config(rt_tm::llama_model_generation::v3, rt_tm::llama_model_size::llama_8B, rt_tm::kernel_type_profile::q8_gqa, rt_tm::model_arch::llama, true);
-		rt_tm::model<rt_tm::impl_indices{}, model_config> model_graph{ argv[2] };
+			rt_tm::generate_model_config(rt_tm::llama_model_generation::v3, rt_tm::llama_model_size::llama_8B, rt_tm::kernel_type_profile::q8_gqa, rt_tm::model_arch::llama, false);
+		rt_tm::model<rt_tm::impl_indices{ .cpu_index = 0 }, model_config> model_graph{ argv[2] };
+		rt_tm::memory_buffer<model_config> memory_buffer{};
+		memory_buffer.init(512);
 		rt_tm::input_session_config session_config{ std::cin, 1024 };
 		rt_tm::input_session input_session{ session_config, model_graph };
 		while (input_session.process_input()) {
