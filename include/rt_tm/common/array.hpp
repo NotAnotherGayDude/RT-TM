@@ -21,23 +21,25 @@ RealTimeChris (Chris M.)
 #pragma once
 
 #include <rt_tm/common/iterator.hpp>
+#include <rt_tm/common/concepts.hpp>
 #include <algorithm>
 #include <stdexcept>
 
 namespace rt_tm {
 
-	template<typename value_type_new, uint64_t size_new> struct array {
+	template<typename value_type_new, auto size_new> struct array {
 	  public:
-		static constexpr uint64_t size_val{ size_new };
+		static_assert(integral_or_enum<decltype(size_new)>, "Sorry, but the size val passed to array must be integral or enum!");
+		static constexpr uint64_t size_val{ static_cast<uint64_t>(size_new) };
 		using value_type			 = value_type_new;
-		using size_type				 = uint64_t;
+		using size_type				 = decltype(size_new);
 		using difference_type		 = ptrdiff_t;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = array_iterator<value_type, size_new>;
-		using const_iterator		 = const array_iterator<value_type, size_new>;
+		using iterator				 = array_iterator<value_type, static_cast<uint64_t>(size_new)>;
+		using const_iterator		 = const array_iterator<value_type, static_cast<uint64_t>(size_new)>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -113,28 +115,28 @@ namespace rt_tm {
 			return false;
 		}
 
-		RT_TM_FORCE_INLINE constexpr reference at(size_type position) {
+		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr reference at(index_type position) {
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
 
-			return data_val[position];
+			return data_val[static_cast<uint64_t>(position)];
 		}
 
-		RT_TM_FORCE_INLINE constexpr const_reference at(size_type position) const {
+		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr const_reference at(index_type position) const {
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
 
-			return data_val[position];
+			return data_val[static_cast<uint64_t>(position)];
 		}
 
-		RT_TM_FORCE_INLINE constexpr reference operator[](size_type position) noexcept {
-			return data_val[position];
+		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr reference operator[](index_type position) noexcept {
+			return data_val[static_cast<uint64_t>(position)];
 		}
 
-		RT_TM_FORCE_INLINE constexpr const_reference operator[](size_type position) const noexcept {
-			return data_val[position];
+		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr const_reference operator[](index_type position) const noexcept {
+			return data_val[static_cast<uint64_t>(position)];
 		}
 
 		RT_TM_FORCE_INLINE constexpr reference front() noexcept {

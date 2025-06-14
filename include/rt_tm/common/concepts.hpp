@@ -144,6 +144,9 @@ namespace rt_tm {
 	template<typename T>
 	concept is_valid_activation_type = is_fp_type<T> || is_quantized_type<T>;
 
+	template<typename value_type>
+	concept integral_or_enum = std::integral<value_type> || std::is_enum_v<value_type>;
+
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;

@@ -28,7 +28,7 @@ add_library(rt_tm::arm_neon ALIAS rt_tm_arm_neon)
 
 rt_tm_configure_arm_variant(rt_tm_arm_neon)
 
-target_compile_options(rt_tm_arm_neon PRIVATE
+target_compile_options(rt_tm_arm_neon PUBLIC
     "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-mfpu=neon>"
 )
 

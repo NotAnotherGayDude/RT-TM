@@ -90,11 +90,7 @@ RealTimeChris (Chris M.)
 
 #if defined(__x86_64__) || defined(_M_X64)
 	#define RT_TM_ARCH_X86_64 1
-	#if defined(RT_TM_COMPILER_MSVC)
-		#include <intrin.h>
-	#else
-		#include <immintrin.h>
-	#endif
+	#include <immintrin.h>
 #elif defined(__aarch64__) || defined(_M_ARM64)
 	#define RT_TM_ARCH_ARM64 1
 #else

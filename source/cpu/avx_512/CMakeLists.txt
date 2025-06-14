@@ -28,7 +28,7 @@ add_library(rt_tm::avx512 ALIAS rt_tm_avx512)
 
 rt_tm_configure_x64_variant(rt_tm_avx512)
 
-target_compile_options(rt_tm_avx512 PRIVATE
+target_compile_options(rt_tm_avx512 PUBLIC
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mavx512vpopcntdq>"
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mavx512vnni>"
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mavx512bf16>"

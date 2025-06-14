@@ -29,6 +29,7 @@ RealTimeChris (Chris M.)
 #include <thread>
 #include <mutex>
 #include <latch>
+#include <cmath>
 
 namespace rt_tm {
 
@@ -210,6 +211,32 @@ namespace rt_tm {
 		count,
 	};
 
+	RT_TM_FORCE_INLINE constexpr const char* get_type_name(data_type type) {
+		switch (type) {
+			case data_type::f32: {
+				return "float_32";
+			}
+			case data_type::f16: {
+				return "float_16";
+			}
+			case data_type::q8_0: {
+				return "q8_0";
+			}
+			case data_type::i8: {
+				return "int8_t";
+			}
+			case data_type::i16: {
+				return "int16_t";
+			}
+			case data_type::i32: {
+				return "int32_t";
+			}
+			case data_type::i64: {
+				return "int64_t";
+			}
+		}
+	}
+
 	enum class kernel_type : uint8_t {
 		none,
 		get_rows,
@@ -227,7 +254,11 @@ namespace rt_tm {
 		silu,
 		add,
 		sub,
+		count,
 	};
+
+	static constexpr array<const char*, kernel_type::count> kernel_names{ { "none", "get_rows", "rms_norm", "mul", "mul_mat", "reshape", "permute", "transpose", "view", "cont",
+		"copy", "rope", "softmax", "silu", "add", "sub" } };
 
 	enum class llama_op_types : uint16_t {
 		inp_embd,
@@ -289,6 +320,93 @@ namespace rt_tm {
 		result_output,
 		count
 	};
+
+	static constexpr array<const char*, llama_op_types::count> llama_op_names{ { "inp_embd", "token_embd_weight", "inp_tokens", "inp_pos", "inp_out_ids", "rope_freqs_weight",
+		"output_weight", "output_norm_weight", "attn_q_weight", "attn_k_weight", "attn_v_weight", "attn_output_weight", "attn_norm_weight", "ffn_gate_weight", "ffn_up_weight",
+		"ffn_down_weight", "ffn_norm_weight", "cache_k", "cache_v", "kq_mask", "norm", "attn_norm", "qcur", "qcur_reshaped", "qcur_rope", "kcur", "kcur_reshaped", "kcur_rope",
+		"vcur", "k_cache_view", "k_cache_view_copy", "vcur_transposed", "v_cache_view", "v_cache_view_copy", "v", "k", "q", "kq", "kq_soft_max", "kqv", "kqv_merged",
+		"kqv_merged_cont", "kqv_out", "ffn_inp", "norm_out", "ffn_norm", "ffn_gate", "ffn_silu", "ffn_up", "ffn_gate_par", "ffn_out", "l_out", "attn_residual", "prev_residual",
+		"final_norm", "result_norm", "result_output" } };
+
+	template<integral_or_enum value_type> constexpr kernel_type get_kernel_type_from_llama_op(value_type op) {
+		switch (static_cast<llama_op_types>(op)) {
+			case llama_op_types::inp_tokens:
+			case llama_op_types::inp_pos:
+			case llama_op_types::inp_out_ids:
+			case llama_op_types::token_embd_weight:
+			case llama_op_types::rope_freqs_weight:
+			case llama_op_types::output_weight:
+			case llama_op_types::output_norm_weight:
+			case llama_op_types::attn_q_weight:
+			case llama_op_types::attn_k_weight:
+			case llama_op_types::attn_v_weight:
+			case llama_op_types::attn_output_weight:
+			case llama_op_types::attn_norm_weight:
+			case llama_op_types::ffn_gate_weight:
+			case llama_op_types::ffn_up_weight:
+			case llama_op_types::ffn_down_weight:
+			case llama_op_types::ffn_norm_weight:
+			case llama_op_types::cache_k:
+			case llama_op_types::cache_v:
+			case llama_op_types::kq_mask:
+				return kernel_type::none;
+			case llama_op_types::inp_embd:
+			case llama_op_types::attn_residual:
+			case llama_op_types::prev_residual:
+				return kernel_type::get_rows;
+			case llama_op_types::norm:
+			case llama_op_types::norm_out:
+			case llama_op_types::ffn_norm:
+			case llama_op_types::final_norm:
+				return kernel_type::rms_norm;
+			case llama_op_types::attn_norm:
+			case llama_op_types::ffn_gate_par:
+			case llama_op_types::result_norm:
+				return kernel_type::mul;
+			case llama_op_types::qcur:
+			case llama_op_types::kcur:
+			case llama_op_types::vcur:
+			case llama_op_types::kq:
+			case llama_op_types::kqv:
+			case llama_op_types::kqv_out:
+			case llama_op_types::ffn_gate:
+			case llama_op_types::ffn_up:
+			case llama_op_types::ffn_out:
+			case llama_op_types::result_output:
+				return kernel_type::mul_mat;
+			case llama_op_types::qcur_reshaped:
+			case llama_op_types::kcur_reshaped:
+				return kernel_type::reshape;
+			case llama_op_types::q:
+			case llama_op_types::kqv_merged:
+				return kernel_type::permute;
+			case llama_op_types::vcur_transposed:
+				return kernel_type::transpose;
+			case llama_op_types::k_cache_view:
+			case llama_op_types::v_cache_view:
+			case llama_op_types::v:
+			case llama_op_types::k:
+				return kernel_type::view;
+			case llama_op_types::kqv_merged_cont:
+				return kernel_type::cont;
+			case llama_op_types::k_cache_view_copy:
+			case llama_op_types::v_cache_view_copy:
+				return kernel_type::copy;
+			case llama_op_types::qcur_rope:
+			case llama_op_types::kcur_rope:
+				return kernel_type::rope;
+			case llama_op_types::kq_soft_max:
+				return kernel_type::softmax;
+			case llama_op_types::ffn_silu:
+				return kernel_type::silu;
+			case llama_op_types::ffn_inp:
+			case llama_op_types::l_out:
+				return kernel_type::add;
+			case llama_op_types::count:
+			default:
+				return kernel_type::none;
+		}
+	}
 
 	enum class device_type {
 		cpu,

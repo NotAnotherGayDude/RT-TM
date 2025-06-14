@@ -28,7 +28,7 @@ add_library(rt_tm::avx2 ALIAS rt_tm_avx2)
 
 rt_tm_configure_x64_variant(rt_tm_avx2)
 
-target_compile_options(rt_tm_avx2 PRIVATE
+target_compile_options(rt_tm_avx2 PUBLIC
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mavx2>"
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-mfma>"
     "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>"

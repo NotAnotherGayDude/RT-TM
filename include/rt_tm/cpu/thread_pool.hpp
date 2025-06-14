@@ -228,8 +228,8 @@ namespace rt_tm {
 	};
 
 	thread_local stop_watch<std::chrono::nanoseconds> stop_watch_val{ 0 };
-	std::atomic_uint64_t avg_count{};
-	std::atomic_uint64_t count{};
+	array<std::atomic_uint64_t, static_cast<size_t>(llama_op_types::count) + 1> avg_count{};
+	array<std::atomic_uint64_t, static_cast<size_t>(llama_op_types::count) + 1> count{};
 
 	template<impl_indices indices, typename base_type_new> struct thread_function : public base_type_new {
 		RT_TM_FORCE_INLINE thread_function() noexcept								   = default;
@@ -257,8 +257,8 @@ namespace rt_tm {
 			this->sync_flag_start[current_index].arrive_and_wait();
 			kernel_dispatcher<indices, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
 			this->sync_flag_end[current_index].arrive_and_wait();
-			count.fetch_add(stop_watch_val.total_time_elapsed_uint64(), std::memory_order_release);
-			avg_count.fetch_add(1, std::memory_order_release);
+			count[base_type::type].fetch_add(stop_watch_val.total_time_elapsed_uint64(), std::memory_order_release);
+			avg_count[base_type::type].fetch_add(1, std::memory_order_release);
 		}
 	};
 
@@ -395,11 +395,9 @@ namespace rt_tm {
 			}
 			while (!stop.load(std::memory_order_acquire)) {
 				worker_latches[thread_index].wait();
-				stop_watch_val.reset();
 				if (!stop.load(std::memory_order_acquire)) {
 					threading_strategy<indices, derived_type, model_traits_type, kernel_type_profile_traits_type>::template impl<thread_function>(thread_index, thread_count);
 				}
-				count.fetch_add(stop_watch_val.total_time_elapsed_uint64(), std::memory_order_release);
 				if (!main_thread_latch.try_wait()) {
 					main_thread_latch.count_down();
 				}
@@ -416,8 +414,13 @@ namespace rt_tm {
 				}
 			}
 			main_thread_latch.wait();
-			std::cout << "TIME TO EXECUTE: " << count.load(std::memory_order_acquire) / avg_count.load(std::memory_order_acquire) << std::endl;
-			std::cout << "FOR: " << avg_count.load(std::memory_order_acquire) << " EXECUTIONS!" << std::endl;
+			for (size_t x = 0; x < static_cast<size_t>(llama_op_types::count); ++x) {
+				size_t count_new{ avg_count[x].load(std::memory_order_acquire) };
+				if (count_new > 0) {
+					std::cout << "TIME TO EXECUTE: " << count[x].load(std::memory_order_acquire) / avg_count[x].load(std::memory_order_acquire) << std::endl;
+					std::cout << "FOR: " << avg_count[x].load(std::memory_order_acquire) << " EXECUTIONS, FOR OP: " << kernel_names[get_kernel_type_from_llama_op(x)] << std::endl;
+				}
+			}
 		}
 
 		RT_TM_FORCE_INLINE ~thread_pool() {
