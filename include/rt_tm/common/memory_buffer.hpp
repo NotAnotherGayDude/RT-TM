@@ -77,7 +77,7 @@ namespace rt_tm {
 		}
 
 		RT_TM_FORCE_INLINE void* claim_memory(uint64_t amount_to_claim) noexcept {
-			uint64_t alignment = alignments[cpu_arch_index_holder::cpu_arch_index];
+			static constexpr uint64_t alignment = cpu_alignment;
 
 			uint64_t aligned_amount = roundUpToMultiple(amount_to_claim, alignment);
 

@@ -20,7 +20,6 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
-#include <rt_tm/cpu/detect_isa.hpp>
 #include <rt_tm/common/config.hpp>
 #include <memory_resource>
 
@@ -61,7 +60,7 @@ namespace rt_tm {
 			if RT_TM_UNLIKELY (count_new == 0) {
 				return nullptr;
 			}
-			uint64_t alignment{ alignments[cpu_arch_index_holder::cpu_arch_index] };
+			uint64_t alignment{ cpu_alignment };
 #if defined(RT_TM_PLATFORM_WINDOWS) || defined(RT_TM_PLATFORM_LINUX)
 			return static_cast<value_type*>(_mm_malloc(roundUpToMultiple(count_new * sizeof(value_type), alignment), alignment));
 #else

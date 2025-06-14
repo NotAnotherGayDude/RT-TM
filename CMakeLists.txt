@@ -34,15 +34,10 @@ project(
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     set(RT_TM_ARCH_X64 TRUE)
     set(RT_TM_BUILD_ALL_X64_VARIANTS TRUE)
-    message(STATUS "RT-TM: Building ALL x64 SIMD variants for runtime selection")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|arm64")
     set(RT_TM_ARCH_ARM64 TRUE)
     set(RT_TM_BUILD_ALL_ARM_VARIANTS TRUE)
-    message(STATUS "RT-TM: Building ALL ARM64 SIMD variants for runtime selection")
 endif()
-
-message(STATUS "RT-TM: Detected architecture: ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "RT-TM: Universal binary strategy: Runtime CPU detection")
 
 add_library("${PROJECT_NAME}" INTERFACE)
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
@@ -64,6 +59,10 @@ target_include_directories(
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
     "$<INSTALL_INTERFACE:include/>"
 )
+
+if (NOT DEFINED RT_TM_CPU_INSTRUCTIONS)
+	include("cmake/rt_tm_detect_architecture.cmake")
+endif()
 
 set(RT_RM_COMMON_COMPILE_FLAGS
     "$<$<BOOL:${PGO_GENERATE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-generate>>"
@@ -103,6 +102,7 @@ set(RT_RM_COMMON_COMPILE_FLAGS
 	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
+    "${AVX_FLAG}"
 )
 
 set(RT_RM_COMMON_LINK_OPTIONS
@@ -135,16 +135,6 @@ target_compile_definitions(
     "${PROJECT_NAME}" INTERFACE 
     "$<$<STREQUAL:${RT_TM_ASAN_ENABLED},TRUE>:RT_TM_ASAN_ENABLED>"
 )
-
-add_subdirectory(source/cpu)
-
-if(RT_TM_ARCH_X64)
-    target_link_libraries("${PROJECT_NAME}" INTERFACE rt_tm::avx2 rt_tm::avx512)
-    message(STATUS "RT-TM: Main library linked with ALL x64 variants")
-elseif(RT_TM_ARCH_ARM64)
-    target_link_libraries("${PROJECT_NAME}" INTERFACE rt_tm::arm_neon rt_tm::arm_sve)
-    message(STATUS "RT-TM: Main library linked with ALL ARM64 variants")
-endif()
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
 set(EXPORTED_TARGETS_NAME "${PROJECT_NAME}Targets")
@@ -180,11 +170,6 @@ install(
 )
 
 set(RT_TM_ALL_TARGETS "${PROJECT_NAME}")
-if(RT_TM_ARCH_X64)
-    list(APPEND RT_TM_ALL_TARGETS rt_tm_avx2 rt_tm_avx512)
-elseif(RT_TM_ARCH_ARM64)
-    list(APPEND RT_TM_ALL_TARGETS rt_tm_arm_neon rt_tm_arm_sve)
-endif()
 
 install(
     TARGETS ${RT_TM_ALL_TARGETS}
@@ -206,19 +191,14 @@ message(STATUS "RT-TM Configuration Summary:")
 message(STATUS "==========================")
 message(STATUS "Version: ${PROJECT_VERSION}")
 message(STATUS "Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "Strategy: Universal Binary with Runtime CPU Detection")
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 if(RT_TM_BUILD_ALL_X64_VARIANTS)
-    message(STATUS "x64 Variants: SSE4.2, AVX2, AVX-512 (All built)")
+    message(STATUS "x64 Variants: ${INSTRUCTION_SET_NAME}")
 endif()
 if(RT_TM_BUILD_ALL_ARM_VARIANTS)
-    message(STATUS "ARM Variants: NEON, SVE (All built)")
+    message(STATUS "ARM Variants: ${INSTRUCTION_SET_NAME}")
 endif()
-message(STATUS "")
-message(STATUS "RT-TM: RealTime Tensor Math")
-message(STATUS "Universal binaries with runtime CPU detection")
-message(STATUS "")
 
 if (RT_TM_VS_LLAMA)
     add_subdirectory("./tests/vs-llama")

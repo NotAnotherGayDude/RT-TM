@@ -28,21 +28,11 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	RT_TM_FORCE_INLINE consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch, bool exceptions = false,
-		kv_cache_strategy cache_strategy = kv_cache_strategy::paged, bool use_gradient_checkpointing = false, rope_scaling_type rope_scaling = rope_scaling_type::linear,
-		bool use_rotary_embeddings = true, uint64_t kv_cache_block_size = 16, bool use_flash_attention = true, norm_type rms_norm_type = norm_type::rms_standard,
-		float norm_epsilon = 1e-6f) {
-		model_config<decltype(model_generation), decltype(model_size)> config{ model_generation, model_size, kernel_profile, arch, cache_strategy, use_gradient_checkpointing,
-			rope_scaling, use_rotary_embeddings, kv_cache_block_size, use_flash_attention, rms_norm_type, norm_epsilon, exceptions };
-		return config;
-	};
-
 	template<impl_indices indices, model_config config> struct model;
 
 	template<typename model_generation_type, typename model_size_type> struct model_base {
 		model_config<model_generation_type, model_size_type> config{};
-		virtual void execute_model() = 0;
-		virtual ~model_base()		 = default;
+		virtual ~model_base() = default;
 	};
 
 	template<impl_indices indices, model_config config> struct model

@@ -18,7 +18,6 @@ RealTimeChris (Chris M.)
 2025
 */
 
-#include <rt_tm/cpu/detect_isa.hpp>
 #include <rt_tm/common/model_parser.hpp>
 #include <rt_tm/common/model_graph.hpp>
 #include <rt_tm/common/debugging_io.hpp>

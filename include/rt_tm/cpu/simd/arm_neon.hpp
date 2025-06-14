@@ -17,12 +17,13 @@ Signed,
 RealTimeChris (Chris M.)
 2025
 */
-#if defined(RT_TM_ARM_NEON)
-	#pragma once
-
-#include <arm_neon.h>
+#pragma once
 
 #include <rt_tm/common/common.hpp>
+
+#if defined(RT_TM_NEON)
+
+#include <arm_neon.h>
 
 namespace rt_tm {
 

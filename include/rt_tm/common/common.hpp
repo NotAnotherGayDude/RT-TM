@@ -20,6 +20,7 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
+#include <rt_tm/cpu/simd/rt_tm_cpu_instructions.hpp>
 #include <rt_tm/common/string_literal.hpp>
 #include <rt_tm/common/data_types.hpp>
 #include <rt_tm/common/concepts.hpp>
@@ -470,6 +471,8 @@ namespace rt_tm {
 		using type = llama_op_types;
 	};
 
+	enum class model_format { gguf = 1 };
+
 	template<typename model_generation_type_new, typename model_size_type_new> struct model_config {
 		using model_generation_type = model_generation_type_new;
 		using model_size_type		= model_size_type_new;
@@ -484,22 +487,21 @@ namespace rt_tm {
 		uint64_t kv_cache_block_size{};
 		bool use_flash_attention{};
 		norm_type rms_norm_type{};
+		model_format format{};
 		float norm_epsilon{};
 		bool exceptions{};
 
 	  protected:
 		template<typename model_generateion_type_newer, typename model_size_type_newer> friend struct model_base;
-		friend consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch, bool exceptions,
-			kv_cache_strategy cache_strategy, bool use_gradient_checkpointing, rope_scaling_type rope_scaling, bool use_rotary_embeddings, uint64_t kv_cache_block_size,
-			bool use_flash_attention, norm_type rms_norm_type, float norm_epsilon);
+		friend struct harbinger;
 
-		constexpr model_config(auto model_generation_new, auto model_size_new, kernel_type_profile kernel_profile_new, model_arch arch_new, kv_cache_strategy cache_strategy_new,
-			bool use_gradient_checkpointing_new, rope_scaling_type rope_scaling_new, bool use_rotary_embeddings_new, uint64_t kv_cache_block_size_new, bool use_flash_attention_new,
-			norm_type rms_norm_type_new, float norm_epsilon_new, bool exceptions_new)
+		constexpr model_config(auto model_generation_new, auto model_size_new, kernel_type_profile kernel_profile_new, model_arch arch_new, bool exceptions_new,
+			kv_cache_strategy cache_strategy_new, bool use_gradient_checkpointing_new, rope_scaling_type rope_scaling_new, bool use_rotary_embeddings_new,
+			uint64_t kv_cache_block_size_new, bool use_flash_attention_new, norm_type rms_norm_type_new, model_format format_new, float norm_epsilon_new)
 			: model_generation(model_generation_new), model_size(model_size_new), kernel_profile(kernel_profile_new), arch(arch_new), cache_strategy(cache_strategy_new),
 			  use_gradient_checkpointing(use_gradient_checkpointing_new), rope_scaling(rope_scaling_new), use_rotary_embeddings(use_rotary_embeddings_new),
-			  kv_cache_block_size(kv_cache_block_size_new), use_flash_attention(use_flash_attention_new), rms_norm_type(rms_norm_type_new), norm_epsilon(norm_epsilon_new),
-			  exceptions(exceptions_new) {};
+			  kv_cache_block_size(kv_cache_block_size_new), use_flash_attention(use_flash_attention_new), rms_norm_type(rms_norm_type_new), format{ format_new },
+			  norm_epsilon(norm_epsilon_new), exceptions(exceptions_new) {};
 
 		constexpr model_config() = default;
 	};

@@ -729,9 +729,6 @@ namespace rt_tm {
 		return nullptr;
 	}
 
-
-	enum class model_format { gguf = 1 };
-
 	template<model_config config, model_arch arch, model_format type> struct model_parser;
 
 	template<model_config config> struct model_parser<config, model_arch::llama, model_format::gguf> {

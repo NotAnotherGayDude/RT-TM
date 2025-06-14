@@ -20,11 +20,11 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
-#include <rt_tm/cpu/avx_2/avx_2.hpp>
-#include <rt_tm/cpu/avx_512/avx_512.hpp>
+#include <rt_tm/cpu/simd/avx_2.hpp>
+#include <rt_tm/cpu/simd/avx_512.hpp>
 
-#include <rt_tm/cpu/arm_neon/arm_neon.hpp>
-#include <rt_tm/cpu/arm_sve/arm_sve.hpp>
+#include <rt_tm/cpu/simd/arm_neon.hpp>
+#include <rt_tm/cpu/simd/arm_sve2.hpp>
 
 namespace rt_tm {
 

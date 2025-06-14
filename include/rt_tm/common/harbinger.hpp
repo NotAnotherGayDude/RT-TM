@@ -27,16 +27,25 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<model_config config> struct harbinger {
-		template<model_format format> RT_TM_FORCE_INLINE static auto parse_model_graph(std::string_view path) {
-			if (cpu_arch_index_holder::cpu_arch_index == 2) {
+	struct harbinger {
+		RT_TM_FORCE_INLINE static consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch,
+			bool exceptions = false, kv_cache_strategy cache_strategy = kv_cache_strategy::paged, bool use_gradient_checkpointing = false,
+			rope_scaling_type rope_scaling = rope_scaling_type::linear, bool use_rotary_embeddings = true, uint64_t kv_cache_block_size = 16, bool use_flash_attention = true,
+			norm_type rms_norm_type = norm_type::rms_standard, model_format format = model_format::gguf, float norm_epsilon = 1e-6f) {
+			model_config<decltype(model_generation), decltype(model_size)> config{ model_generation, model_size, kernel_profile, arch, exceptions, cache_strategy,
+				use_gradient_checkpointing, rope_scaling, use_rotary_embeddings, kv_cache_block_size, use_flash_attention, rms_norm_type, format, norm_epsilon };
+			return config;
+		};
+
+		template<model_config config> RT_TM_FORCE_INLINE static auto parse_model_graph(std::string_view path) {
+			if constexpr (cpu_arch_index == 2) {
 				using model_type = model<impl_indices{ .cpu_index = 2 }, config>;
 				using base_type	 = model_type::base_type;
 				std::unique_ptr<base_type> return_value{};
 				model_type* new_model{ new model_type{ path } };
 				return_value.reset(new_model);
 				return return_value;
-			} else if (cpu_arch_index_holder::cpu_arch_index == 1) {
+			} else if constexpr (cpu_arch_index == 1) {
 				using model_type = model<impl_indices{ .cpu_index = 1 }, config>;
 				using base_type	 = model_type::base_type;
 				std::unique_ptr<base_type> return_value{};

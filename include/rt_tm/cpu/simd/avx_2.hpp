@@ -17,10 +17,11 @@ Signed,
 RealTimeChris (Chris M.)
 2025
 */
-#if defined(RT_TM_AVX2)
-	#pragma once
+#pragma once
 
-	#include <rt_tm/common/common.hpp>
+#include <rt_tm/common/common.hpp>
+
+#if defined(RT_TM_AVX2)
 
 namespace rt_tm {
 
@@ -120,6 +121,7 @@ namespace rt_tm {
 		}
 
 		RT_TM_FORCE_INLINE static void impl(uint64_t count, float* output, const float* input01, const float* input02) {
+			/*
 			const size_t simd_width = 8;
 			const size_t simd_count = count / simd_width;
 			const size_t remainder	= count % simd_width;
@@ -175,7 +177,7 @@ namespace rt_tm {
 
 			for (size_t i = simd_count * simd_width; i < count; ++i) {
 				output[i] /= total_sum;
-			}
+			}*/
 		}
 	};
 

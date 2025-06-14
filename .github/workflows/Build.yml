@@ -177,3 +177,19 @@ jobs:
           if ($philosopherLines) { $philosopherLines } else { Write-Host "No lines containing 'philosopher' found" }
           exit 1
         }
+
+    - name: Copy Install Directory to Workspace
+      if: success() || failure()
+      shell: bash
+      run: |
+        if [ -d "../Install" ]; then
+          cp -r ../Install ./Install-Backup
+        fi
+
+    - name: Upload RT-TM Binaries
+      if: success() || failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: "rt-tm-binaries-${{ matrix.name }}"
+        path: "Install-Backup/"
+        retention-days: 30
