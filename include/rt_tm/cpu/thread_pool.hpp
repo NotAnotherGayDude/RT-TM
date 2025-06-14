@@ -150,7 +150,7 @@ namespace rt_tm {
 
 		template<op_type_type current_index = static_cast<op_type_type>(0)> RT_TM_FORCE_INLINE static constexpr uint64_t impl(uint64_t current_size = 0) {
 			if constexpr (static_cast<uint64_t>(current_index) < static_cast<uint64_t>(op_type_type::count)) {
-				using core_traits_type = core_traits<indices, current_index, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
+				using core_traits_type = core_traits<current_index, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
 				using output_type	   = core_traits_type::output_type;
 				current_size += core_traits_type::total_required_bytes * get_multiplier<core_traits_type>();
 				return impl<static_cast<op_type_type>(static_cast<uint64_t>(current_index) + 1)>(current_size);
@@ -159,7 +159,7 @@ namespace rt_tm {
 		}
 	};
 
-	template<impl_indices indices, typename base_type_new> struct execution_planner {
+	template<typename base_type_new> struct execution_planner {
 		RT_TM_FORCE_INLINE execution_planner() noexcept									   = default;
 		RT_TM_FORCE_INLINE execution_planner& operator=(const execution_planner&) noexcept = delete;
 		RT_TM_FORCE_INLINE execution_planner(const execution_planner&) noexcept			   = delete;
@@ -170,7 +170,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE static void impl(base_type&, uint64_t) {}
 	};
 
-	template<impl_indices indices, blocking base_type_new> struct execution_planner<indices, base_type_new> {
+	template<blocking base_type_new> struct execution_planner<base_type_new> {
 		RT_TM_FORCE_INLINE execution_planner() noexcept									   = default;
 		RT_TM_FORCE_INLINE execution_planner& operator=(const execution_planner&) noexcept = delete;
 		RT_TM_FORCE_INLINE execution_planner(const execution_planner&) noexcept			   = delete;
@@ -186,7 +186,7 @@ namespace rt_tm {
 		}
 	};
 
-	template<impl_indices indices, typename base_type_new> struct execution_planner_constexpr {
+	template<typename base_type_new> struct execution_planner_constexpr {
 		RT_TM_FORCE_INLINE execution_planner_constexpr() noexcept											   = default;
 		RT_TM_FORCE_INLINE execution_planner_constexpr& operator=(const execution_planner_constexpr&) noexcept = delete;
 		RT_TM_FORCE_INLINE execution_planner_constexpr(const execution_planner_constexpr&) noexcept			   = delete;
@@ -206,7 +206,7 @@ namespace rt_tm {
 		};
 	};
 
-	template<impl_indices indices, typename base_type> struct memory_mapper {
+	template<typename base_type> struct memory_mapper {
 		RT_TM_FORCE_INLINE memory_mapper() noexcept								   = default;
 		RT_TM_FORCE_INLINE memory_mapper& operator=(const memory_mapper&) noexcept = delete;
 		RT_TM_FORCE_INLINE memory_mapper(const memory_mapper&) noexcept			   = delete;
@@ -270,46 +270,46 @@ namespace rt_tm {
 
 		static constexpr uint64_t global_input_count{ [] {
 			uint64_t return_value{};
-			get_core_traits_base_t<indices, op_type_type, derived_type_new, model_traits_type,
-				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr, indices>(return_value, layer_op_type::global_input);
+			get_core_traits_base_t<op_type_type, derived_type_new, model_traits_type,
+				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr>(return_value, layer_op_type::global_input);
 			return return_value;
 		}() };
 
 		static constexpr uint64_t per_block_count{ [] {
 			uint64_t return_value{};
-			get_core_traits_base_t<indices, op_type_type, derived_type_new, model_traits_type,
-				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr, indices>(return_value, layer_op_type::per_block);
+			get_core_traits_base_t<op_type_type, derived_type_new, model_traits_type,
+				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr>(return_value, layer_op_type::per_block);
 			return return_value;
 		}() };
 
 		static constexpr uint64_t global_output_count{ [] {
 			uint64_t return_value{};
-			get_core_traits_base_t<indices, op_type_type, derived_type_new, model_traits_type,
-				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr, indices>(return_value, layer_op_type::global_output);
+			get_core_traits_base_t<op_type_type, derived_type_new, model_traits_type,
+				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr>(return_value, layer_op_type::global_output);
 			return return_value;
 		}() };
 
 		static constexpr auto global_input{ [] {
 			uint64_t current_index{};
 			array<op_type_type, global_input_count> return_value{};
-			get_core_traits_base_t<indices, op_type_type, derived_type_new, model_traits_type,
-				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr, indices>(return_value, layer_op_type::global_input, current_index);
+			get_core_traits_base_t<op_type_type, derived_type_new, model_traits_type,
+				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr>(return_value, layer_op_type::global_input, current_index);
 			return return_value;
 		}() };
 
 		static constexpr auto per_block{ [] {
 			uint64_t current_index{};
 			array<op_type_type, per_block_count> return_value{};
-			get_core_traits_base_t<indices, op_type_type, derived_type_new, model_traits_type,
-				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr, indices>(return_value, layer_op_type::per_block, current_index);
+			get_core_traits_base_t<op_type_type, derived_type_new, model_traits_type,
+				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr>(return_value, layer_op_type::per_block, current_index);
 			return return_value;
 		}() };
 
 		static constexpr auto global_output{ [] {
 			uint64_t current_index{};
 			array<op_type_type, global_output_count> return_value{};
-			get_core_traits_base_t<indices, op_type_type, derived_type_new, model_traits_type,
-				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr, indices>(return_value, layer_op_type::global_output, current_index);
+			get_core_traits_base_t<op_type_type, derived_type_new, model_traits_type,
+				kernel_type_profile_traits_type>::template impl_constexpr<execution_planner_constexpr>(return_value, layer_op_type::global_output, current_index);
 			return return_value;
 		}() };
 
@@ -317,7 +317,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE void impl_global_input(uint64_t thread_index, uint64_t thread_count) {
 			if constexpr (current_index < global_input_count) {
 				static constexpr op_type_type op_type = global_input[current_index];
-				using core_traits_type				  = core_traits<indices, op_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
+				using core_traits_type				  = core_traits<op_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
 				static_cast<thread_function<indices, core_traits_type>*>(static_cast<core_traits_type*>(static_cast<derived_type_new*>(this)))
 					->thread_impl(thread_index, thread_count);
 				impl_global_input<thread_function, current_index + 1>(thread_index, thread_count);
@@ -328,7 +328,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE void impl_per_block(uint64_t thread_index, uint64_t thread_count, uint64_t current_index_new) {
 			if constexpr (current_index < per_block_count) {
 				static constexpr op_type_type op_type = per_block[current_index];
-				using core_traits_type				  = core_traits<indices, op_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
+				using core_traits_type				  = core_traits<op_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
 				if constexpr (blocking<core_traits_type>) {
 					static_cast<thread_function<indices, core_traits_type>*>(static_cast<core_traits_type*>(static_cast<derived_type_new*>(this)))
 						->thread_impl(thread_index, thread_count, current_index_new);
@@ -344,7 +344,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE void impl_global_output(uint64_t thread_index, uint64_t thread_count) {
 			if constexpr (current_index < global_output_count) {
 				static constexpr op_type_type op_type = global_output[current_index];
-				using core_traits_type				  = core_traits<indices, op_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
+				using core_traits_type				  = core_traits<op_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
 				if constexpr (blocking<core_traits_type>) {
 					static_cast<thread_function<indices, core_traits_type>*>(static_cast<core_traits_type*>(static_cast<derived_type_new*>(this)))
 						->thread_impl(thread_index, thread_count);

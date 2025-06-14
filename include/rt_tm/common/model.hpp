@@ -35,18 +35,19 @@ namespace rt_tm {
 		virtual ~model_base() = default;
 	};
 
-	template<impl_indices indices, model_config config> struct model
+	template<impl_indices indices_new, model_config config> struct model
 		: public model_base<decltype(config.model_size), decltype(config.model_generation)>,
-		  public get_core_traits_base_t<indices, typename op_type_type<config.arch>::type, model<indices, config>,
-			  model_traits<config.arch, config.model_size, config.model_generation>, kernel_type_profile_traits<config.kernel_profile>>,
-		  public thread_pool<indices, model<indices, config>, model_traits<config.arch, config.model_size, config.model_generation>,
+		  public get_core_traits_base_t<typename op_type_type<config.arch>::type, model<indices_new, config>, model_traits<config.arch, config.model_size, config.model_generation>,
+			  kernel_type_profile_traits<config.kernel_profile>>,
+		  public thread_pool<indices_new, model<indices_new, config>, model_traits<config.arch, config.model_size, config.model_generation>,
 			  kernel_type_profile_traits<config.kernel_profile>> {
-		using core_bases_type				  = get_core_traits_base_t<indices, typename op_type_type<config.arch>::type, model<indices, config>,
+		using core_bases_type				  = get_core_traits_base_t<typename op_type_type<config.arch>::type, model<indices_new, config>,
 							model_traits<config.arch, config.model_size, config.model_generation>, kernel_type_profile_traits<config.kernel_profile>>;
 		using model_traits_type				  = model_traits<config.arch, config.model_size, config.model_generation>;
-		using op_type_type						  = typename model_traits_type::op_type_type;
+		using op_type_type					  = typename model_traits_type::op_type_type;
 		using kernel_type_profile_traits_type = kernel_type_profile_traits<config.kernel_profile>;
 		using base_type						  = model_base<decltype(config.model_size), decltype(config.model_generation)>;
+		inline static constexpr impl_indices indices{ indices_new };
 		inline static constexpr uint64_t total_required_bytes{
 			collect_required_bytes<indices, typename model_traits_type::op_type_type, model<indices, config>, model_traits_type, kernel_type_profile_traits_type>::impl()
 		};
@@ -58,12 +59,12 @@ namespace rt_tm {
 			: thread_pool<indices, model<indices, config>, model_traits<config.arch, config.model_size, config.model_generation>,
 				  kernel_type_profile_traits<config.kernel_profile>>{ thread_count } {
 			memory.init(total_required_bytes);
-			core_bases_type::template impl<memory_mapper, indices>(memory);
-			core_bases_type::template impl<execution_planner, indices>(thread_count);
+			core_bases_type::template impl<memory_mapper>(memory);
+			core_bases_type::template impl<execution_planner>(thread_count);
 		}
 
 		template<op_type_type type> RT_TM_FORCE_INLINE auto& get_core() {
-			return *static_cast<core_traits<indices, type, model, model_traits_type, kernel_type_profile_traits_type>*>(this);
+			return *static_cast<core_traits<type, model, model_traits_type, kernel_type_profile_traits_type>*>(this);
 		}
 
 		RT_TM_FORCE_INLINE void execute_model() {

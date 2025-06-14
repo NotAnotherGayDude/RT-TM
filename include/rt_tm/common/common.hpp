@@ -34,42 +34,49 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	struct alignas(64) latch_wrapper {
-		RT_TM_FORCE_INLINE latch_wrapper() noexcept								   = default;
-		RT_TM_FORCE_INLINE latch_wrapper& operator=(const latch_wrapper&) noexcept = delete;
-		RT_TM_FORCE_INLINE latch_wrapper(const latch_wrapper&) noexcept			   = delete;
-		RT_TM_FORCE_INLINE latch_wrapper(uint64_t count) : sync_flag{ static_cast<ptrdiff_t>(count) } {
-		}
-		alignas(64) std::latch sync_flag{ 0 };
-	};
-
 	struct alignas(64) latch_wrapper_holder {
-		RT_TM_FORCE_INLINE latch_wrapper_holder() noexcept										 = default;
-		RT_TM_FORCE_INLINE latch_wrapper_holder& operator=(const latch_wrapper_holder&) noexcept = delete;
-		RT_TM_FORCE_INLINE latch_wrapper_holder(const latch_wrapper_holder&) noexcept			 = delete;
-		RT_TM_FORCE_INLINE latch_wrapper_holder& operator=(latch_wrapper_holder&&) noexcept		 = default;
-		RT_TM_FORCE_INLINE latch_wrapper_holder(latch_wrapper_holder&&) noexcept				 = default;
+		RT_TM_FORCE_INLINE latch_wrapper_holder() noexcept = default;
+		RT_TM_FORCE_INLINE latch_wrapper_holder(const latch_wrapper_holder&) noexcept {};
+
 		RT_TM_FORCE_INLINE void reset(uint64_t count) {
-			sync_flag = std::make_unique<latch_wrapper>(count);
+			sync_count.store(count, std::memory_order_release);
+			sync_count.notify_all();
 		}
 
 		RT_TM_FORCE_INLINE bool try_wait() {
-			return sync_flag->sync_flag.try_wait();
+			return sync_count.load(std::memory_order_acquire) == 0;
 		}
 
 		RT_TM_FORCE_INLINE void count_down() {
-			sync_flag->sync_flag.count_down();
+			sync_count.store(0, std::memory_order_release);
+			sync_count.notify_all();
 		}
 
 		RT_TM_FORCE_INLINE void arrive_and_wait() {
-			sync_flag->sync_flag.arrive_and_wait();
+			uint64_t remaining = sync_count.fetch_sub(1, std::memory_order_acq_rel);
+			sync_count.notify_all();
+
+			if (remaining > 1) {
+				wait();
+			}
 		}
 
 		RT_TM_FORCE_INLINE void wait() {
-			sync_flag->sync_flag.wait();
+			uint64_t count = sync_count.load(std::memory_order_acquire);
+			while (count != 0) {
+				for (int i = 0; i < 1000; ++i) {
+					count = sync_count.load(std::memory_order_acquire);
+					if (count == 0) {
+						return;
+					}
+					rt_tm_pause();
+				}
+				sync_count.wait(count);
+				count = sync_count.load(std::memory_order_acquire);
+			}
 		}
 
-		alignas(64) std::unique_ptr<latch_wrapper> sync_flag{};
+		alignas(64) std::atomic<uint64_t> sync_count{};
 	};
 
 	template<typename value_type>

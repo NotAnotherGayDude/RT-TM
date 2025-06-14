@@ -88,10 +88,46 @@ namespace rt_tm {
 	};
 
 	template<typename transform_type> struct kernel_dispatcher_impl<1, kernel_type::softmax, transform_type, float, float, float> {
-		RT_TM_FORCE_INLINE static __m256 _mm256_exp_ps(__m256 invec) {
-			alignas(32) float element[8];
-			_mm256_store_ps(element, invec);
-			return _mm256_setr_ps(expf(element[0]), expf(element[1]), expf(element[2]), expf(element[3]), expf(element[4]), expf(element[5]), expf(element[6]), expf(element[7]));
+		RT_TM_FORCE_INLINE static __m256 fast_exp_ps(__m256 x) {
+			const __m256 a = _mm256_set1_ps(12102203.0f / 16777216.0f);
+			const __m256 b = _mm256_set1_ps(1064872507.0f / 16777216.0f);
+			x			   = _mm256_min_ps(x, _mm256_set1_ps(88.3762626647950f));
+			x			   = _mm256_max_ps(x, _mm256_set1_ps(-88.3762626647950f));
+			__m256 tmp	   = _mm256_fmadd_ps(x, a, b);
+			return _mm256_castsi256_ps(_mm256_cvttps_epi32(tmp));
+		}
+
+		RT_TM_FORCE_INLINE static void impl(uint64_t count, float* output, const float* input01, const float* input02) {
+			constexpr size_t simd_width = 8;
+			const size_t simd_count		= count / simd_width;
+			__m256 max_vec = _mm256_set1_ps(-std::numeric_limits<float>::max());
+			for (size_t i = 0; i < simd_count; ++i) {
+				__m256 logits = _mm256_load_ps(input01 + i * simd_width);
+				__m256 mask	  = _mm256_load_ps(input02 + i * simd_width);
+				max_vec		  = _mm256_max_ps(max_vec, _mm256_blendv_ps(_mm256_set1_ps(-std::numeric_limits<float>::max()), logits, mask));
+			}
+			float max_val = horizontal_max(max_vec);
+
+			__m256 sum_vec	 = _mm256_setzero_ps();
+			__m256 max_bcast = _mm256_set1_ps(max_val);
+			for (size_t i = 0; i < simd_count; ++i) {
+				__m256 logits  = _mm256_load_ps(input01 + i * simd_width);
+				__m256 shifted = _mm256_sub_ps(logits, max_bcast);
+				__m256 exps	   = fast_exp_ps(shifted);
+				__m256 mask	   = _mm256_load_ps(input02 + i * simd_width);
+				exps		   = _mm256_and_ps(exps, mask);
+				_mm256_stream_ps(output + i * simd_width, exps);
+				sum_vec = _mm256_add_ps(sum_vec, exps);
+			}
+
+			__m256 inv_sum = _mm256_set1_ps(1.0f / horizontal_sum(sum_vec));
+			for (size_t i = 0; i < simd_count; ++i) {
+				__m256 vals = _mm256_load_ps(output + i * simd_width);
+				_mm256_store_ps(output + i * simd_width, _mm256_mul_ps(vals, inv_sum));
+			}
+
+			if (count % simd_width) {
+			}
 		}
 
 		RT_TM_FORCE_INLINE static float horizontal_max(__m256 vec) {
@@ -118,66 +154,6 @@ namespace rt_tm {
 			sum128		= _mm_add_ps(sum128, shuf);
 
 			return _mm_cvtss_f32(sum128);
-		}
-
-		RT_TM_FORCE_INLINE static void impl(uint64_t count, float* output, const float* input01, const float* input02) {
-			/*
-			const size_t simd_width = 8;
-			const size_t simd_count = count / simd_width;
-			const size_t remainder	= count % simd_width;
-
-			__m256 max_vec = _mm256_set1_ps(-std::numeric_limits<float>::infinity());
-
-			for (size_t i = 0; i < simd_count; ++i) {
-				__m256 logits		 = _mm256_loadu_ps(input01 + i * simd_width);
-				__m256 mask			 = _mm256_loadu_ps(input02 + i * simd_width);
-				__m256 masked_logits = _mm256_blendv_ps(_mm256_set1_ps(-std::numeric_limits<float>::infinity()), logits, mask);
-				max_vec				 = _mm256_max_ps(max_vec, masked_logits);
-			}
-
-			float max_val = horizontal_max(max_vec);
-
-			for (size_t i = simd_count * simd_width; i < count; ++i) {
-				if (input02[i] != 0.0f) {
-					max_val = std::max(max_val, input01[i]);
-				}
-			}
-
-			const __m256 max_broadcast = _mm256_set1_ps(max_val);
-			__m256 sum_vec			   = _mm256_setzero_ps();
-
-			for (size_t i = 0; i < simd_count; ++i) {
-				__m256 logits	= _mm256_loadu_ps(input01 + i * simd_width);
-				__m256 mask		= _mm256_loadu_ps(input02 + i * simd_width);
-				__m256 shifted	= _mm256_sub_ps(logits, max_broadcast);
-				__m256 exp_vals = _mm256_exp_ps(shifted);
-				exp_vals		= _mm256_and_ps(exp_vals, mask);
-				_mm256_storeu_ps(output + i * simd_width, exp_vals);
-				sum_vec = _mm256_add_ps(sum_vec, exp_vals);
-			}
-
-			float total_sum = horizontal_sum(sum_vec);
-
-			for (size_t i = simd_count * simd_width; i < count; ++i) {
-				if (input02[i] != 0.0f) {
-					float exp_val = std::exp(input01[i] - max_val);
-					output[i]	  = exp_val;
-					total_sum += exp_val;
-				} else {
-					output[i] = 0.0f;
-				}
-			}
-
-			const __m256 inv_sum = _mm256_set1_ps(1.0f / total_sum);
-
-			for (size_t i = 0; i < simd_count; ++i) {
-				__m256 exp_vals = _mm256_loadu_ps(output + i * simd_width);
-				_mm256_storeu_ps(output + i * simd_width, _mm256_mul_ps(exp_vals, inv_sum));
-			}
-
-			for (size_t i = simd_count * simd_width; i < count; ++i) {
-				output[i] /= total_sum;
-			}*/
 		}
 	};
 

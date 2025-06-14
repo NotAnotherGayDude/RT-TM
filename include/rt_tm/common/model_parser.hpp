@@ -1346,9 +1346,9 @@ namespace rt_tm {
 			}
 			auto calculate_tensor_size = [](const gguf_tensor_info_t& tensor) -> uint64_t {
 				core_base_creation_data temp_core{};
-				temp_core.data_type_val = tensor.type;
+				//temp_core.data_type_val = tensor.type;
 				for (uint64_t i = 0; i < tensor.n_dimensions; ++i) {
-					temp_core.allocated_dims[i] = tensor.dimensions[i];
+					//temp_core.allocated_dims[i] = tensor.dimensions[i];
 				}
 				return temp_core.core_total_byte_size();
 			};
@@ -1373,10 +1373,6 @@ namespace rt_tm {
 				core_base_creation_data new_core{};
 				//new_core.name = arch_traits<model_arch::llama>::tensor_names[string_to_tensor_name<model_arch::llama>::impl(gguf_file.tensor_infos[x].name)]
 				//[extract_layer_number(gguf_file.tensor_infos[x].name)];
-				new_core.type		   = kernel_type::none;
-				new_core.depth		   = 0;
-				new_core.op_id		   = x;
-				new_core.data_type_val = gguf_file.tensor_infos[x].type;
 				for (uint64_t y = 0; y < gguf_file.tensor_infos[x].n_dimensions; ++y) {
 					new_core.allocated_dims[y] = gguf_file.tensor_infos[x].dimensions[y];
 					new_core.allocated_dims[y] = gguf_file.tensor_infos[x].dimensions[y];

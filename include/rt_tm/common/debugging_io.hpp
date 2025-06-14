@@ -158,10 +158,10 @@ namespace rt_tm {
 		intermediary_tensor(const core_base_creation_data& other) {
 			//uint64_t nbytes{ other.core_total_byte_size() };
 			for (uint64_t x = 0; x < 4; ++x) {
-				dims[x] = other.allocated_dims[x];
+				//dims[x] = other.allocated_dims[x];
 			}
-			op	 = other.type;
-			type = other.data_type_val;
+			//			op	 = other.type;
+			//type = other.data_type_val;
 			name = { other.name };
 		}
 

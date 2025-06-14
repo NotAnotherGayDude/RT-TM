@@ -27,6 +27,10 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
+	template<typename value_type01, typename value_type02> struct is_indexable {
+		static constexpr bool indexable{ std::is_same_v<value_type01, value_type02> || ( std::integral<value_type01> && std::integral<value_type02> )};
+	};
+
 	template<typename value_type_new, auto size_new> struct array {
 	  public:
 		static_assert(integral_or_enum<decltype(size_new)>, "Sorry, but the size val passed to array must be integral or enum!");
@@ -116,6 +120,7 @@ namespace rt_tm {
 		}
 
 		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr reference at(index_type position) {
+			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -124,6 +129,7 @@ namespace rt_tm {
 		}
 
 		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr const_reference at(index_type position) const {
+			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -132,10 +138,12 @@ namespace rt_tm {
 		}
 
 		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr reference operator[](index_type position) noexcept {
+			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 
 		template<integral_or_enum index_type> RT_TM_FORCE_INLINE constexpr const_reference operator[](index_type position) const noexcept {
+			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 

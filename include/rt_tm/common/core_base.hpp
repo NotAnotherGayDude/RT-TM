@@ -26,20 +26,10 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	struct core_base_creation_data : public param_api<core_base_creation_data> {
-		std::vector<core_base_creation_data*> input_ops{};
+	struct core_base_creation_data {
 		array<uint64_t, 4> allocated_dims{ { 1, 1, 1, 1 } };
-		std::vector<uint64_t> dependent_ops{};
-		std::vector<uint8_t> aux_params{};
-		uint64_t comparison_index{};
-		data_type data_type_val{};
-		bool allocate_memory{};
 		mutable void* data{};
 		const char* name{};
-		bool blocking{};
-		uint64_t op_id{};
-		uint64_t depth{};
-		kernel_type type{};
 
 		RT_TM_FORCE_INLINE uint64_t core_total_dims() const {
 			return allocated_dims[0] * allocated_dims[1] * allocated_dims[2] * allocated_dims[3];

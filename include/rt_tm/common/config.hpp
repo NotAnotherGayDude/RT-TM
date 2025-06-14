@@ -97,6 +97,16 @@ RealTimeChris (Chris M.)
 	#error "Unsupported architecture"
 #endif
 
+RT_TM_FORCE_INLINE void rt_tm_pause() noexcept {
+#if defined(RT_TM_ARCH_X86_64)
+	_mm_pause();
+#elif defined(RT_TM_ARCH_ARM64)
+	__asm__ __volatile__("yield" ::: "memory");
+#else
+	__asm__ __volatile__("" ::: "memory");
+#endif
+}
+
 #ifndef NDEBUG
 	#define RT_TM_ASSERT(x) \
 		if (!(x)) \
