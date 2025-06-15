@@ -26,25 +26,6 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	enum class llama_model_generation : uint64_t {
-		v1_v2,
-		v3,
-		count,
-	};
-
-	enum class llama_model_size {
-		llama_1B,
-		llama_3B,
-		llama_7B,
-		llama_8B,
-		llama_11B,
-		llama_13B,
-		llama_70B,
-		llama_90B,
-		llama_405B,
-		count,
-	};
-
 	template<model_arch arch, auto model_size, auto model_generation> struct model_traits;
 
 	template<> struct model_traits<model_arch::llama, llama_model_size::llama_1B, llama_model_generation::v1_v2> {

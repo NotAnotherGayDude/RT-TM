@@ -98,6 +98,7 @@ namespace rt_tm {
 		}
 
 		RT_TM_FORCE_INLINE static void impl(uint64_t count, float* output, const float* input01, const float* input02) {
+			/*
 			constexpr size_t simd_width = 8;
 			const size_t simd_count		= count / simd_width;
 			__m256 max_vec = _mm256_set1_ps(-std::numeric_limits<float>::max());
@@ -127,7 +128,7 @@ namespace rt_tm {
 			}
 
 			if (count % simd_width) {
-			}
+			}*/
 		}
 
 		RT_TM_FORCE_INLINE static float horizontal_max(__m256 vec) {

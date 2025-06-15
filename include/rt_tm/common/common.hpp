@@ -147,7 +147,7 @@ namespace rt_tm {
 			return get_value_as_uint(total_time_units.load(std::memory_order_acquire));
 		}
 
-		RT_TM_FORCE_INLINE time_type total_time_elapsed() noexcept { 
+		RT_TM_FORCE_INLINE time_type total_time_elapsed() noexcept {
 			return get_current_time() - start_time_units.load(std::memory_order_acquire);
 		}
 
@@ -472,10 +472,35 @@ namespace rt_tm {
 		count,
 	};
 
-	template<model_arch arch> struct op_type_type;
+	enum class llama_model_generation : uint64_t {
+		v1_v2,
+		v3,
+		count,
+	};
 
-	template<> struct op_type_type<model_arch::llama> {
-		using type = llama_op_types;
+	enum class llama_model_size {
+		llama_1B,
+		llama_3B,
+		llama_7B,
+		llama_8B,
+		llama_11B,
+		llama_13B,
+		llama_70B,
+		llama_90B,
+		llama_405B,
+		count,
+	};
+
+	template<typename model_size_type> struct get_op_type_type {
+		static constexpr auto get_op_type_impl() {
+			if constexpr (std::is_same_v<llama_model_generation, std::remove_cvref_t<model_size_type>>) {
+				return llama_op_types{};
+			} else {
+				return size_t{};
+			}
+		}
+
+		using type = decltype(get_op_type_impl());
 	};
 
 	enum class model_format { gguf = 1 };
@@ -483,6 +508,7 @@ namespace rt_tm {
 	template<typename model_generation_type_new, typename model_size_type_new> struct model_config {
 		using model_generation_type = model_generation_type_new;
 		using model_size_type		= model_size_type_new;
+		using op_type_type			= typename get_op_type_type<model_size_type>::type;
 		model_generation_type model_generation{};
 		model_size_type model_size{};
 		kernel_type_profile kernel_profile{};
@@ -513,9 +539,16 @@ namespace rt_tm {
 		constexpr model_config() = default;
 	};
 
+	template<model_config config> using get_op_type_type_t = get_op_type_type<typename decltype(config)::model_size_type>::type;
+
 	struct cli_params {
+		uint64_t thread_count{ std::thread::hardware_concurrency() };
+		bool no_conversation{ false };
+		uint64_t batch_size{ 512 };
+		uint64_t n_predict{ 128 };
 		std::string model_file{};
-		uint64_t thread_count{};
+		std::string prompt{};
+		uint64_t seed{ 0 };
 	};
 
 	struct impl_indices {

@@ -38,44 +38,35 @@ namespace rt_tm {
 		};
 
 		template<model_config config> RT_TM_FORCE_INLINE static auto parse_model_graph(std::string_view path) {
-			if constexpr (cpu_arch_index == 2) {
-				using model_type = model<impl_indices{ .cpu_index = 2 }, config>;
-				using base_type	 = model_type::base_type;
-				std::unique_ptr<base_type> return_value{};
-				model_type* new_model{ new model_type{ path } };
-				return_value.reset(new_model);
-				return return_value;
-			} else if constexpr (cpu_arch_index == 1) {
-				using model_type = model<impl_indices{ .cpu_index = 1 }, config>;
-				using base_type	 = model_type::base_type;
-				std::unique_ptr<base_type> return_value{};
-				model_type* new_model{ new model_type{ path } };
-				return_value.reset(new_model);
-				return return_value;
-			} else {
-				using model_type = model<impl_indices{ .cpu_index = 0 }, config>;
-				using base_type	 = model_type::base_type;
-				std::unique_ptr<base_type> return_value{};
-				model_type* new_model{ new model_type{ path } };
-				return_value.reset(new_model);
-				return return_value;
-			}
+			using model_type = model<config>;
+			using base_type	 = model_type::base_type;
+			std::unique_ptr<base_type> return_value{};
+			model_type* new_model{ new model_type{ path } };
+			return_value.reset(new_model);
+			return return_value;
 		}
 
-		RT_TM_FORCE_INLINE static cli_params parse_cli_arguments(const std::string& command_line) {
+		RT_TM_FORCE_INLINE static cli_params parse_cli_arguments(uint32_t argc, char** argv) {
+			std::vector<std::string> cli_args{};
+			for (size_t x = 0; x < argc; ++x) {
+				cli_args.emplace_back(argv[x]);
+			}
+			return rt_tm::harbinger::parse_cli_arguments(cli_args);
+		}
+
+
+		RT_TM_FORCE_INLINE static cli_params parse_cli_arguments(const std::vector<std::string>& command_line) {
 			cli_params result{};
-			std::istringstream stream(command_line);
 			std::string current_flag{};
-			std::string token{};
 			bool expect_value = false;
 
-			while (stream >> std::quoted(token) || stream >> token) {
+			for (const auto& token: command_line) {
 				if (token.empty())
 					continue;
 
 				if (token[0] == '-') {
 					current_flag = token;
-					if (token == "-m" || token == "-t") {
+					if (token == "-m" || token == "-t" || token == "-p" || token == "-s" || token == "-n" || token == "-b") {
 						expect_value = true;
 					} else {
 						expect_value = false;
@@ -88,6 +79,26 @@ namespace rt_tm {
 							result.thread_count = std::stoull(token);
 						} catch (const std::exception&) {
 							result.thread_count = 1;
+						}
+					} else if (current_flag == "-p") {
+						result.prompt = token;
+					} else if (current_flag == "-s") {
+						try {
+							result.seed = std::stoull(token);
+						} catch (const std::exception&) {
+							result.seed = 0;
+						}
+					} else if (current_flag == "-n") {
+						try {
+							result.n_predict = std::stoull(token);
+						} catch (const std::exception&) {
+							result.n_predict = 128;
+						}
+					} else if (current_flag == "-b") {
+						try {
+							result.batch_size = std::stoull(token);
+						} catch (const std::exception&) {
+							result.batch_size = 512;
 						}
 					}
 					expect_value = false;

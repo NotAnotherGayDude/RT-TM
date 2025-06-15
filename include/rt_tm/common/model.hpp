@@ -28,43 +28,45 @@ RealTimeChris (Chris M.)
 
 namespace rt_tm {
 
-	template<impl_indices indices, model_config config> struct model;
-
 	template<typename model_generation_type, typename model_size_type> struct model_base {
 		model_config<model_generation_type, model_size_type> config{};
-		virtual ~model_base() = default;
+		virtual void execute_model()		 = 0;
+		virtual void init(cli_params params) = 0;
+		virtual ~model_base()				 = default;
 	};
 
-	template<impl_indices indices_new, model_config config> struct model
-		: public model_base<decltype(config.model_size), decltype(config.model_generation)>,
-		  public get_core_traits_base_t<typename op_type_type<config.arch>::type, model<indices_new, config>, model_traits<config.arch, config.model_size, config.model_generation>,
-			  kernel_type_profile_traits<config.kernel_profile>>,
-		  public thread_pool<indices_new, model<indices_new, config>, model_traits<config.arch, config.model_size, config.model_generation>,
-			  kernel_type_profile_traits<config.kernel_profile>> {
-		using core_bases_type				  = get_core_traits_base_t<typename op_type_type<config.arch>::type, model<indices_new, config>,
-							model_traits<config.arch, config.model_size, config.model_generation>, kernel_type_profile_traits<config.kernel_profile>>;
+	static constexpr impl_indices indices_new{};
+
+	template<model_config config> struct model : public model_base<decltype(config.model_size), decltype(config.model_generation)>,
+												 public get_core_traits_config_base_t<config>,
+												 public thread_pool<config, model<config>>,
+												 public hyper_parameters<config.arch> {
+		using core_bases_config_type		  = get_core_traits_config_base_t<config>;
 		using model_traits_type				  = model_traits<config.arch, config.model_size, config.model_generation>;
-		using op_type_type					  = typename model_traits_type::op_type_type;
+		using op_type_type					  = model_traits_type::op_type_type;
 		using kernel_type_profile_traits_type = kernel_type_profile_traits<config.kernel_profile>;
 		using base_type						  = model_base<decltype(config.model_size), decltype(config.model_generation)>;
 		inline static constexpr impl_indices indices{ indices_new };
-		inline static constexpr uint64_t total_required_bytes{
-			collect_required_bytes<indices, typename model_traits_type::op_type_type, model<indices, config>, model_traits_type, kernel_type_profile_traits_type>::impl()
-		};
+		inline static constexpr uint64_t total_required_bytes{ collect_required_bytes<config>::impl() };
+		RT_TM_FORCE_INLINE model()						  = default;
 		RT_TM_FORCE_INLINE model& operator=(model&&)	  = delete;
 		RT_TM_FORCE_INLINE model(model&&)				  = delete;
 		RT_TM_FORCE_INLINE model& operator=(const model&) = delete;
 		RT_TM_FORCE_INLINE model(const model&)			  = delete;
-		RT_TM_FORCE_INLINE model(const std::string_view&, uint64_t thread_count = 32)
-			: thread_pool<indices, model<indices, config>, model_traits<config.arch, config.model_size, config.model_generation>,
-				  kernel_type_profile_traits<config.kernel_profile>>{ thread_count } {
+		RT_TM_FORCE_INLINE model(cli_params params) : thread_pool<config, model>{ params.thread_count } {
 			memory.init(total_required_bytes);
-			core_bases_type::template impl<memory_mapper>(memory);
-			core_bases_type::template impl<execution_planner>(thread_count);
+			core_bases_config_type::template impl<memory_mapper>(memory);
+			core_bases_config_type::template impl<execution_planner>(params.thread_count);
+		}
+
+		RT_TM_FORCE_INLINE void init(cli_params params) {
+			memory.init(total_required_bytes);
+			core_bases_config_type::template impl<memory_mapper>(memory);
+			core_bases_config_type::template impl<execution_planner>(params.thread_count);
 		}
 
 		template<op_type_type type> RT_TM_FORCE_INLINE auto& get_core() {
-			return *static_cast<core_traits<type, model, model_traits_type, kernel_type_profile_traits_type>*>(this);
+			return *static_cast<core_traits<config, type>*>(this);
 		}
 
 		RT_TM_FORCE_INLINE void execute_model() {

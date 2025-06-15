@@ -45,7 +45,7 @@ namespace rt_tm {
 		static constexpr bool required{ !std::is_same_v<type01, type02> };
 	};
 
-	template<llama_op_types op_type, typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type> struct core_traits;
+	template<model_config config, llama_op_types op_type> struct core_traits;
 
 	template<kernel_type kernel_type01, kernel_type kernel_type02> struct output_transform {};
 
@@ -53,16 +53,21 @@ namespace rt_tm {
 		template<typename value_type> RT_TM_FORCE_INLINE static void impl(value_type*, uint64_t) {};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::token_embd_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct model;
+
+	template<model_config config> struct model_traits_provider {
+		using model_type = model<config>;
+	};
+
+	template<model_config config> struct core_traits<config, llama_op_types::token_embd_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::vocab_size, 1, 1 } };
@@ -75,16 +80,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::inp_tokens, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::inp_tokens> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::input_token_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::input_token_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, 1, 1, 1 } };
@@ -97,16 +101,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::inp_pos, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::inp_pos> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::position_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::position_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, 1, 1, 1 } };
@@ -119,16 +122,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::inp_out_ids, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::inp_out_ids> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::output_token_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::output_token_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, 1, 1, 1 } };
@@ -141,16 +143,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::rope_freqs_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::rope_freqs_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::rope_freqs_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::rope_freqs_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::rope_dimension_count / 2, 1, 1, 1 } };
@@ -163,16 +164,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::output_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::output_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::vocab_size, 1, 1 } };
@@ -185,16 +185,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::output_norm_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::output_norm_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::output_norm_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::output_norm_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
@@ -207,16 +206,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::attn_q_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::attn_q_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::query_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::query_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::embedding_dim, 1, 1 } };
@@ -229,16 +227,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::attn_k_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::attn_k_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::key_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::key_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, (model_traits_type::head_dim * model_traits_type::head_count_kv), 1, 1 } };
@@ -251,16 +248,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::attn_v_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::attn_v_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::value_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::value_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, (model_traits_type::head_dim * model_traits_type::head_count_kv), 1, 1 } };
@@ -273,16 +269,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::attn_output_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::attn_output_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::attn_output_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::attn_output_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::embedding_dim, 1, 1 } };
@@ -295,16 +290,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::attn_norm_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::attn_norm_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::attn_norm_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::attn_norm_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
@@ -317,16 +311,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_gate_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_gate_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::ffn_gate_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_gate_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::feed_forward_length, 1, 1 } };
@@ -339,16 +332,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_up_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_up_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::ffn_up_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_up_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::per_block_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, model_traits_type::feed_forward_length, 1, 1 } };
@@ -361,16 +353,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_down_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_down_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::ffn_down_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_down_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::feed_forward_length, model_traits_type::embedding_dim, 1, 1 } };
@@ -383,16 +374,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_norm_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_norm_weight> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::ffn_norm_weight_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_norm_weight_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
@@ -405,16 +395,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::cache_k, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::cache_k> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::kv_cache_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::kv_cache_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
@@ -427,16 +416,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::cache_v, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::cache_v> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::kv_cache_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::kv_cache_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
@@ -449,16 +437,15 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kq_mask, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kq_mask> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using output_type													   = typename kernel_type_profile_traits_type::kq_mask_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::kq_mask_type;
 		static constexpr uint64_t depth{ 0 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, model_traits_type::max_sequence_length, 1, 1 } };
@@ -471,20 +458,20 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::inp_embd, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::inp_embd> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::inp_embd, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::token_embd_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::inp_tokens, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::embedding_type;
+
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::inp_embd>;
+		using input_type01		= core_traits<config, llama_op_types::token_embd_weight>;
+		using input_type02		= core_traits<config, llama_op_types::inp_tokens>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::embedding_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -499,19 +486,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::norm> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::inp_embd, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::norm_output_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::norm>;
+		using input_type01		= core_traits<config, llama_op_types::inp_embd>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::norm_output_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -526,20 +512,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::attn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::attn_norm> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type		 = core_traits<llama_op_types::attn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01	 = core_traits<llama_op_types::norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02	 = core_traits<llama_op_types::attn_norm_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type	 = typename kernel_type_profile_traits_type::norm_output_type;
-		using transform_type = output_transform<input_type01::krn_type, input_type02::krn_type>;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::attn_norm>;
+		using input_type01		= core_traits<config, llama_op_types::norm>;
+		using input_type02		= core_traits<config, llama_op_types::attn_norm_weight>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::norm_output_type;
+		using transform_type	= output_transform<input_type01::krn_type, input_type02::krn_type>;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -554,20 +539,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::qcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::qcur> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::qcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::attn_q_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::attn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::query_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::qcur>;
+		using input_type01		= core_traits<config, llama_op_types::attn_q_weight>;
+		using input_type02		= core_traits<config, llama_op_types::attn_norm>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::query_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -584,19 +568,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::qcur_reshaped, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::qcur_reshaped> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::qcur_reshaped, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::qcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::query_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::qcur_reshaped>;
+		using input_type01		= core_traits<config, llama_op_types::qcur>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::query_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count, 1 } };
@@ -609,21 +592,20 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::qcur_rope, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::qcur_rope> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::qcur_rope, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::qcur_reshaped, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::inp_pos, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type03 = core_traits<llama_op_types::rope_freqs_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::query_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::qcur_rope>;
+		using input_type01		= core_traits<config, llama_op_types::qcur_reshaped>;
+		using input_type02		= core_traits<config, llama_op_types::inp_pos>;
+		using input_type03		= core_traits<config, llama_op_types::rope_freqs_weight>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::query_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -638,20 +620,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kcur> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::attn_k_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::attn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::key_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kcur>;
+		using input_type01		= core_traits<config, llama_op_types::attn_k_weight>;
+		using input_type02		= core_traits<config, llama_op_types::attn_norm>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::key_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -668,19 +649,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kcur_reshaped, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kcur_reshaped> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kcur_reshaped, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::key_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kcur_reshaped>;
+		using input_type01		= core_traits<config, llama_op_types::kcur>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::key_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count_kv, 1 } };
@@ -693,21 +673,20 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kcur_rope, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kcur_rope> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kcur_rope, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kcur_reshaped, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::inp_pos, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type03 = core_traits<llama_op_types::rope_freqs_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::key_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kcur_rope>;
+		using input_type01		= core_traits<config, llama_op_types::kcur_reshaped>;
+		using input_type02		= core_traits<config, llama_op_types::inp_pos>;
+		using input_type03		= core_traits<config, llama_op_types::rope_freqs_weight>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::key_type;
 		static constexpr uint64_t depth{ std::max(std::max(input_type01::depth, input_type02::depth), input_type03::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -722,20 +701,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::vcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::vcur> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::vcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::attn_v_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::attn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::value_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::vcur>;
+		using input_type01		= core_traits<config, llama_op_types::attn_v_weight>;
+		using input_type02		= core_traits<config, llama_op_types::attn_norm>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::value_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -752,19 +730,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::k_cache_view, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::k_cache_view> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::k_cache_view, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::cache_k, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::kv_cache_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::k_cache_view>;
+		using input_type01		= core_traits<config, llama_op_types::cache_k>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::kv_cache_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
@@ -777,19 +754,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::k_cache_view_copy, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::k_cache_view_copy> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::k_cache_view_copy, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kcur_rope, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename core_traits<llama_op_types::k_cache_view, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>::output_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::k_cache_view_copy>;
+		using input_type01		= core_traits<config, llama_op_types::kcur_rope>;
+		using output_type		= typename core_traits<config, llama_op_types::k_cache_view>::output_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim, model_traits_type::max_sequence_length, 1, 1 } };
@@ -802,19 +778,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::vcur_transposed, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::vcur_transposed> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::vcur_transposed, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::vcur, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::value_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::vcur_transposed>;
+		using input_type01		= core_traits<config, llama_op_types::vcur>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::value_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, (model_traits_type::head_dim * model_traits_type::head_count_kv), 1, 1 } };
@@ -827,19 +802,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::v_cache_view, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::v_cache_view> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::v_cache_view, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::cache_v, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::kv_cache_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::v_cache_view>;
+		using input_type01		= core_traits<config, llama_op_types::cache_v>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::kv_cache_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, (model_traits_type::head_count_kv * model_traits_type::head_dim), 1, 1 } };
@@ -852,19 +826,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::v_cache_view_copy, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::v_cache_view_copy> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::v_cache_view_copy, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::vcur_transposed, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename core_traits<llama_op_types::v_cache_view, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>::output_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::v_cache_view_copy>;
+		using input_type01		= core_traits<config, llama_op_types::vcur_transposed>;
+		using output_type		= typename core_traits<config, llama_op_types::v_cache_view>::output_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, (model_traits_type::head_count_kv * model_traits_type::head_dim), 1, 1 } };
@@ -877,19 +850,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::v, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::v> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::v, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::cache_v, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::scale_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::v>;
+		using input_type01		= core_traits<config, llama_op_types::cache_v>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::scale_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::max_sequence_length, model_traits_type::head_dim, model_traits_type::head_count_kv, 1 } };
@@ -902,19 +874,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::k, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::k> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::k, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::cache_k, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::scale_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::k>;
+		using input_type01		= core_traits<config, llama_op_types::cache_k>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::scale_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count_kv, 1 } };
@@ -927,19 +898,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::q, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::q> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::q, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::qcur_rope, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::query_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::q>;
+		using input_type01		= core_traits<config, llama_op_types::qcur_rope>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::query_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::max_sequence_length, model_traits_type::head_count, 1 } };
@@ -952,20 +922,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kq, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kq> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kq, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::k, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::q, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::attention_score_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kq>;
+		using input_type01		= core_traits<config, llama_op_types::k>;
+		using input_type02		= core_traits<config, llama_op_types::q>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::attention_score_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -982,20 +951,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kq_soft_max, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kq_soft_max> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kq_soft_max, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kq, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::kq_mask, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::softmax_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kq_soft_max>;
+		using input_type01		= core_traits<config, llama_op_types::kq>;
+		using input_type02		= core_traits<config, llama_op_types::kq_mask>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::softmax_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1012,20 +980,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kqv, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kqv> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kqv, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::v, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::kq_soft_max, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::value_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kqv>;
+		using input_type01		= core_traits<config, llama_op_types::v>;
+		using input_type02		= core_traits<config, llama_op_types::kq_soft_max>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::value_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -1042,19 +1009,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kqv_merged, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kqv_merged> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kqv_merged, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kqv, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::value_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kqv_merged>;
+		using input_type01		= core_traits<config, llama_op_types::kqv>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::value_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_dim, model_traits_type::head_count, 1, 1 } };
@@ -1067,19 +1033,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kqv_merged_cont, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kqv_merged_cont> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kqv_merged_cont, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kqv_merged, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::value_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kqv_merged_cont>;
+		using input_type01		= core_traits<config, llama_op_types::kqv_merged>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::value_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
@@ -1092,20 +1057,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::kqv_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::kqv_out> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::kqv_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::attn_output_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::kqv_merged_cont, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::hidden_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::kqv_out>;
+		using input_type01		= core_traits<config, llama_op_types::attn_output_weight>;
+		using input_type02		= core_traits<config, llama_op_types::kqv_merged_cont>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::hidden_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -1122,20 +1086,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_inp, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_inp> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::ffn_inp, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kqv_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::l_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::residual_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::ffn_inp>;
+		using input_type01		= core_traits<config, llama_op_types::kqv_out>;
+		using input_type02		= core_traits<config, llama_op_types::l_out>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::residual_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -1150,19 +1113,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::norm_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::norm_out> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::norm_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::ffn_inp, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::residual_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::norm_out>;
+		using input_type01		= core_traits<config, llama_op_types::ffn_inp>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::residual_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1177,20 +1139,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_norm> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type		 = core_traits<llama_op_types::ffn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01	 = core_traits<llama_op_types::norm_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02	 = core_traits<llama_op_types::ffn_norm_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type	 = typename kernel_type_profile_traits_type::residual_type;
-		using transform_type = output_transform<input_type01::krn_type, input_type02::krn_type>;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::ffn_norm>;
+		using input_type01		= core_traits<config, llama_op_types::norm_out>;
+		using input_type02		= core_traits<config, llama_op_types::ffn_norm_weight>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::residual_type;
+		using transform_type	= output_transform<input_type01::krn_type, input_type02::krn_type>;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1205,20 +1166,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_gate, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_gate> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::ffn_gate, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::ffn_gate_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::ffn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::ffn_intermediate_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::ffn_gate>;
+		using input_type01		= core_traits<config, llama_op_types::ffn_gate_weight>;
+		using input_type02		= core_traits<config, llama_op_types::ffn_norm>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_intermediate_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -1235,19 +1195,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_silu, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_silu> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::ffn_silu, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::ffn_gate, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::ffn_intermediate_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::ffn_silu>;
+		using input_type01		= core_traits<config, llama_op_types::ffn_gate>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_intermediate_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1262,20 +1221,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_up, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_up> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::ffn_up, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::ffn_up_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::ffn_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::ffn_intermediate_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::ffn_up>;
+		using input_type01		= core_traits<config, llama_op_types::ffn_up_weight>;
+		using input_type02		= core_traits<config, llama_op_types::ffn_norm>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_intermediate_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -1292,20 +1250,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_gate_par, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_gate_par> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type		 = core_traits<llama_op_types::ffn_gate_par, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01	 = core_traits<llama_op_types::ffn_silu, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02	 = core_traits<llama_op_types::ffn_up, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type	 = typename kernel_type_profile_traits_type::ffn_intermediate_type;
-		using transform_type = output_transform<input_type01::krn_type, input_type02::krn_type>;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::ffn_gate_par>;
+		using input_type01		= core_traits<config, llama_op_types::ffn_silu>;
+		using input_type02		= core_traits<config, llama_op_types::ffn_up>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::ffn_intermediate_type;
+		using transform_type	= output_transform<input_type01::krn_type, input_type02::krn_type>;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1320,20 +1277,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::ffn_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::ffn_out> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::ffn_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::ffn_down_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::ffn_gate_par, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::hidden_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::ffn_out>;
+		using input_type01		= core_traits<config, llama_op_types::ffn_down_weight>;
+		using input_type02		= core_traits<config, llama_op_types::ffn_gate_par>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::hidden_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -1350,20 +1306,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::l_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::l_out> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::l_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::ffn_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::ffn_inp, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::residual_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::l_out>;
+		using input_type01		= core_traits<config, llama_op_types::ffn_out>;
+		using input_type02		= core_traits<config, llama_op_types::ffn_inp>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::residual_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1378,20 +1333,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::attn_residual, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::attn_residual> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::attn_residual, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::kqv_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::inp_out_ids, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::residual_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::attn_residual>;
+		using input_type01		= core_traits<config, llama_op_types::kqv_out>;
+		using input_type02		= core_traits<config, llama_op_types::inp_out_ids>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::residual_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1406,20 +1360,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::prev_residual, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::prev_residual> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::prev_residual, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::l_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::inp_out_ids, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::residual_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::prev_residual>;
+		using input_type01		= core_traits<config, llama_op_types::l_out>;
+		using input_type02		= core_traits<config, llama_op_types::inp_out_ids>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::residual_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1434,19 +1387,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::final_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::final_norm> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::final_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::l_out, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::norm_output_type;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::final_norm>;
+		using input_type01		= core_traits<config, llama_op_types::l_out>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::norm_output_type;
 		static constexpr uint64_t depth{ input_type01::depth + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1461,20 +1413,19 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::result_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::result_norm> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type		 = core_traits<llama_op_types::result_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01	 = core_traits<llama_op_types::final_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02	 = core_traits<llama_op_types::output_norm_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type	 = typename kernel_type_profile_traits_type::norm_output_type;
-		using transform_type = output_transform<input_type01::krn_type, input_type02::krn_type>;
+
+		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type			= core_traits<config, llama_op_types::result_norm>;
+		using input_type01		= core_traits<config, llama_op_types::final_norm>;
+		using input_type02		= core_traits<config, llama_op_types::output_norm_weight>;
+		using output_type		= typename kernel_type_profile_traits<config.kernel_profile>::norm_output_type;
+		using transform_type	= output_transform<input_type01::krn_type, input_type02::krn_type>;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
@@ -1489,20 +1440,18 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	struct core_traits<llama_op_types::result_output, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type> {
+	template<model_config config> struct core_traits<config, llama_op_types::result_output> {
 		RT_TM_FORCE_INLINE core_traits() noexcept							   = default;
 		RT_TM_FORCE_INLINE core_traits& operator=(const core_traits&) noexcept = delete;
 		RT_TM_FORCE_INLINE core_traits(const core_traits&) noexcept			   = delete;
 		RT_TM_FORCE_INLINE core_traits& operator=(core_traits&&) noexcept	   = delete;
 		RT_TM_FORCE_INLINE core_traits(core_traits&&) noexcept				   = delete;
 		using transform_type												   = int32_t;
-		using derived_type													   = derived_type_new;
-		using model_traits_type												   = model_traits_type_new;
-		using this_type	   = core_traits<llama_op_types::result_output, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type01 = core_traits<llama_op_types::output_weight, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using input_type02 = core_traits<llama_op_types::result_norm, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>;
-		using output_type  = typename kernel_type_profile_traits_type::logit_type;
+		using model_traits_type												   = model_traits<config.arch, config.model_size, config.model_generation>;
+		using this_type														   = core_traits<config, llama_op_types::result_output>;
+		using input_type01													   = core_traits<config, llama_op_types::output_weight>;
+		using input_type02													   = core_traits<config, llama_op_types::result_norm>;
+		using output_type													   = typename kernel_type_profile_traits<config.kernel_profile>::logit_type;
 		static constexpr uint64_t depth{ std::max(input_type01::depth, input_type02::depth) + 1 };
 		static constexpr alloc_type alc_type{ alloc_type::single_alloc };
 		static constexpr bool dequantization{ requires_dequant_or_quant<typename input_type01::output_type, typename input_type02::output_type>::required };
@@ -1519,10 +1468,13 @@ namespace rt_tm {
 		int32_t value{};
 	};
 
-	template<typename derived_type_new, uint64_t index> struct get_adjacent_value {
-		using derived_type		   = derived_type_new;
-		using derived_derived_type = typename derived_type::derived_type;
-		RT_TM_FORCE_INLINE static auto& impl(derived_type_new& core) {
+	template<model_config config, auto krn_type, uint64_t index> struct get_adjacent_value;
+
+	template<model_config config, auto krn_type, uint64_t index> struct get_adjacent_value {
+		using derived_type				 = core_traits<config, krn_type>;
+		using model_traits_provider_type = model_traits_provider<config>;
+		using derived_derived_type		 = typename model_traits_provider_type::model_type;
+		RT_TM_FORCE_INLINE static auto& impl(derived_type& core) {
 			if constexpr (index == 0) {
 				using input_type01 = typename derived_type::input_type01;
 				return *static_cast<input_type01*>(static_cast<derived_derived_type*>(&core));
@@ -1543,8 +1495,7 @@ namespace rt_tm {
 		RT_TM_FORCE_INLINE core_bases& operator=(const core_bases&) = delete;
 		RT_TM_FORCE_INLINE core_bases(const core_bases&)			= delete;
 
-		template<template<typename> typename mixin_type, typename op_entity_type, typename... arg_types>
-		RT_TM_FORCE_INLINE void impl_internal(arg_types&&... args) {
+		template<template<typename> typename mixin_type, typename op_entity_type, typename... arg_types> RT_TM_FORCE_INLINE void impl_internal(arg_types&&... args) {
 			return mixin_type<op_entity_type>::impl(*static_cast<op_entity_type*>(this), std::forward<arg_types>(args)...);
 		}
 
@@ -1557,23 +1508,20 @@ namespace rt_tm {
 			return mixin_type<op_entity_type>::impl(std::forward<arg_types>(args)...);
 		}
 
-		template<template<typename> typename mixin_type, typename... arg_types>
-		RT_TM_FORCE_INLINE static constexpr void impl_constexpr(arg_types&&... args) {
+		template<template<typename> typename mixin_type, typename... arg_types> RT_TM_FORCE_INLINE static constexpr void impl_constexpr(arg_types&&... args) {
 			(impl_internal_constexpr<mixin_type, bases>(args...), ...);
 		}
 	};
 
-	template<typename op_type_type, typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type,
-		typename index_sequence>
-	struct get_core_traits_base;
+	template<model_config config, typename index_sequence> struct get_core_traits_base;
 
-	template<typename op_type_type, typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type, uint64_t... index>
-	struct get_core_traits_base<op_type_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type, std::index_sequence<index...>> {
-		using type = core_bases<core_traits<static_cast<op_type_type>(index), derived_type_new, model_traits_type_new, kernel_type_profile_traits_type>...>;
+	template<model_config config> using op_type_type_t = typename model_traits<config.arch, config.model_size, config.model_generation>::op_type_type;
+
+	template<model_config config, uint64_t... index> struct get_core_traits_base<config, std::index_sequence<index...>> {
+		using type = core_bases<core_traits<config, static_cast<op_type_type_t<config>>(index)>...>;
 	};
 
-	template<typename op_type_type, typename derived_type_new, typename model_traits_type_new, typename kernel_type_profile_traits_type>
-	using get_core_traits_base_t = typename get_core_traits_base<op_type_type, derived_type_new, model_traits_type_new, kernel_type_profile_traits_type,
-		std::make_index_sequence<static_cast<uint64_t>(op_type_type::count)>>::type;
+	template<model_config config> using get_core_traits_config_base_t =
+		typename get_core_traits_base<config, std::make_index_sequence<static_cast<uint64_t>(op_type_type_t<config>::count)>>::type;
 
 }
