@@ -1,4 +1,4 @@
-name: RT-TM Multi-Platform Build-Sanitized
+name: Nihilus Multi-Platform Build-Sanitized
 on:
   push:
     branches: [ "**" ]
@@ -71,7 +71,7 @@ jobs:
     
     - name: Configure CMake
       run: |
-        cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE -DCMAKE_INSTALL_RPATH="@loader_path/../lib" -DRT_TM_VS_LLAMA=TRUE -DGGML_METAL=OFF -DRT_TM_UBSAN_ENABLED=TRUE -DRT_TM_ASAN_ENABLED=TRUE
+        cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE -DCMAKE_INSTALL_RPATH="@loader_path/../lib" -DNIHILUS_VS_LLAMA=TRUE -DGGML_METAL=OFF -DNIHILUS_UBSAN_ENABLED=TRUE -DNIHILUS_ASAN_ENABLED=TRUE
     
     - name: Build Project
       run: |
@@ -99,9 +99,9 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         export DYLD_LIBRARY_PATH="${GITHUB_WORKSPACE}/../Install/lib:$DYLD_LIBRARY_PATH"
-        chmod +x "${GITHUB_WORKSPACE}/../Install/bin/rt_tm_performance"
-        "${GITHUB_WORKSPACE}/../Install/bin/rt_tm_performance" --model installed-to/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf -p "What is the meaning of life?" -s 0 -n 8 -no-cnv -t 1 > llm_output_macos.txt 2>&1
-        echo "=== RT-TM LLM OUTPUT (macOS) ==="
+        chmod +x "${GITHUB_WORKSPACE}/../Install/bin/nihilus_performance"
+        "${GITHUB_WORKSPACE}/../Install/bin/nihilus_performance" --model installed-to/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf -p "What is the meaning of life?" -s 0 -n 8 -no-cnv -t 1 > llm_output_macos.txt 2>&1
+        echo "=== Nihilus LLM OUTPUT (macOS) ==="
         cat llm_output_macos.txt
         echo "=== END OUTPUT ==="
         echo "=== VALIDATION CHECK ==="
@@ -127,9 +127,9 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         export LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/../Install/lib:$LD_LIBRARY_PATH"
-        chmod +x "${GITHUB_WORKSPACE}/../Install/bin/rt_tm_performance"
-        "${GITHUB_WORKSPACE}/../Install/bin/rt_tm_performance" --model installed-to/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf -p "What is the meaning of life?" -s 0 -n 8 -no-cnv -t 1 > llm_output_linux.txt 2>&1
-        echo "=== RT-TM LLM OUTPUT (Linux) ==="
+        chmod +x "${GITHUB_WORKSPACE}/../Install/bin/nihilus_performance"
+        "${GITHUB_WORKSPACE}/../Install/bin/nihilus_performance" --model installed-to/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf -p "What is the meaning of life?" -s 0 -n 8 -no-cnv -t 1 > llm_output_linux.txt 2>&1
+        echo "=== Nihilus LLM OUTPUT (Linux) ==="
         cat llm_output_linux.txt
         echo "=== END OUTPUT ==="
         echo "=== VALIDATION CHECK ==="
@@ -154,8 +154,8 @@ jobs:
     - name: Run Model (Windows)
       if: runner.os == 'Windows'
       run: |
-        & "${env:GITHUB_WORKSPACE}\..\Install\bin\rt_tm_performance.exe" --model installed-to/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf -p "What is the meaning of life?" -s 0 -n 8 -no-cnv -t 1 > llm_output_windows.txt 2>&1
-        Write-Host "=== RT-TM LLM OUTPUT (Windows) ==="
+        & "${env:GITHUB_WORKSPACE}\..\Install\bin\nihilus_performance.exe" --model installed-to/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf -p "What is the meaning of life?" -s 0 -n 8 -no-cnv -t 1 > llm_output_windows.txt 2>&1
+        Write-Host "=== Nihilus LLM OUTPUT (Windows) ==="
         Get-Content llm_output_windows.txt
         Write-Host "=== END OUTPUT ==="
         Write-Host "=== VALIDATION CHECK ==="

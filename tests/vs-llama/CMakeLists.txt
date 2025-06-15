@@ -22,7 +22,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 project(
-  "rt_tm_performance"
+  "nihilus_performance"
   VERSION "${PRODUCT_VERSION}"
   LANGUAGES CXX
 )
@@ -49,20 +49,20 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(benchmarksuite)
 
 add_executable(
-  "rt_tm_performance" 
+  "nihilus_performance" 
   "./main.cpp"
  "save_tensor.h")
 
 add_subdirectory("./common")
 
 target_link_libraries(
-	"rt_tm_performance" PUBLIC 
-	rt_tm::rt_tm llama common BenchmarkSuite::BenchmarkSuite ggml ggml-cpu
+	"nihilus_performance" PUBLIC 
+	nihilus::nihilus llama common BenchmarkSuite::BenchmarkSuite ggml ggml-cpu
 )
 
 target_compile_options(
-	"rt_tm_performance" PUBLIC
-	#"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${RT_TM_ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"nihilus_performance" PUBLIC
+	#"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${NIHILUS_ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wnull-dereference>"
 	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wuninitialized>"
 	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wconversion>"
@@ -84,15 +84,15 @@ target_compile_options(
 )
 
 target_link_options(
-	"rt_tm_performance" PUBLIC
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${RT_TM_ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:$<$<STREQUAL:${RT_TM_ASAN_ENABLED},TRUE>:-fsanitize=address>>"
+	"nihilus_performance" PUBLIC
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${NIHILUS_ASAN_ENABLED},TRUE>:-fsanitize=address>>"
+	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:$<$<STREQUAL:${NIHILUS_ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 )
 
 if (WIN32)
 	install(
 		FILES 
-		"$<TARGET_PDB_FILE:rt_tm_performance>"
+		"$<TARGET_PDB_FILE:nihilus_performance>"
 		DESTINATION "bin"
 		OPTIONAL
 	)
@@ -100,30 +100,30 @@ endif()
 
 install(
 	FILES 
-	"$<TARGET_FILE:rt_tm_performance>"
+	"$<TARGET_FILE:nihilus_performance>"
 	DESTINATION "bin"
 	OPTIONAL
 )
 
 install(
       FILES "$<TARGET_FILE:ggml>"
-      DESTINATION "$<TARGET_FILE_DIR:rt_tm_performance>"
+      DESTINATION "$<TARGET_FILE_DIR:nihilus_performance>"
       OPTIONAL
     )
     install(
       FILES "$<TARGET_FILE:ggml-cpu>"
-      DESTINATION "$<TARGET_FILE_DIR:rt_tm_performance>"
+      DESTINATION "$<TARGET_FILE_DIR:nihilus_performance>"
       OPTIONAL
     )
     install(
       FILES "$<TARGET_FILE:ggml-base>"
-      DESTINATION "$<TARGET_FILE_DIR:rt_tm_performance>"
+      DESTINATION "$<TARGET_FILE_DIR:nihilus_performance>"
       OPTIONAL
     )
 
 install(
 	FILES 
 	"$<TARGET_FILE:llama>"
-	DESTINATION "$<TARGET_FILE_DIR:rt_tm_performance>"
+	DESTINATION "$<TARGET_FILE_DIR:nihilus_performance>"
 	OPTIONAL
 )

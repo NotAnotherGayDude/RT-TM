@@ -48,7 +48,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "LLAMA_CURL": "Off",
-        "RT_TM_VS_LLAMA": true
+        "NIHILUS_VS_LLAMA": true
       }
     },
     {
@@ -58,7 +58,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "LLAMA_CURL": "Off",
-        "RT_TM_VS_LLAMA": true
+        "NIHILUS_VS_LLAMA": true
       }
     },
     {
