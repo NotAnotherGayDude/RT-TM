@@ -54,7 +54,6 @@ namespace nihilus {
 			return nihilus::harbinger::parse_cli_arguments(cli_args);
 		}
 
-
 		NIHILUS_FORCE_INLINE static cli_params parse_cli_arguments(const std::vector<std::string>& command_line) {
 			cli_params result{};
 			std::string current_flag{};
@@ -90,9 +89,9 @@ namespace nihilus {
 						}
 					} else if (current_flag == "-n") {
 						try {
-							result.n_predict = std::stoull(token);
+							result.n_tokens = std::stoull(token);
 						} catch (const std::exception&) {
-							result.n_predict = 128;
+							result.n_tokens = 0;
 						}
 					} else if (current_flag == "-b") {
 						try {
