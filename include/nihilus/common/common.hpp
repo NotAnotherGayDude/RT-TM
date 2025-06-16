@@ -34,47 +34,64 @@ RealTimeChris (Chris M.)
 
 namespace nihilus {
 
+	static constexpr auto nanosecond_count{ 9000 };
+
 	inline std::mutex mutex{};
 
-	NIHILUS_FORCE_INLINE void log(std::string_view string) {
+	enum class log_level {
+		error,
+		status,
+	};
+
+	template<log_level level> NIHILUS_FORCE_INLINE void log(std::string_view string) {
 		std::unique_lock lock{ mutex };
-		std::cout << string << std::endl;
+		if constexpr (level == log_level::error) {
+			std::cerr << string << std::endl;
+		} else {
+			std::cout << string << std::endl;
+		}
 	}
 
 	struct alignas(64) atomic_flag_wrapper {
 		NIHILUS_FORCE_INLINE atomic_flag_wrapper() noexcept = default;
 		NIHILUS_FORCE_INLINE atomic_flag_wrapper& operator=(const atomic_flag_wrapper&) noexcept {
 			return *this;
-		};
-		NIHILUS_FORCE_INLINE atomic_flag_wrapper(const atomic_flag_wrapper&) noexcept {};
-
-		alignas(64) std::atomic_flag flag{};
-
-		NIHILUS_FORCE_INLINE void clear(std::memory_order order) {
-			flag.clear(order);
 		}
 
-		NIHILUS_FORCE_INLINE void test_and_set(std::memory_order order) {
-			flag.test_and_set(order);
+		NIHILUS_FORCE_INLINE atomic_flag_wrapper(const atomic_flag_wrapper&) noexcept {
+		}
+
+		NIHILUS_FORCE_INLINE void clear() {
+			flag.store(0, std::memory_order_release);
+		}
+
+		NIHILUS_FORCE_INLINE void test_and_set() {
+			flag.store(1, std::memory_order_release);
 		}
 
 		NIHILUS_FORCE_INLINE void notify_one() {
 			flag.notify_one();
 		}
 
-		NIHILUS_FORCE_INLINE bool test(std::memory_order order) {
-			return flag.test(order);
+		NIHILUS_FORCE_INLINE bool test() {
+			return flag.load(std::memory_order_acquire) == 1;
 		}
 
 		NIHILUS_FORCE_INLINE void wait(bool value) {
 			flag.wait(value, std::memory_order_acquire);
 		}
+
+	  protected:
+		alignas(64) std::atomic_signed_lock_free flag{};
 	};
 
 	struct alignas(64) op_latch {
-		alignas(64) std::vector<atomic_flag_wrapper> start_flags{};// For "start work"
-		alignas(64) std::vector<atomic_flag_wrapper> finish_flags{};// For "work done"
-		alignas(64) std::atomic<int64_t> global_counter{};
+		alignas(64) std::vector<atomic_flag_wrapper> finish_flags{};
+		char padding01[40];
+		alignas(64) std::vector<atomic_flag_wrapper> start_flags{};
+		char padding02[40];
+		alignas(64) std::atomic_signed_lock_free global_counter{};
+		char padding03[56];
 		alignas(64) size_t thread_count{};
 
 		NIHILUS_FORCE_INLINE void init(size_t thread_count_new) {
@@ -85,25 +102,25 @@ namespace nihilus {
 		}
 
 		NIHILUS_FORCE_INLINE void worker_wait(size_t thread_index) {
-			while (!start_flags[thread_index].test(std::memory_order_acquire)) {
+			while (!start_flags[thread_index].test()) {
 				start_flags[thread_index].wait(false);
 			}
-			start_flags[thread_index].clear(std::memory_order_release);
+			start_flags[thread_index].clear();
 		}
 
 		NIHILUS_FORCE_INLINE void arrive_and_wait(size_t thread_index) {
 			global_counter.fetch_sub(1, std::memory_order_acq_rel);
 			global_counter.notify_one();
 
-			while (!finish_flags[thread_index].test(std::memory_order_acquire)) {
+			while (!finish_flags[thread_index].test()) {
 				nihilus_pause();
 			}
-			finish_flags[thread_index].clear(std::memory_order_release);
+			finish_flags[thread_index].clear();
 		}
 
 		NIHILUS_FORCE_INLINE void count_down() {
 			for (size_t x = 0; x < thread_count; ++x) {
-				start_flags[x].test_and_set(std::memory_order_release);
+				start_flags[x].test_and_set();
 				start_flags[x].notify_one();
 			}
 		}
@@ -112,11 +129,12 @@ namespace nihilus {
 			uint64_t current_value = global_counter.load(std::memory_order_acquire);
 			while (current_value > 0) {
 				current_value = global_counter.load(std::memory_order_acquire);
+				nihilus_pause();
 			}
 
 			global_counter.store(thread_count, std::memory_order_release);
 			for (size_t x = 0; x < thread_count; ++x) {
-				finish_flags[x].test_and_set(std::memory_order_release);
+				finish_flags[x].test_and_set();
 				finish_flags[x].notify_one();
 			}
 		}
@@ -544,6 +562,10 @@ namespace nihilus {
 
 	enum class model_format { gguf = 1 };
 
+	template<typename model_generation_type_new, typename model_size_type_new> struct model_config;
+
+	template<auto> struct harbinger;
+
 	template<typename model_generation_type_new, typename model_size_type_new> struct model_config {
 		using model_generation_type = model_generation_type_new;
 		using model_size_type		= model_size_type_new;
@@ -565,7 +587,9 @@ namespace nihilus {
 
 	  protected:
 		template<typename model_generateion_type_newer, typename model_size_type_newer> friend struct model_base;
-		friend struct harbinger;
+		NIHILUS_FORCE_INLINE friend consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch,
+			bool exceptions, kv_cache_strategy cache_strategy, bool use_gradient_checkpointing, rope_scaling_type rope_scaling, bool use_rotary_embeddings,
+			uint64_t kv_cache_block_size, bool use_flash_attention, norm_type rms_norm_type, model_format format, float norm_epsilon);
 
 		constexpr model_config(auto model_generation_new, auto model_size_new, kernel_type_profile kernel_profile_new, model_arch arch_new, bool exceptions_new,
 			kv_cache_strategy cache_strategy_new, bool use_gradient_checkpointing_new, rope_scaling_type rope_scaling_new, bool use_rotary_embeddings_new,

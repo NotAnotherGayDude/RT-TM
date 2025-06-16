@@ -152,7 +152,6 @@ namespace nihilus {
 		QueryPerformanceCounter(&start);
 		uint64_t target_ticks = start.QuadPart + (frequency.QuadPart * nanoseconds) / 1000000000ULL;
 		do {
-			_mm_pause();
 			QueryPerformanceCounter(&current);
 		} while (current.QuadPart < target_ticks);
 #else
@@ -160,7 +159,6 @@ namespace nihilus {
 		auto start	= std::chrono::high_resolution_clock::now();
 		auto target = start + std::chrono::nanoseconds(nanoseconds);
 		do {
-			_mm_pause();// or __builtin_ia32_pause() on some compilers
 		} while (std::chrono::high_resolution_clock::now() < target);
 #endif
 	}
@@ -258,9 +256,7 @@ namespace nihilus {
 		}
 	};
 
-	stop_watch<std::chrono::nanoseconds> stop_watch_val{ 0 };
-	array<std::atomic_uint64_t, static_cast<size_t>(llama_op_types::count) + 1> avg_count{};
-	array<std::atomic_uint64_t, static_cast<size_t>(llama_op_types::count) + 1> count{};
+	stop_watch<std::chrono::nanoseconds> stop_watch_val_nihilus{ 0 };
 
 	template<model_config config, typename base_type_new> struct thread_function : public base_type_new {
 		NIHILUS_FORCE_INLINE thread_function() noexcept									 = default;
@@ -272,8 +268,7 @@ namespace nihilus {
 		using base_type																	 = base_type_new;
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count) {
 			kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
-			avg_count[0].fetch_add(1, std::memory_order_release);
-			spinlock_nanoseconds(9000);
+			spinlock_nanoseconds(nanosecond_count);
 		}
 		NIHILUS_FORCE_INLINE void thread_impl_main() {};
 	};
@@ -287,25 +282,15 @@ namespace nihilus {
 		using output_type																 = base_type_new::output_type;
 		using base_type																	 = base_type_new;
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count, uint64_t current_index = 0) {
-			//stop_watch_val.reset();
 			this->sync_flag_start[current_index].arrive_and_wait(thread_index);
 			kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
-			spinlock_nanoseconds(9000);
-			avg_count[0].fetch_add(1, std::memory_order_release);
-			//wait_10us_sleep_for();
+			spinlock_nanoseconds(nanosecond_count);
 			this->sync_flag_end[current_index].arrive_and_wait(thread_index);
-			//std::cout << "TOTAL COUNT-02: " << avg_count[0].load(std::memory_order_acquire) << std::endl;
-			//count[base_type::type].fetch_add(stop_watch_val.total_time_elapsed_uint64(), std::memory_order_release);
-			//avg_count[base_type::type].fetch_add(1, std::memory_order_release);
 		}
 
 		NIHILUS_FORCE_INLINE void thread_impl_main(uint64_t current_index = 0) {
-			//stop_watch_val.reset();
 			this->sync_flag_start[current_index].main_wait();
-			//kernel_dispatcher<config, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
 			this->sync_flag_end[current_index].main_wait();
-			//count[base_type::type].fetch_add(stop_watch_val.total_time_elapsed_uint64(), std::memory_order_release);
-			//avg_count[base_type::type].fetch_add(1, std::memory_order_release);
 		}
 	};
 
@@ -457,19 +442,15 @@ namespace nihilus {
 				thread_latch.worker_wait(thread_index);
 				if (!stop.load(std::memory_order_acquire)) {
 					threading_strategy<config, derived_type>::template impl<thread_function>(thread_index, thread_count);
+					thread_latch.arrive_and_wait(thread_index);
 				}
-				thread_latch.arrive_and_wait(thread_index);
 			}
 		}
 
 		NIHILUS_FORCE_INLINE void execute_tasks() {
-			stop_watch_val.reset();
 			thread_latch.count_down();
 			threading_strategy<config, derived_type>::template impl_main<thread_function>();
 			thread_latch.main_wait();
-			stop_watch_val.add_time();
-
-			std::cout << "TOTAL COUNT: " << avg_count[0].load(std::memory_order_acquire) << std::endl;
 		}
 
 		NIHILUS_FORCE_INLINE ~thread_pool() {

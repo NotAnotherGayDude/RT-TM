@@ -20,6 +20,7 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
+#include <nihilus/common/input_session.hpp>
 #include <nihilus/common/model.hpp>
 #include <nihilus/common/model_parser.hpp>
 #include <nihilus/common/common.hpp>
@@ -27,21 +28,32 @@ RealTimeChris (Chris M.)
 
 namespace nihilus {
 
-	struct harbinger {
-		NIHILUS_FORCE_INLINE static consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch,
-			bool exceptions = false, kv_cache_strategy cache_strategy = kv_cache_strategy::paged, bool use_gradient_checkpointing = false,
-			rope_scaling_type rope_scaling = rope_scaling_type::linear, bool use_rotary_embeddings = true, uint64_t kv_cache_block_size = 16, bool use_flash_attention = true,
-			norm_type rms_norm_type = norm_type::rms_standard, model_format format = model_format::gguf, float norm_epsilon = 1e-6f) {
-			model_config<decltype(model_generation), decltype(model_size)> config{ model_generation, model_size, kernel_profile, arch, exceptions, cache_strategy,
-				use_gradient_checkpointing, rope_scaling, use_rotary_embeddings, kv_cache_block_size, use_flash_attention, rms_norm_type, format, norm_epsilon };
-			return config;
-		};
+	NIHILUS_FORCE_INLINE static consteval auto generate_model_config(auto model_generation, auto model_size, kernel_type_profile kernel_profile, model_arch arch,
+		bool exceptions = false, kv_cache_strategy cache_strategy = kv_cache_strategy::paged, bool use_gradient_checkpointing = false,
+		rope_scaling_type rope_scaling = rope_scaling_type::linear, bool use_rotary_embeddings = true, uint64_t kv_cache_block_size = 16, bool use_flash_attention = true,
+		norm_type rms_norm_type = norm_type::rms_standard, model_format format = model_format::gguf, float norm_epsilon = 1e-6f) {
+		model_config<decltype(model_generation), decltype(model_size)> config{ model_generation, model_size, kernel_profile, arch, exceptions, cache_strategy,
+			use_gradient_checkpointing, rope_scaling, use_rotary_embeddings, kv_cache_block_size, use_flash_attention, rms_norm_type, format, norm_epsilon };
+		return config;
+	};
 
-		template<model_config config> NIHILUS_FORCE_INLINE static auto parse_model_graph(std::string_view path) {
-			using model_type = model<config>;
-			using base_type	 = model_type::base_type;
-			std::unique_ptr<base_type> return_value{};
-			model_type* new_model{ new model_type{ path } };
+	template<model_config config> struct harbinger<config> {
+		using model_type = model<config>;
+		using model_base_type = typename model<config>::base_type;
+		using input_session_type = input_session<model_type>;
+		using input_session_base_type = input_session_type::base_type;
+
+		NIHILUS_FORCE_INLINE static auto parse_model_graph(cli_params params) {
+			std::unique_ptr<model_base_type> return_value{};
+			model_base_type* new_model{ new model_type{ params } };
+			return_value.reset(new_model);
+			return return_value;
+		}
+
+		NIHILUS_FORCE_INLINE static auto get_input_session(input_session_config& params, model_base_type& model) {
+			std::unique_ptr<input_session_base_type> return_value{};
+			input_session_type new_input_session{};
+			input_session_base_type* new_model{ new input_session_type{ params, &static_cast<model_type&>(model) } };
 			return_value.reset(new_model);
 			return return_value;
 		}
@@ -51,7 +63,7 @@ namespace nihilus {
 			for (size_t x = 0; x < argc; ++x) {
 				cli_args.emplace_back(argv[x]);
 			}
-			return nihilus::harbinger::parse_cli_arguments(cli_args);
+			return parse_cli_arguments(cli_args);
 		}
 
 		NIHILUS_FORCE_INLINE static cli_params parse_cli_arguments(const std::vector<std::string>& command_line) {

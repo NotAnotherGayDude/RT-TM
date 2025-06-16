@@ -34,23 +34,33 @@ namespace nihilus {
 		uint64_t max_tokens{};
 	};
 
-	template<typename model_type> struct input_session : public tokenizer<model_type::model_traits_type::arch> {
-		NIHILUS_FORCE_INLINE input_session(const input_session_config&, model_type& model) : model_ptr{ &model } {};
+	struct input_session_base {
+		virtual bool process_input() = 0;
+		virtual operator bool()		 = 0;
+
+		execution_parameters exec_params{};
+	};
+
+	template<typename model_type> struct input_session : public input_session_base, public tokenizer<model_type::model_traits_type::arch> {
+		using base_type = input_session_base;
+
+		NIHILUS_FORCE_INLINE input_session() noexcept = default;
+		NIHILUS_FORCE_INLINE input_session(const input_session_config&, model_type& model) : model_ptr{ &model } {
+			exec_params.thread_count = model.thread_count;
+		};
 
 		NIHILUS_FORCE_INLINE bool process_input() {
 			this->tokenize(input, model_ptr->template get_core<model_type::op_type_type::inp_tokens>().data);
 			model_ptr->execute_model(exec_params);
-			std::cout << "FOR " << exec_params.thread_count << " THREADS, WITH " << 9000 << " NANOSECONDS OF SPINLOCK PER KERNEL, "
-					  << "NIHILUS AVERAGE COMPUTE TIME, OVER: " << std::setw(50 - std::size("NIHILUS AVERAGE COMPUTE TIME, OVER: ")) << stop_watch_val.get_count()
-					  << " TOKENS: " << stop_watch_val.get_average() << std::endl;
+			std::cout << "FOR " << exec_params.thread_count << " THREADS, WITH " << nanosecond_count << " NANOSECONDS OF SPINLOCK PER KERNEL, "
+					  << "NIHILUS AVERAGE COMPUTE TIME, OVER: " << std::setw(50 - std::size("NIHILUS AVERAGE COMPUTE TIME, OVER: ")) << stop_watch_val_nihilus.get_count()
+					  << " TOKENS: " << stop_watch_val_nihilus.get_average() << std::endl;
 			return false;
 		}
 
 		NIHILUS_FORCE_INLINE operator bool() {
 			return false;
 		}
-
-		execution_parameters exec_params{};
 
 	  protected:
 		model_type* model_ptr{};

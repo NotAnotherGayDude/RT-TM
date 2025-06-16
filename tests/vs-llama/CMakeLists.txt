@@ -21,6 +21,10 @@
 
 cmake_minimum_required(VERSION 3.18)
 
+if (NOT DEFINED LLAMA_BRANCH)
+	set(LLAMA_BRANCH "master")
+endif()
+
 project(
   "nihilus_performance"
   VERSION "${PRODUCT_VERSION}"
@@ -34,8 +38,8 @@ include(FetchContent)
 
 FetchContent_Declare(
   llama.cpp
-  GIT_REPOSITORY https://github.com/realtimechris/llama.cpp.git
-  GIT_TAG master
+  GIT_REPOSITORY https://github.com/notanothergaydude/llama.cpp.git
+  GIT_TAG ${LLAMA_BRANCH}
   GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(llama.cpp)

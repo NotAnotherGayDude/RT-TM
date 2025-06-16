@@ -46,6 +46,7 @@ namespace nihilus {
 		using op_type_type					  = model_traits_type::op_type_type;
 		using kernel_type_profile_traits_type = kernel_type_profile_traits<config.kernel_profile>;
 		using base_type						  = model_base<decltype(config.model_size), decltype(config.model_generation)>;
+		template<typename model_type> friend struct input_session;
 		inline static constexpr impl_indices indices{ indices_new };
 		static constexpr uint64_t total_required_bytes{ collect_required_bytes<config>::impl() };
 		NIHILUS_FORCE_INLINE model()						  = default;
@@ -70,8 +71,9 @@ namespace nihilus {
 
 		NIHILUS_FORCE_INLINE void execute_model(execution_parameters& params) {
 			for (size_t x = 0; x < params.token_count + 1; ++x) {
-				core_bases_config_type::template impl<execution_planner>(this->thread_count);
+				stop_watch_val_nihilus.reset();
 				this->execute_tasks();
+				stop_watch_val_nihilus.add_time();
 			}
 			// Perform all of the necessary stuff to execute the model - along with all of the constexpr values stored globally inside the class LOL!.
 			// Because we only pay the "virtual overhead @ the top here == totally negligible.

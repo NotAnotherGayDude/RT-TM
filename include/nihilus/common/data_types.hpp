@@ -26,10 +26,10 @@ namespace nihilus {
 
 	inline static constexpr uint64_t Q_SIZE{ 32 };
 
-	using half	   = uint16_t;
-	using half2	   = uint32_t;
-	using fp16_t   = uint16_t;
-	using bf16_t   = uint16_t;
+	using half	   = int16_t;
+	using half2	   = int32_t;
+	using fp16_t   = int16_t;
+	using bf16_t   = int16_t;
 	using float_32 = float;
 	using float_64 = double;
 

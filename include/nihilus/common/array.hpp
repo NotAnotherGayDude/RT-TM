@@ -120,7 +120,7 @@ namespace nihilus {
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr reference at(index_type position) {
-			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -129,7 +129,7 @@ namespace nihilus {
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr const_reference at(index_type position) const {
-			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -138,12 +138,12 @@ namespace nihilus {
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr reference operator[](index_type position) noexcept {
-			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr const_reference operator[](index_type position) const noexcept {
-			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 
