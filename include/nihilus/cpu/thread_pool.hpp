@@ -138,9 +138,35 @@ namespace nihilus {
 #endif
 	};
 
+#if defined(NIHILUS_PLATFORM_WINDOWS)
+
+	#include <windows.h>
+#endif
+
+	using namespace std::chrono_literals;
+
+	NIHILUS_FORCE_INLINE void spinlock_nanoseconds(uint64_t nanoseconds) {
+#if defined(NIHILUS_PLATFORM_WINDOWS)
+		LARGE_INTEGER frequency, start, current;
+		QueryPerformanceFrequency(&frequency);
+		QueryPerformanceCounter(&start);
+		uint64_t target_ticks = start.QuadPart + (frequency.QuadPart * nanoseconds) / 1000000000ULL;
+		do {
+			_mm_pause();
+			QueryPerformanceCounter(&current);
+		} while (current.QuadPart < target_ticks);
+#else
+		// Linux/Unix implementation
+		auto start	= std::chrono::high_resolution_clock::now();
+		auto target = start + std::chrono::nanoseconds(nanoseconds);
+		do {
+			_mm_pause();// or __builtin_ia32_pause() on some compilers
+		} while (std::chrono::high_resolution_clock::now() < target);
+#endif
+	}
+
 	template<model_config config> struct collect_required_bytes {
-		using op_type_type		= op_type_type_t<config>;
-		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+		using op_type_type		= op_type_type_t<config>;		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
 		template<typename core_traits_type> static constexpr uint64_t get_multiplier() {
 			if constexpr (core_traits_type::alc_type == alloc_type::per_block_alloc) {
 				return model_traits_type::block_count;
@@ -182,8 +208,8 @@ namespace nihilus {
 		using base_type																		 = base_type_new;
 		NIHILUS_FORCE_INLINE static void impl(base_type& core, uint64_t thread_count) {
 			for (uint64_t x = 0; x < base_type::model_traits_type::block_count; ++x) {
-				core.sync_flag_start[x].reset(thread_count);
-				core.sync_flag_end[x].reset(thread_count);
+				core.sync_flag_start[x].init(thread_count);
+				core.sync_flag_end[x].init(thread_count);
 			}
 		}
 	};
@@ -245,9 +271,11 @@ namespace nihilus {
 		using output_type																 = base_type_new::output_type;
 		using base_type																	 = base_type_new;
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count) {
-			kernel_dispatcher<config, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
+			kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
 			avg_count[0].fetch_add(1, std::memory_order_release);
+			spinlock_nanoseconds(9000);
 		}
+		NIHILUS_FORCE_INLINE void thread_impl_main() {};
 	};
 
 	template<model_config config, blocking base_type_new> struct thread_function<config, base_type_new> : public base_type_new {
@@ -261,25 +289,27 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count, uint64_t current_index = 0) {
 			//stop_watch_val.reset();
 			this->sync_flag_start[current_index].arrive_and_wait(thread_index);
-			kernel_dispatcher<config, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
+			kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
+			spinlock_nanoseconds(9000);
 			avg_count[0].fetch_add(1, std::memory_order_release);
+			//wait_10us_sleep_for();
 			this->sync_flag_end[current_index].arrive_and_wait(thread_index);
+			//std::cout << "TOTAL COUNT-02: " << avg_count[0].load(std::memory_order_acquire) << std::endl;
 			//count[base_type::type].fetch_add(stop_watch_val.total_time_elapsed_uint64(), std::memory_order_release);
 			//avg_count[base_type::type].fetch_add(1, std::memory_order_release);
 		}
 
 		NIHILUS_FORCE_INLINE void thread_impl_main(uint64_t current_index = 0) {
 			//stop_watch_val.reset();
-			this->sync_flag_start[current_index].wait_main();
-			kernel_dispatcher<config, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
-			this->sync_flag_end[current_index].wait_main();
+			this->sync_flag_start[current_index].main_wait();
+			//kernel_dispatcher<config, device_type::cpu, base_type::krn_type, base_type>::impl(*this);
+			this->sync_flag_end[current_index].main_wait();
 			//count[base_type::type].fetch_add(stop_watch_val.total_time_elapsed_uint64(), std::memory_order_release);
 			//avg_count[base_type::type].fetch_add(1, std::memory_order_release);
 		}
 	};
 
-	template<model_config config, typename derived_type_new> struct threading_strategy {
-		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
+	template<model_config config, typename derived_type_new> struct threading_strategy {		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
 		using derived_type		= derived_type_new;
 		using op_type_type		= model_traits_type::op_type_type;
 
@@ -368,6 +398,15 @@ namespace nihilus {
 			impl_global_output<thread_function>(thread_index, thread_count);
 		}
 
+		template<template<model_config, typename> typename thread_function, uint64_t current_index = 0> NIHILUS_FORCE_INLINE void impl_global_output_main() {
+			if constexpr (current_index < global_output_count) {
+				static constexpr op_type_type op_type = global_output[current_index];
+				using core_traits_type				  = core_traits<config, op_type>;
+				static_cast<thread_function<config, core_traits_type>*>(static_cast<core_traits_type*>(static_cast<derived_type_new*>(this)))->thread_impl_main();
+				impl_global_output_main<thread_function, current_index + 1>();
+			}
+		};
+
 		template<template<model_config, typename> typename thread_function, uint64_t current_index = 0> NIHILUS_FORCE_INLINE void impl_per_block_main(uint64_t current_index_new) {
 			if constexpr (current_index < per_block_count) {
 				static constexpr op_type_type op_type = per_block[current_index];
@@ -385,6 +424,7 @@ namespace nihilus {
 			for (uint64_t x = 0; x < model_traits_type::block_count; ++x) {
 				impl_per_block_main<thread_function>(x);
 			}
+			impl_global_output_main<thread_function>();
 		};
 	};
 
@@ -395,12 +435,10 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE thread_pool(const thread_pool&) noexcept			 = delete;
 
 		NIHILUS_FORCE_INLINE thread_pool(uint64_t thread_count_new) {
-			worker_latches.resize(thread_count_new);
 			threads.resize(thread_count_new);
 			thread_count = thread_count_new;
-			main_thread_latch.reset(thread_count_new);
+			thread_latch.init(thread_count_new);
 			for (uint64_t x = 0; x < thread_count_new; ++x) {
-				worker_latches[x].reset(1ull);
 				threads[x] = std::thread{ [&, x] {
 					if (x < (thread_count_new % 3) == 0) {
 						thread_function_impl<true>(x);
@@ -416,39 +454,27 @@ namespace nihilus {
 				//pin_thread_to_core(thread_index % 2);
 			}
 			while (!stop.load(std::memory_order_acquire)) {
-				worker_latches[thread_index].wait();
+				thread_latch.worker_wait(thread_index);
 				if (!stop.load(std::memory_order_acquire)) {
 					threading_strategy<config, derived_type>::template impl<thread_function>(thread_index, thread_count);
 				}
-				if (!main_thread_latch.try_wait()) {
-					main_thread_latch.count_down();
-				}
-				worker_latches[thread_index].reset(1ull);
+				thread_latch.arrive_and_wait(thread_index);
 			}
 		}
 
 		NIHILUS_FORCE_INLINE void execute_tasks() {
 			stop_watch_val.reset();
-			main_thread_latch.reset(threads.size());
-			for (auto& value: worker_latches) {
-				if (!value.try_wait()) {
-					value.count_down();
-				}
-			}
+			thread_latch.count_down();
 			threading_strategy<config, derived_type>::template impl_main<thread_function>();
+			thread_latch.main_wait();
 			stop_watch_val.add_time();
-			std::cout << "NIHILUS AVERAGE COMPUTE TIME, OVER: " << std::setw(50 - std::size("NIHILUS AVERAGE COMPUTE TIME, OVER: ")) << stop_watch_val.get_count()
-					  << " TOKENS: " << stop_watch_val.get_average() << std::endl;
+
 			std::cout << "TOTAL COUNT: " << avg_count[0].load(std::memory_order_acquire) << std::endl;
 		}
 
 		NIHILUS_FORCE_INLINE ~thread_pool() {
 			stop.store(true, std::memory_order_release);
-			for (auto& value: worker_latches) {
-				if (!value.try_wait()) {
-					value.count_down();
-				}
-			}
+			thread_latch.count_down();
 			for (auto& value: threads) {
 				if (value.joinable()) {
 					value.join();
@@ -457,13 +483,12 @@ namespace nihilus {
 		};
 
 	  protected:
-		std::vector<slim_latch> worker_latches{};
-		slim_latch main_thread_latch{};
 		std::vector<std::thread> threads{};
 		char padding[48]{};
 		alignas(64) std::atomic_bool stop{};
 		char padding02[63]{};
 		alignas(64) uint64_t thread_count{};
+		op_latch thread_latch;
 	};
 
 }

@@ -45,7 +45,19 @@ namespace nihilus {
 		}
 	};
 
-	template<> struct type_traits<int8_t> : public total_bytes_size<type_traits<int8_t>> {
+	template<typename derived_type> struct get_strides {
+		NIHILUS_FORCE_INLINE constexpr static array<size_t, 4> impl(const array<uint64_t, 4>& dims) {
+			array<size_t, 4> return_values{}; 
+			return_values[0] = derived_type::type_size;
+			return_values[1] = return_values[0] * (dims[0] / derived_type::block_size);
+			for (int i = 2; i < 4; i++) {
+				return_values[i] = return_values[i - 1] * dims[i - 1];
+			}
+			return return_values;
+		}
+	};
+
+	template<> struct type_traits<int8_t> : public total_bytes_size<type_traits<int8_t>>, public get_strides<type_traits<int8_t>> {
 		using value_type = int8_t;
 		using quant_type = int8_t;
 		inline static constexpr data_type type{ data_type::i8 };
@@ -55,7 +67,7 @@ namespace nihilus {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<int32_t> : public total_bytes_size<type_traits<int32_t>> {
+	template<> struct type_traits<int32_t> : public total_bytes_size<type_traits<int32_t>>, public get_strides<type_traits<int32_t>> {
 		using value_type = int32_t;
 		using quant_type = int32_t;
 		inline static constexpr data_type type{ data_type::i32 };
@@ -65,7 +77,7 @@ namespace nihilus {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<float> : public total_bytes_size<type_traits<float>> {
+	template<> struct type_traits<float> : public total_bytes_size<type_traits<float>>, public get_strides<type_traits<float>> {
 		using value_type = float;
 		using quant_type = float;
 		inline static constexpr data_type type{ data_type::f32 };
@@ -75,7 +87,7 @@ namespace nihilus {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<int16_t> : public total_bytes_size<type_traits<int16_t>> {
+	template<> struct type_traits<int16_t> : public total_bytes_size<type_traits<int16_t>>, public get_strides<type_traits<int16_t>> {
 		using value_type = fp16_t;
 		using quant_type = fp16_t;
 		inline static constexpr data_type type{ data_type::f16 };
@@ -85,7 +97,7 @@ namespace nihilus {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<block_q8_0<half>> : public total_bytes_size<type_traits<block_q8_0<half>>> {
+	template<> struct type_traits<block_q8_0<half>> : public total_bytes_size<type_traits<block_q8_0<half>>>, public get_strides<type_traits<block_q8_0<half>>> {
 		using value_type = block_q8_0<half>;
 		using quant_type = block_q8_0<half>;
 		inline static constexpr data_type type{ data_type::q8_0 };
@@ -95,7 +107,7 @@ namespace nihilus {
 		inline static constexpr uint64_t n_rows{ 1 };
 	};
 
-	template<> struct type_traits<void> : public total_bytes_size<type_traits<void>> {
+	template<> struct type_traits<void> : public total_bytes_size<type_traits<void>>, public get_strides<type_traits<void>> {
 		inline static constexpr data_type type{ data_type::count };
 		inline static constexpr uint64_t type_size{ 0 };
 		inline static constexpr bool is_quantized{ true };

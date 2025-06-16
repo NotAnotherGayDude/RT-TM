@@ -592,16 +592,8 @@ int32_t run_llama(int argc, char** argv, std::string& output, size_t& token_coun
 	return 0;
 }
 
-std::atomic_uint64_t test_value{};
-
 int main(int argc, char** argv) {
 	try {
-		std::jthread new_thread{ [&] {
-			std::this_thread::sleep_for(std::chrono::seconds{ 3 });
-			test_value.fetch_add(1, std::memory_order_release);
-			test_value.notify_one();
-		} };
-		test_value.wait(0, std::memory_order_acquire);
 		std::string return_value{};
 		auto cli_args_final				   = nihilus::harbinger::parse_cli_arguments(argc, argv);
 		static constexpr auto model_config = nihilus::harbinger::generate_model_config(nihilus::llama_model_generation::v3, nihilus::llama_model_size::llama_8B,
@@ -610,6 +602,7 @@ int main(int argc, char** argv) {
 		nihilus::input_session_config session_config{ std::cin, 1024 };
 		nihilus::input_session input_session{ session_config, model_graph };
 		input_session.exec_params.token_count = cli_args_final.n_tokens;
+		input_session.exec_params.thread_count = cli_args_final.thread_count;
 		std::cout << "CURRENT COUNT: " << input_session.exec_params.token_count << std::endl;
 		while (input_session.process_input()) {
 		}

@@ -47,7 +47,7 @@ namespace nihilus {
 		using kernel_type_profile_traits_type = kernel_type_profile_traits<config.kernel_profile>;
 		using base_type						  = model_base<decltype(config.model_size), decltype(config.model_generation)>;
 		inline static constexpr impl_indices indices{ indices_new };
-		inline static constexpr uint64_t total_required_bytes{ collect_required_bytes<config>::impl() };
+		static constexpr uint64_t total_required_bytes{ collect_required_bytes<config>::impl() };
 		NIHILUS_FORCE_INLINE model()						  = default;
 		NIHILUS_FORCE_INLINE model& operator=(model&&)	  = delete;
 		NIHILUS_FORCE_INLINE model(model&&)				  = delete;

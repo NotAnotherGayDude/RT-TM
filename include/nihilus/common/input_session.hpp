@@ -40,6 +40,9 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE bool process_input() {
 			this->tokenize(input, model_ptr->template get_core<model_type::op_type_type::inp_tokens>().data);
 			model_ptr->execute_model(exec_params);
+			std::cout << "FOR " << exec_params.thread_count << " THREADS, WITH " << 9000 << " NANOSECONDS OF SPINLOCK PER KERNEL, "
+					  << "NIHILUS AVERAGE COMPUTE TIME, OVER: " << std::setw(50 - std::size("NIHILUS AVERAGE COMPUTE TIME, OVER: ")) << stop_watch_val.get_count()
+					  << " TOKENS: " << stop_watch_val.get_average() << std::endl;
 			return false;
 		}
 

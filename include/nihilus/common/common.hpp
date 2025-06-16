@@ -34,6 +34,13 @@ RealTimeChris (Chris M.)
 
 namespace nihilus {
 
+	inline std::mutex mutex{};
+
+	NIHILUS_FORCE_INLINE void log(std::string_view string) {
+		std::unique_lock lock{ mutex };
+		std::cout << string << std::endl;
+	}
+
 	struct alignas(64) atomic_flag_wrapper {
 		NIHILUS_FORCE_INLINE atomic_flag_wrapper() noexcept = default;
 		NIHILUS_FORCE_INLINE atomic_flag_wrapper& operator=(const atomic_flag_wrapper&) noexcept {
@@ -64,108 +71,54 @@ namespace nihilus {
 		}
 	};
 
-	struct alignas(64) slim_latch {
-		alignas(64) std::vector<atomic_flag_wrapper> thread_flags{};
-		alignas(64) std::atomic<uint64_t> global_counter{};
+	struct alignas(64) op_latch {
+		alignas(64) std::vector<atomic_flag_wrapper> start_flags{};// For "start work"
+		alignas(64) std::vector<atomic_flag_wrapper> finish_flags{};// For "work done"
+		alignas(64) std::atomic<int64_t> global_counter{};
 		alignas(64) size_t thread_count{};
 
-		NIHILUS_FORCE_INLINE slim_latch() noexcept = default;
-		NIHILUS_FORCE_INLINE slim_latch(const slim_latch&) noexcept {};
-
-		NIHILUS_FORCE_INLINE void reset(uint64_t count) {
-			thread_count = count;
-			global_counter.store(count, std::memory_order_release);
-			thread_flags.resize(count);
-			for (size_t i = 0; i < count; ++i) {
-				thread_flags[i].clear(std::memory_order_release);
-			}
+		NIHILUS_FORCE_INLINE void init(size_t thread_count_new) {
+			thread_count = thread_count_new;
+			start_flags.resize(thread_count);
+			finish_flags.resize(thread_count);
+			global_counter.store(thread_count, std::memory_order_release);
 		}
 
-		NIHILUS_FORCE_INLINE bool try_wait() {
-			return global_counter.load(std::memory_order_acquire) == 0;
+		NIHILUS_FORCE_INLINE void worker_wait(size_t thread_index) {
+			while (!start_flags[thread_index].test(std::memory_order_acquire)) {
+				start_flags[thread_index].wait(false);
+			}
+			start_flags[thread_index].clear(std::memory_order_release);
+		}
+
+		NIHILUS_FORCE_INLINE void arrive_and_wait(size_t thread_index) {
+			global_counter.fetch_sub(1, std::memory_order_acq_rel);
+			global_counter.notify_one();
+
+			while (!finish_flags[thread_index].test(std::memory_order_acquire)) {
+				nihilus_pause();
+			}
+			finish_flags[thread_index].clear(std::memory_order_release);
 		}
 
 		NIHILUS_FORCE_INLINE void count_down() {
-			global_counter.store(0, std::memory_order_release);
-			global_counter.notify_all();
-
 			for (size_t x = 0; x < thread_count; ++x) {
-				thread_flags[x].test_and_set(std::memory_order_release);
-				thread_flags[x].notify_one();
+				start_flags[x].test_and_set(std::memory_order_release);
+				start_flags[x].notify_one();
 			}
 		}
 
-		NIHILUS_FORCE_INLINE void arrive_and_wait(size_t thread_index) {
-			uint64_t remaining = global_counter.fetch_sub(1, std::memory_order_acq_rel);
-
-			if (remaining == 1) {
-				count_down();
-			} else {
-				bool current_value = thread_flags[thread_index].test(std::memory_order_acquire);
-				while (!current_value) {
-					for (int i = 0; i < 100 && !current_value; ++i) {
-						current_value = thread_flags[thread_index].test(std::memory_order_acquire);
-					}
-					nihilus_pause();
-				}
-			}
-		}
-
-		NIHILUS_FORCE_INLINE void wait() {
+		NIHILUS_FORCE_INLINE void main_wait() {
 			uint64_t current_value = global_counter.load(std::memory_order_acquire);
 			while (current_value > 0) {
-				for (int i = 0; i < 100 && current_value > 0; ++i) {
-					current_value = global_counter.load(std::memory_order_acquire);
-				}
-				nihilus_pause();
-			}
-		}
-	};
-
-	struct alignas(64) op_latch {
-		alignas(64) std::vector<atomic_flag_wrapper> thread_flags{};
-		alignas(64) std::atomic<uint64_t> global_counter{};
-		alignas(64) size_t thread_count{};
-
-		NIHILUS_FORCE_INLINE op_latch() noexcept = default;
-		NIHILUS_FORCE_INLINE op_latch(const slim_latch&) noexcept {};
-
-		NIHILUS_FORCE_INLINE void reset(uint64_t count) {
-			thread_count = count;
-			global_counter.store(count, std::memory_order_release);
-			thread_flags.resize(count);
-			for (size_t i = 0; i < count; ++i) {
-				thread_flags[i].clear(std::memory_order_release);
-			}
-		}
-
-		NIHILUS_FORCE_INLINE void count_up() {
-
-			for (size_t x = 0; x < thread_count; ++x) {
-				thread_flags[x].test_and_set(std::memory_order_release);
-				thread_flags[x].notify_one();
-			}
-		}
-
-		NIHILUS_FORCE_INLINE void arrive_and_wait(size_t thread_index) {
-			uint64_t remaining = global_counter.fetch_add(1, std::memory_order_acq_rel);
-
-			bool current_value = thread_flags[thread_index].test(std::memory_order_acquire);
-			while (!current_value) {
-				for (int i = 0; i < 100 && !current_value; ++i) {
-					current_value = thread_flags[thread_index].test(std::memory_order_acquire);
-				}
-				nihilus_pause();
-			}
-		}
-
-		NIHILUS_FORCE_INLINE void wait_main() {
-			uint64_t current_value = global_counter.load(std::memory_order_acquire);
-			while (current_value < thread_count) {
-				global_counter.wait(current_value, std::memory_order_acquire);
 				current_value = global_counter.load(std::memory_order_acquire);
 			}
-			count_up();
+
+			global_counter.store(thread_count, std::memory_order_release);
+			for (size_t x = 0; x < thread_count; ++x) {
+				finish_flags[x].test_and_set(std::memory_order_release);
+				finish_flags[x].notify_one();
+			}
 		}
 	};
 
@@ -270,13 +223,6 @@ namespace nihilus {
 			}
 		}
 	};
-
-	inline std::mutex mutex{};
-
-	NIHILUS_FORCE_INLINE void log(std::string_view string) {
-		std::unique_lock lock{ mutex };
-		std::cout << string << std::endl;
-	}
 
 	template<auto current_index, auto enum_count> NIHILUS_FORCE_INLINE constexpr std::string_view get_enum_name() {
 		std::string_view return_string{ std::source_location::current().function_name() };
@@ -662,6 +608,7 @@ namespace nihilus {
 		uint64_t random_seed{};
 		int32_t eos_token_id{};
 		bool clear_kv_cache{};
+		size_t thread_count{};
 		size_t token_count{};
 		size_t sequence_id{};
 		size_t batch_size{};
