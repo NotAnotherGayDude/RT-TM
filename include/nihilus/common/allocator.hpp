@@ -25,7 +25,7 @@ RealTimeChris (Chris M.)
 
 namespace nihilus {
 
-	template<typename value_type01, typename value_type02> NIHILUS_FORCE_INLINE constexpr value_type01 roundUpToMultiple(value_type01 value, value_type02 multiple) noexcept {
+	template<typename value_type01, typename value_type02> NIHILUS_FORCE_INLINE constexpr value_type01 round_up_to_multiple(value_type01 value, value_type02 multiple) noexcept {
 		if ((multiple & (multiple - 1)) == 0) {
 			auto mulSub1{ multiple - 1 };
 			auto notMulSub1{ ~mulSub1 };
@@ -62,9 +62,9 @@ namespace nihilus {
 			}
 			uint64_t alignment{ cpu_alignment };
 #if defined(NIHILUS_PLATFORM_WINDOWS) || defined(NIHILUS_PLATFORM_LINUX)
-			return static_cast<value_type*>(_mm_malloc(roundUpToMultiple(count_new * sizeof(value_type), alignment), alignment));
+			return static_cast<value_type*>(_mm_malloc(round_up_to_multiple(count_new * sizeof(value_type), alignment), alignment));
 #else
-			return static_cast<value_type*>(aligned_alloc(alignment, roundUpToMultiple(count_new * sizeof(value_type), alignment)));
+			return static_cast<value_type*>(aligned_alloc(alignment, round_up_to_multiple(count_new * sizeof(value_type), alignment)));
 #endif
 		}
 

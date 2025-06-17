@@ -20,193 +20,17 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
+#include <jsonifier/Index.hpp>
 #include <nihilus/common/arch_traits.hpp>
-#include <nihilus/common/core_base.hpp>
 #include <nihilus/common/common.hpp>
 #include <filesystem>
 #include <stdexcept>
 #include <charconv>
 #include <cstdint>
 #include <fstream>
+#include <string>
 
 namespace nihilus {
-
-	template<bool exceptions> class file_loader {
-	  public:
-		explicit file_loader(const std::filesystem::path& filePath) {
-			if (!std::filesystem::exists(filePath)) {
-				if constexpr (exceptions) {
-					throw std::runtime_error("File does not exist: " + filePath.string());
-				} else {
-					std::cerr << "File does not exist: " + filePath.string() << std::endl;
-				}
-			}
-
-			std::ifstream file(filePath, std::ios::binary | std::ios::ate);
-			if (!file) {
-				if constexpr (exceptions) {
-					throw std::runtime_error("Failed to open file: " + filePath.string());
-				} else {
-					std::cerr << "Failed to open file: " + filePath.string() << std::endl;
-				}
-			}
-
-			const std::streamsize size = file.tellg();
-			file.seekg(0, std::ios::beg);
-			if (size != -1) {
-				contents.resize(static_cast<uint64_t>(size));
-				if (!file.read(contents.data(), size)) {
-					if constexpr (exceptions) {
-						throw std::runtime_error("Failed to read file: " + filePath.string());
-					} else {
-						std::cerr << "Failed to read file: " + filePath.string() << std::endl;
-					}
-				}
-			}
-		}
-
-		operator const std::string&() const noexcept {
-			return contents;
-		}
-
-		uint64_t size() const noexcept {
-			return contents.size();
-		}
-
-	  private:
-		std::string contents;
-	};
-
-	template<bool exceptions> class file_saver {
-	  public:
-		file_saver(const std::filesystem::path& path, const void* data, uint64_t size) {
-			if (!data || size == 0) {
-				if constexpr (exceptions) {
-					throw std::runtime_error("Cannot save null or empty data to file: " + path.string());
-				} else {
-					std::cerr << "Cannot save null or empty data to file: " + path.string() << std::endl;
-				}
-			}
-
-			std::ofstream file(path, std::ios::binary | std::ios::trunc);
-			if (!file) {
-				if constexpr (exceptions) {
-					throw std::runtime_error("Failed to open file for writing: " + path.string());
-				} else {
-					std::cerr << "Failed to open file for writing: " + path.string() << std::endl;
-				}
-			}
-
-			file.write(static_cast<const char*>(data), static_cast<std::streamsize>(size));
-			if (!file) {
-				if constexpr (exceptions) {
-					throw std::runtime_error("Failed to write data to file: " + path.string());
-				} else {
-					std::cerr << "Failed to write data to file: " + path.string() << std::endl;
-				}
-			}
-		}
-	};
-
-	std::string map_nihilus_to_ggml(llama_op_types, uint64_t) {
-		return {};
-		//arch_traits<model_arch::llama>::tensor_names[static_cast<uint64_t>(nihilus_enum)][layer_index].operator const char*();
-	}
-
-	std::string convert_nihilus_name_to_ggml(std::string_view nihilus_name) {
-		uint64_t dash_pos	   = nihilus_name.find_last_of('-');
-		uint64_t layer_index = 0;
-
-		if (dash_pos != std::string_view::npos) {
-			std::string_view number_part = nihilus_name.substr(dash_pos + 1);
-			auto result					 = std::from_chars(number_part.data(), number_part.data() + number_part.size(), layer_index);
-			if (result.ec != std::errc{}) {
-				layer_index = 0;
-			}
-		}
-
-		std::string_view base_name = (dash_pos != std::string_view::npos) ? nihilus_name.substr(0, dash_pos) : nihilus_name;
-		if (base_name == "inp_tokens")
-			return map_nihilus_to_ggml(llama_op_types::inp_tokens, layer_index);
-		return static_cast<std::string>(nihilus_name);
-	}
-
-	struct intermediary_tensor {
-		static constexpr uint64_t tensor_len_size{ sizeof(uint64_t) };
-		static constexpr uint64_t name_len_size{ sizeof(uint64_t) };
-		static constexpr uint64_t dims_size{ sizeof(uint64_t) * 4 };
-		static constexpr uint64_t type_size{ sizeof(uint32_t) };
-		static constexpr uint64_t op_size{ sizeof(uint32_t) };
-		std::vector<std::string> input_names{};
-		array<uint64_t, 4> dims{};
-		std::string name{};
-		data_type type{};
-		kernel_type op{};
-
-		intermediary_tensor() noexcept = default;
-		/*
-		intermediary_tensor(const core_base& other) {
-			//uint64_t nbytes{ other.core_total_byte_size() };
-			for (uint64_t x = 0; x < 4; ++x) {
-				dims[x] = other.allocated_dims[x];
-			}
-			op	 = other.type;
-			type = other.data_type_val;
-			name = { other.name };
-		}
-		*/
-		intermediary_tensor(const core_base_creation_data& other) {
-			//uint64_t nbytes{ other.core_total_byte_size() };
-			for (uint64_t x = 0; x < 4; ++x) {
-				//dims[x] = other.allocated_dims[x];
-			}
-			//			op	 = other.type;
-			//type = other.data_type_val;
-			name = { other.name };
-		}
-
-		NIHILUS_FORCE_INLINE friend bool operator==(const intermediary_tensor& lhs, const intermediary_tensor& rhs) {
-			std::stringstream stream{};
-			bool same{ true };
-			std::cout << "Correct Name: " << lhs.name << std::endl;
-			std::cout << "Current Name: " << rhs.name << std::endl;
-			if (lhs.op != rhs.op) {
-				stream << "Different op-type!" << std::endl;
-				stream << "Correct op-type: " << static_cast<int32_t>(lhs.op) << std::endl;
-				stream << "Current op-type: " << static_cast<int32_t>(rhs.op) << std::endl;
-				same = false;
-			}
-			if (lhs.type != rhs.type) {
-				stream << "Different type!" << std::endl;
-				stream << "Correct type: " << static_cast<int32_t>(lhs.type) << std::endl;
-				stream << "Current type: " << static_cast<int32_t>(rhs.type) << std::endl;
-				same = false;
-			}
-			if (lhs.dims != rhs.dims) {
-				stream << "Different dims!" << std::endl;
-				stream << "Correct Dims: " << lhs.dims << std::endl;
-				stream << "Current Dims: " << rhs.dims << std::endl;
-				same = false;
-			}
-			if (!same) {
-				std::cerr << "For Tensor: " << rhs.name << std::endl;
-				std::cerr << stream.str() << std::endl;
-			}
-			return same;
-		}
-
-		/*
-		intermediary_tensor(const ggml_tensor& other) {
-			uint64_t nbytes{ ggml_nbytes(&other) };
-			data.resize(nbytes);
-			std::memcpy(data.data(), other.data, nbytes);
-			for (uint64_t x = 0; x < 4; ++x) {
-				dims[x] = other.ne[x];
-			}
-			type = static_cast<data_type>(other.type);
-			name = std::string{other.name};
-		}*/
-	};
 
 	enum ggml_op {
 		GGML_OP_NONE = 0,
@@ -232,7 +56,7 @@ namespace nihilus {
 		GGML_OP_REPEAT_BACK,
 		GGML_OP_CONCAT,
 		GGML_OP_SILU_BACK,
-		GGML_OP_NORM,
+		GGML_OP_NORM,// normalize
 		GGML_OP_RMS_NORM,
 		GGML_OP_RMS_NORM_BACK,
 		GGML_OP_GROUP_NORM,
@@ -263,6 +87,7 @@ namespace nihilus {
 		GGML_OP_CONV_TRANSPOSE_1D,
 		GGML_OP_IM2COL,
 		GGML_OP_IM2COL_BACK,
+		GGML_OP_CONV_2D_DW,
 		GGML_OP_CONV_TRANSPOSE_2D,
 		GGML_OP_POOL_1D,
 		GGML_OP_POOL_2D,
@@ -289,16 +114,11 @@ namespace nihilus {
 
 		GGML_OP_UNARY,
 
-		GGML_OP_MAP_UNARY,
-		GGML_OP_MAP_BINARY,
-
-		GGML_OP_MAP_CUSTOM1_F32,
-		GGML_OP_MAP_CUSTOM2_F32,
-		GGML_OP_MAP_CUSTOM3_F32,
-
 		GGML_OP_MAP_CUSTOM1,
 		GGML_OP_MAP_CUSTOM2,
 		GGML_OP_MAP_CUSTOM3,
+
+		GGML_OP_CUSTOM,
 
 		GGML_OP_CROSS_ENTROPY_LOSS,
 		GGML_OP_CROSS_ENTROPY_LOSS_BACK,
@@ -307,152 +127,330 @@ namespace nihilus {
 		GGML_OP_COUNT,
 	};
 
-	enum kernel_type convert_ggml_op_to_op_type(enum ggml_op) {
-		return {};
+	struct intermediary_ggml_tensor {
+		std::vector<uint64_t> dims{ [] {
+			std::vector<uint64_t> return_values{};
+			return_values.resize(4);
+			return return_values;
+		}() };
+		std::string name{};
+		std::vector<uint8_t> data{};
+		data_type type{};
+		ggml_op op{};
+	};
+
+	constexpr kernel_type convert_ggml_op_to_nihilus_kernel(ggml_op op) noexcept {
+		switch (op) {
+			// Direct mappings - perfect 1:1 correspondence
+			case GGML_OP_GET_ROWS:
+				return kernel_type::get_rows;
+
+			case GGML_OP_RMS_NORM:
+				return kernel_type::rms_norm;
+
+			case GGML_OP_MUL:
+				return kernel_type::mul;
+
+			case GGML_OP_MUL_MAT:
+			case GGML_OP_MUL_MAT_ID:// Matrix multiplication with ID - maps to mul_mat
+				return kernel_type::mul_mat;
+
+			case GGML_OP_RESHAPE:
+				return kernel_type::reshape;
+
+			case GGML_OP_PERMUTE:
+				return kernel_type::permute;
+
+			case GGML_OP_TRANSPOSE:
+				return kernel_type::transpose;
+
+			case GGML_OP_VIEW:
+				return kernel_type::view;
+
+			case GGML_OP_CONT:
+				return kernel_type::cont;
+
+			case GGML_OP_CPY:
+			case GGML_OP_DUP:// Duplicate is essentially a copy operation
+				return kernel_type::copy;
+
+			case GGML_OP_ROPE:
+				return kernel_type::rope;
+
+			case GGML_OP_SOFT_MAX:
+				return kernel_type::softmax;
+
+			case GGML_OP_ADD:
+			case GGML_OP_ADD1:// Add scalar - can be handled by add kernel
+				return kernel_type::add;
+
+			case GGML_OP_SUB:
+				return kernel_type::sub;
+
+			// SILU-related operations
+			case GGML_OP_SILU_BACK:// SILU backward pass - maps to silu kernel
+				return kernel_type::silu;
+
+			// Operations that don't have direct Nihilus equivalents or are unsupported
+			case GGML_OP_NONE:
+			case GGML_OP_ACC:// Accumulate - could potentially map to add
+			case GGML_OP_DIV:// Division - not implemented in Nihilus yet
+			case GGML_OP_SQR:// Square - not implemented
+			case GGML_OP_SQRT:// Square root - not implemented
+			case GGML_OP_LOG:// Logarithm - not implemented
+			case GGML_OP_SIN:// Sine - not implemented
+			case GGML_OP_COS:// Cosine - not implemented
+			case GGML_OP_SUM:// Sum reduction - not implemented
+			case GGML_OP_SUM_ROWS:// Row-wise sum - not implemented
+			case GGML_OP_MEAN:// Mean - not implemented
+			case GGML_OP_ARGMAX:// Argmax - not implemented
+			case GGML_OP_COUNT_EQUAL:// Count equal elements - not implemented
+			case GGML_OP_REPEAT:// Repeat tensor - not implemented
+			case GGML_OP_REPEAT_BACK:// Repeat backward - not implemented
+			case GGML_OP_CONCAT:// Concatenation - not implemented
+			case GGML_OP_NORM:// Layer norm - could potentially map to rms_norm
+			case GGML_OP_RMS_NORM_BACK:// RMS norm backward - not implemented
+			case GGML_OP_GROUP_NORM:// Group normalization - not implemented
+			case GGML_OP_L2_NORM:// L2 normalization - not implemented
+			case GGML_OP_OUT_PROD:// Outer product - not implemented
+			case GGML_OP_SCALE:// Scaling - could potentially map to mul
+			case GGML_OP_SET:// Set values - not implemented
+			case GGML_OP_GET_ROWS_BACK:// Get rows backward - not implemented
+			case GGML_OP_DIAG:// Diagonal - not implemented
+			case GGML_OP_DIAG_MASK_INF:// Diagonal mask with infinity - not implemented
+			case GGML_OP_DIAG_MASK_ZERO:// Diagonal mask with zero - not implemented
+			case GGML_OP_SOFT_MAX_BACK:// Softmax backward - not implemented
+			case GGML_OP_ROPE_BACK:// ROPE backward - not implemented
+			case GGML_OP_CLAMP:// Clamp values - not implemented
+			case GGML_OP_CONV_TRANSPOSE_1D:// 1D transposed convolution - not implemented
+			case GGML_OP_IM2COL:// Image to column - not implemented
+			case GGML_OP_IM2COL_BACK:// Image to column backward - not implemented
+			case GGML_OP_CONV_2D_DW:// 2D depthwise convolution - not implemented
+			case GGML_OP_CONV_TRANSPOSE_2D:// 2D transposed convolution - not implemented
+			case GGML_OP_POOL_1D:// 1D pooling - not implemented
+			case GGML_OP_POOL_2D:// 2D pooling - not implemented
+			case GGML_OP_POOL_2D_BACK:// 2D pooling backward - not implemented
+			case GGML_OP_UPSCALE:// Upscaling - not implemented
+			case GGML_OP_PAD:// Padding - not implemented
+			case GGML_OP_PAD_REFLECT_1D:// 1D reflection padding - not implemented
+			case GGML_OP_ARANGE:// Range generation - not implemented
+			case GGML_OP_TIMESTEP_EMBEDDING:// Timestep embedding - not implemented
+			case GGML_OP_ARGSORT:// Argument sort - not implemented
+			case GGML_OP_LEAKY_RELU:// Leaky ReLU - not implemented
+			case GGML_OP_FLASH_ATTN_EXT:// Flash attention - not implemented
+			case GGML_OP_FLASH_ATTN_BACK:// Flash attention backward - not implemented
+			case GGML_OP_SSM_CONV:// State space model convolution - not implemented
+			case GGML_OP_SSM_SCAN:// State space model scan - not implemented
+			case GGML_OP_WIN_PART:// Window partition - not implemented
+			case GGML_OP_WIN_UNPART:// Window unpartition - not implemented
+			case GGML_OP_GET_REL_POS:// Get relative position - not implemented
+			case GGML_OP_ADD_REL_POS:// Add relative position - not implemented
+			case GGML_OP_RWKV_WKV6:// RWKV WKV6 - not implemented
+			case GGML_OP_GATED_LINEAR_ATTN:// Gated linear attention - not implemented
+			case GGML_OP_RWKV_WKV7:// RWKV WKV7 - not implemented
+			case GGML_OP_UNARY:// Unary operation - not implemented
+			case GGML_OP_MAP_CUSTOM1:// Custom operation 1 - not implemented
+			case GGML_OP_MAP_CUSTOM2:// Custom operation 2 - not implemented
+			case GGML_OP_MAP_CUSTOM3:// Custom operation 3 - not implemented
+			case GGML_OP_CUSTOM:// Custom operation - not implemented
+			case GGML_OP_CROSS_ENTROPY_LOSS:// Cross entropy loss - not implemented
+			case GGML_OP_CROSS_ENTROPY_LOSS_BACK:// Cross entropy loss backward - not implemented
+			case GGML_OP_OPT_STEP_ADAMW:// AdamW optimizer step - not implemented
+			case GGML_OP_COUNT:// Count sentinel - not a real operation
+			default:
+				return kernel_type::none;
+		}
 	}
 
-	intermediary_tensor parse_tensor_from_string(const std::string& file_contents) {
-		intermediary_tensor tensor{};
-		uint64_t offset = 0;
-
-		constexpr uint64_t min_header_size =
-			intermediary_tensor::type_size + intermediary_tensor::op_size + intermediary_tensor::dims_size + intermediary_tensor::name_len_size + sizeof(uint64_t);
-
-		if (file_contents.size() < min_header_size) {
-			throw std::runtime_error("File contents too small for valid tensor");
+	struct intermediary_tensor {
+		std::vector<uint64_t> dims{ [] {
+			std::vector<uint64_t> return_values{};
+			return_values.resize(4);
+			return return_values;
+		}() };
+		NIHILUS_FORCE_INLINE intermediary_tensor() noexcept = default;
+		NIHILUS_FORCE_INLINE intermediary_tensor(const intermediary_ggml_tensor& other) {
+			dims = other.dims;
+			data	   = other.data;
+			name	   = other.name;
+			type	   = other.type;
+			op		   = convert_ggml_op_to_nihilus_kernel(other.op);
 		}
 
-		if (offset + intermediary_tensor::type_size > file_contents.size()) {
-			throw std::runtime_error("Not enough data for type field");
-		}
-		uint32_t temp_type{};
-		std::memcpy(&temp_type, file_contents.data() + offset, intermediary_tensor::type_size);
-		offset += intermediary_tensor::type_size;
-		tensor.type = static_cast<data_type>(temp_type);
-
-		if (offset + intermediary_tensor::op_size > file_contents.size()) {
-			throw std::runtime_error("Not enough data for operation field");
-		}
-		ggml_op temp_op_type{};
-		std::memcpy(&temp_op_type, file_contents.data() + offset, intermediary_tensor::op_size);
-		offset += intermediary_tensor::op_size;
-		tensor.op = convert_ggml_op_to_op_type(temp_op_type);
-		if (offset + intermediary_tensor::dims_size > file_contents.size()) {
-			throw std::runtime_error("Not enough data for dimensions");
-		}
-		std::memcpy(tensor.dims.data(), file_contents.data() + offset, intermediary_tensor::dims_size);
-		offset += intermediary_tensor::dims_size;
-
-		uint64_t name_length = 0;
-		if (offset + intermediary_tensor::name_len_size > file_contents.size()) {
-			throw std::runtime_error("Not enough data for name length");
-		}
-		std::memcpy(&name_length, file_contents.data() + offset, intermediary_tensor::name_len_size);
-		offset += intermediary_tensor::name_len_size;
-
-		if (name_length > 10000) {
-			throw std::runtime_error("Suspiciously large name length: " + std::to_string(name_length));
-		}
-
-		if (name_length > 0) {
-			if (offset + name_length > file_contents.size()) {
-				throw std::runtime_error("Not enough data for tensor name");
+		template<core_traits_type tensor_type> NIHILUS_FORCE_INLINE intermediary_tensor(const tensor_type& other, const std::string& name_new) {
+			using output_type = typename tensor_type::output_type;
+			for (size_t x = 0; x < 4; ++x) {
+				dims[x] = other.dims[x];
 			}
-			tensor.name.resize(name_length);
-			std::memcpy(tensor.name.data(), file_contents.data() + offset, name_length);
-			offset += name_length;
+			name = name_new;
+			type = type_traits<output_type>::type;
+			op	 = other.krn_type;
 		}
-
-		uint64_t input_count = 0;
-		if (offset + sizeof(uint64_t) > file_contents.size()) {
-			throw std::runtime_error("Not enough data for input count");
-		}
-		std::memcpy(&input_count, file_contents.data() + offset, sizeof(uint64_t));
-		offset += sizeof(uint64_t);
-
-		if (input_count > 1000) {
-			throw std::runtime_error("Suspiciously large input count: " + std::to_string(input_count));
-		}
-
-		tensor.input_names.reserve(input_count);
-		for (uint64_t i = 0; i < input_count; ++i) {
-			uint64_t input_name_length = 0;
-			if (offset + intermediary_tensor::name_len_size > file_contents.size()) {
-				throw std::runtime_error("Not enough data for input name length at index " + std::to_string(i));
+		std::string name{};
+		std::vector<uint8_t> data{};
+		data_type type{};
+		kernel_type op{};
+		NIHILUS_FORCE_INLINE bool operator==(const intermediary_tensor& other) const {
+			if (op != other.op) {
+				std::cout << "Incorret op-types:, For Tensor: " << name << std::endl;
+				std::cout << "LHS OP: " << ( int32_t )op << std::endl;
+				std::cout << "RHS OP: " << ( int32_t )other.op << std::endl;
 			}
-			std::memcpy(&input_name_length, file_contents.data() + offset, intermediary_tensor::name_len_size);
-			offset += intermediary_tensor::name_len_size;
-
-			if (input_name_length > 10000) {
-				throw std::runtime_error("Suspiciously large input name length: " + std::to_string(input_name_length));
+			if (type != other.type) {
+				std::cout << "Incorret Types:, For Tensor: " << name << std::endl;
+				std::cout << "LHS TYPE: " << ( int32_t )type << std::endl;
+				std::cout << "RHS TYPE: " << ( int32_t )other.type << std::endl;
 			}
 
-			std::string input_name{};
-			if (input_name_length > 0) {
-				if (offset + input_name_length > file_contents.size()) {
-					throw std::runtime_error("Not enough data for input name at index " + std::to_string(i));
-				}
-				input_name.resize(input_name_length);
-				std::memcpy(input_name.data(), file_contents.data() + offset, input_name_length);
-				offset += input_name_length;
+			if (dims != other.dims) {
+				std::cout << "Incorret Dims:, For Tensor: " << name << std::endl;
+				std::cout << "LHS Dims: " << dims << std::endl;
+				std::cout << "RHS Dims: " << other.dims << std::endl;
 			}
-
-			tensor.input_names.push_back(std::move(input_name));
+			
+			return data == other.data && dims == other.dims && name == other.name;
 		}
+	};
 
-		return tensor;
+	std::ostream& operator<<(std::ostream& os, const std::array<uint64_t, 4>& tensor) {
+		os << "[";
+		os << tensor[0];
+		os << ",";
+		os << tensor[1];
+		os << ",";
+		os << tensor[2];
+		os << ",";
+		os << tensor[3];
+		os << "]" << std::endl;
+		return os;
 	}
 
-	intermediary_tensor parse_tensor_from_string_safe(const std::string& file_contents, bool strict_validation = true) {
-		try {
-			auto tensor = parse_tensor_from_string(file_contents);
+	std::ostream& operator<<(std::ostream& os, const std::vector<uint64_t>& tensor) {
+		os << "[";
+		os << tensor[0];
+		os << ",";
+		os << tensor[1];
+		os << ",";
+		os << tensor[2];
+		os << ",";
+		os << tensor[3];
+		return os;
+	}
 
-			if (strict_validation) {
-				if (tensor.name.empty()) {
-					std::cerr << "Warning: Tensor has empty name" << std::endl;
-				}
+	std::ostream& operator<<(std::ostream& os, const intermediary_ggml_tensor& tensor) {
+		os << "Name: ";
+		os << tensor.name << std::endl;
+		os << "Dims: ";
+		os << tensor.dims << std::endl;
+		os << "Type: ";
+		os << get_type_name(tensor.type) << std::endl;
+		os << "Op-Type: ";
+		os << kernel_names[convert_ggml_op_to_nihilus_kernel(tensor.op)] << std::endl;
+		os << std::endl;
+		//os << tensor.data.data() << std::endl;
+		return os;
+	}
+}
 
-				for (uint64_t i = 0; i < 4; ++i) {
-					if (tensor.dims[i] > 1000000) {
-						std::cerr << "Warning: Dimension " << i << " is very large: " << tensor.dims[i] << std::endl;
-					}
-				}
+namespace jsonifier {
+	template<> struct core<nihilus::intermediary_ggml_tensor> {
+		using value_type				 = nihilus::intermediary_ggml_tensor;
+		static constexpr auto parseValue = createValue<&value_type::dims, &value_type::name, &value_type::op, &value_type::type>();
+	};
+}
 
-				std::cout << "Parsed tensor: '" << tensor.name << "'" << std::endl;
-				std::cout << "  Dimensions: [" << tensor.dims[0] << ", " << tensor.dims[1] << ", " << tensor.dims[2] << ", " << tensor.dims[3] << "]" << std::endl;
-				std::cout << "  Type: " << static_cast<int>(tensor.type) << std::endl;
-				std::cout << "  Op: " << static_cast<int>(tensor.op) << std::endl;
-				std::cout << "  Input names count: " << tensor.input_names.size() << std::endl;
-				for (uint64_t i = 0; i < tensor.input_names.size(); ++i) {
-					std::cout << "    Input " << i << ": '" << tensor.input_names[i] << "'" << std::endl;
-				}
+namespace nihilus {
+
+	NIHILUS_FORCE_INLINE std::string convert_op_to_string(llama_op_types type, size_t current_block) {
+		std::string block{ std::to_string(current_block) };
+		switch (type) {
+			case llama_op_types::inp_embd: {
+				return "inp_embd";
 			}
-
-			return tensor;
-		} catch (const std::exception& e) {
-			std::cerr << "Error parsing tensor: " << e.what() << std::endl;
-			throw;
+			case llama_op_types::inp_tokens: {
+				return "leaf_2";
+			}
+			case llama_op_types::attn_k_weight: {
+				return "blk." + block + ".attn_k.weight";
+			}
+			case llama_op_types::attn_q_weight: {
+				return "blk." + block + ".attn_q.weight";
+			}
+			case llama_op_types::attn_v_weight: {
+				return "blk." + block + ".attn_v.weight";
+			}
+			case llama_op_types::attn_norm_weight: {
+				return "blk." + block + ".attn_norm.weight";
+			}
+			case llama_op_types::attn_output_weight: {
+				return "blk." + block + ".attn_output.weight";
+			}
+			case llama_op_types::ffn_down_weight: {
+				return "blk." + block + ".ffn_down.weight";
+			}
+			case llama_op_types::ffn_gate_weight: {
+				return "blk." + block + ".ffn_gate.weight";
+			}
+			case llama_op_types::ffn_norm_weight: {
+				return "blk." + block + ".ffn_norm.weight";
+			}
+			case llama_op_types::ffn_up_weight: {
+				return "blk." + block + ".ffn_up.weight";
+			}
+			case llama_op_types::output_norm_weight: {
+				return "output_norm.weight";
+			}
+			case llama_op_types::output_weight: {
+				return "output.weight";
+			}
+			case llama_op_types::rope_freqs_weight: {
+				return "rope_freqs.weight";
+			}
+			case llama_op_types::token_embd_weight: {
+				return "token_embd.weight";
+			}
+			case llama_op_types::cache_k: {
+				return "cache_k_l" + block;
+			}
+			case llama_op_types::cache_v: {
+				return "cache_v_l" + block;
+			}
+			default: {
+				return {};
+			}
 		}
 	}
 
-	NIHILUS_FORCE_INLINE intermediary_tensor parse_tensor(const std::string& other) {
-		return parse_tensor_from_string(other);
+	std::map<std::string, intermediary_tensor> get_tensors(std::string_view path) {
+		std::map<std::string, intermediary_ggml_tensor> return_values_ggml{};
+		std::map<std::string, intermediary_tensor> return_values{};
+		file_loader<false> file_loader{ path };
+		jsonifier::jsonifier_core parser{};
+		parser.parseJson<jsonifier::parse_options{ .minified = false }>(return_values_ggml, file_loader.operator const std::string&());
+		for (auto& [key, value]: return_values_ggml) {
+			return_values[key] = value;
+			std::cout << key << std::endl;
+			std::cout << value << std::endl;
+		}
+		for (auto& value: parser.getErrors()) {
+			std::cout << value << std::endl;
+		}
+		return return_values;
 	}
 
-	template<bool exceptions, typename value_type> struct debugging_io;
-
-	template<bool exceptions> struct debugging_io<exceptions, struct core_base_creation_data> {
-		NIHILUS_FORCE_INLINE static void load_and_compare_tensors(const core_base_creation_data& core) {
-			const auto& new_string = file_loader<exceptions>{ std::string{ convert_nihilus_name_to_ggml(core.name) } + ".safetensor" }.operator const std::string&();
-			if (new_string.size() > 0) {
-				intermediary_tensor new_tensor{ parse_tensor(new_string) };
-				intermediary_tensor save_tensor{ core };
-				if (new_tensor != save_tensor) {
-					std::cout << "Failed on Tensor: " << new_tensor.name << std::endl;
-				} else {
-					std::cout << "Success on Tensor: " << new_tensor.name << std::endl;
-				}
+	struct tensor_debugger {
+		inline static std::map<std::string, intermediary_tensor> leafs{ get_tensors("C:/users/chris/source/repos/ft-tl/Leaf_Data.json") };
+		inline static std::map<std::string, intermediary_tensor> nodes{ get_tensors("C:/users/chris/source/repos/ft-tl/Node_Data.json") };
+		template<core_traits_type tensor_type> static bool compare_tensor_data(const tensor_type& tensor, size_t current_block) {
+			std::string tensor_name{ convert_op_to_string(tensor.type, current_block) };
+			if (leafs.contains(tensor_name)) {
+				intermediary_tensor tensor_new{ tensor, tensor_name };
+				//std::cout << "Found an op of name: " << tensor_name << ", OF TYPE: " << ( int32_t )tensor.type << std::endl;
+				return tensor_new == leafs[tensor_name];
+			} else {
+				//std::cout << "Found an op of name: " << tensor_name << ", OF TYPE: " << ( int32_t )tensor.type << std::endl;
 			}
 		}
 	};
+
 }

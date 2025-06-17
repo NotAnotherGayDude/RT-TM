@@ -21,11 +21,42 @@ RealTimeChris (Chris M.)
 #pragma once
 
 #include <nihilus/common/memory_buffer.hpp>
-#include <nihilus/common/core_base.hpp>
 #include <nihilus/common/common.hpp>
-#include <nihilus/common/model.hpp>
 
 namespace nihilus {
+
+	struct core_base_creation_data {
+		array<uint64_t, 4> dimensions{ { 1, 1, 1, 1 } };
+		uint32_t n_dimensions{};
+		mutable void* data{};
+		std::string name{};
+		uint64_t offset{};
+		data_type type{};
+
+		NIHILUS_FORCE_INLINE uint64_t core_total_dims() const {
+			return dimensions[0] * dimensions[1] * dimensions[2] * dimensions[3];
+		}
+
+		NIHILUS_FORCE_INLINE uint64_t core_total_byte_size() const {
+			uint64_t total_elements = core_total_dims();
+			uint64_t block_size		= core_block_size();
+			uint64_t type_size		= core_type_size();
+			uint64_t num_blocks		= (total_elements + block_size - 1) / block_size;
+			return num_blocks * type_size;
+		}
+
+		NIHILUS_INLINE uint64_t core_block_size() const {
+			return get_type_traits(type).block_size;
+		}
+
+		NIHILUS_INLINE uint64_t core_type_size() const {
+			return get_type_traits(type).type_size;
+		}
+
+		NIHILUS_INLINE uint64_t core_row_size(int64_t dims_new) const {
+			return core_type_size() * dims_new / core_block_size();
+		}
+	};
 
 	template<model_arch arch> struct tokenizer_parameters;
 
@@ -63,17 +94,16 @@ namespace nihilus {
 		uint64_t n_expert{};
 	};
 
-	template<model_config config> struct model_graph {
-		NIHILUS_INLINE model_graph()								= default;
-		NIHILUS_INLINE model_graph& operator=(model_graph&&)		= default;
-		NIHILUS_INLINE model_graph(model_graph&&)					= default;
-		NIHILUS_INLINE model_graph& operator=(const model_graph&) = delete;
-		NIHILUS_INLINE model_graph(const model_graph&)			= delete;
-		std::vector<core_base_creation_data> cores{};
+	template<model_config config> struct model_graph_data {
+		using op_type_type = typename decltype(config)::op_type_type;
+		NIHILUS_INLINE model_graph_data()								= default;
+		NIHILUS_INLINE model_graph_data& operator=(model_graph_data&&)		= default;
+		NIHILUS_INLINE model_graph_data(model_graph_data&&)					= default;
+		NIHILUS_INLINE model_graph_data& operator=(const model_graph_data&) = delete;
+		NIHILUS_INLINE model_graph_data(const model_graph_data&)			= delete;
+		std::unordered_map<op_type_type, core_base_creation_data> cores{};
 		tokenizer_parameters<config.arch> tokenizer_params{};
 		construction_parameters<config.arch> cparams{};
-		hyper_parameters<config.arch> hparams{};
-		memory_buffer<config> leaf_core_data{};
 	};
 
 }

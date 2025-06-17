@@ -39,6 +39,7 @@ namespace nihilus {
 		virtual operator bool()		 = 0;
 
 		execution_parameters exec_params{};
+		virtual ~input_session_base() noexcept = default;
 	};
 
 	template<typename model_type> struct input_session : public input_session_base, public tokenizer<model_type::model_traits_type::arch> {

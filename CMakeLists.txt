@@ -24,6 +24,15 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(ENV{CMAKE_INSTALL_PREFIX} "${CMAKE_SOURCE_DIR}/../Install")
 
+include(FetchContent)
+FetchContent_Declare(
+        Jsonifier
+        GIT_REPOSITORY https://github.com/realtimechris/jsonifier.git
+        GIT_TAG        dev
+)
+
+FetchContent_MakeAvailable(Jsonifier)
+
 project(
     "${PROJECT_NAME}"
     VERSION "1.0.0"
@@ -60,19 +69,26 @@ target_include_directories(
     "$<INSTALL_INTERFACE:include/>"
 )
 
-if (NOT DEFINED NIHILUS_CPU_INSTRUCTIONS)
-	include("cmake/nihilus_detect_architecture.cmake")
-endif()
+target_link_libraries(
+    "${PROJECT_NAME}" INTERFACE Jsonifier::Jsonifier
+)
+
+include("cmake/nihilus_detect_architecture.cmake")
 
 set(RT_RM_COMMON_COMPILE_FLAGS
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fno-asynchronous-unwind-tables>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fvisibility-inlines-hidden>>"
     "$<$<BOOL:${PGO_GENERATE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-generate>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fomit-frame-pointer>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fvisibility=hidden>>"
     "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fno-trapping-math>>"
     "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fno-signed-zeros>>"
     "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-funroll-loops>>"
     "$<$<BOOL:${PGO_USE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-use>>"
-    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-ffast-math>>"
     "$<$<AND:$<STREQUAL:$<UPPER_CASE:${NIHILUS_UBSAN_ENABLED}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-ffast-math>>"
     "$<$<CXX_COMPILER_ID:MSVC>:/bigobj>""$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wnull-dereference>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-g0>>"
     "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-O3>>"
     "$<$<CONFIG:DEBUG>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-O0>>"
     "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprefetch-loop-arrays>"
@@ -85,6 +101,7 @@ set(RT_RM_COMMON_COMPILE_FLAGS
 	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wshadow>"
 	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wextra>"
 	"$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wall>"	
+    "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/DNDEBUG>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/fp:fast>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/Ob2>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/GL>>"
@@ -102,17 +119,21 @@ set(RT_RM_COMMON_COMPILE_FLAGS
 	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
-    "${AVX_FLAG}"
+    "${SIMD_FLAG}"
 )
 
 set(RT_RM_COMMON_LINK_OPTIONS
     "$<$<BOOL:${PGO_GENERATE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-generate>>"
-    "$<$<BOOL:${PGO_USE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-use>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-Wl,--discard-all>>"
     "$<$<AND:$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>,$<STREQUAL:${NIHILUS_ASAN_ENABLED},TRUE>>:-fsanitize=address>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-Wl,--strip-all>>"
+    "$<$<BOOL:${PGO_USE}>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-fprofile-use>>"
     "$<$<AND:$<STREQUAL:$<UPPER_CASE:${NIHILUS_UBSAN_ENABLED}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-    "$<$<CONFIG:RELEASE>:$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-flto=thin>>"
+    "$<$<CONFIG:RELEASE>:$<$<OR:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>>:-s>>"
     "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${NIHILUS_ASAN_ENABLED},TRUE>>:-fsanitize=address>"
+    "$<$<CONFIG:RELEASE>:$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-flto=thin>>"
     "$<$<CONFIG:RELEASE>:$<$<STREQUAL:$<UPPER_CASE:$<CXX_COMPILER_ID>>,CLANG>:-Wl,-O3>>"
+    "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/DEBUG:NONE>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>>"
     "$<$<CONFIG:RELEASE>:$<$<CXX_COMPILER_ID:GNU>:-Wl,-O3>>"

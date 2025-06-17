@@ -43,7 +43,7 @@ namespace nihilus {
 		using input_session_type = input_session<model_type>;
 		using input_session_base_type = input_session_type::base_type;
 
-		NIHILUS_FORCE_INLINE static auto parse_model_graph(cli_params params) {
+		NIHILUS_FORCE_INLINE static auto parse_model_graph_data(cli_params params) {
 			std::unique_ptr<model_base_type> return_value{};
 			model_base_type* new_model{ new model_type{ params } };
 			return_value.reset(new_model);

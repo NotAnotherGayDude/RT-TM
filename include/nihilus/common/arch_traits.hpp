@@ -19,8 +19,6 @@ RealTimeChris (Chris M.)
 */
 
 #pragma once
-
-#include <nihilus/common/core_base.hpp>
 #include <nihilus/common/memory_buffer.hpp>
 #include <nihilus/common/common.hpp>
 

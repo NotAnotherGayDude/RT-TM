@@ -60,12 +60,8 @@ namespace nihilus {
 			size_val = size;
 		}
 
-		NIHILUS_FORCE_INLINE void clear() noexcept {
-			if (data_val) {
-				alloc::deallocate(data_val);
-				data_val = nullptr;
-				size_val = 0;
-			}
+		NIHILUS_FORCE_INLINE void deinit() noexcept {
+			clear();
 		}
 
 		NIHILUS_FORCE_INLINE size_type size() noexcept {
@@ -79,7 +75,7 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE void* claim_memory(uint64_t amount_to_claim) noexcept {
 			static constexpr uint64_t alignment = cpu_alignment;
 
-			uint64_t aligned_amount = roundUpToMultiple(amount_to_claim, alignment);
+			uint64_t aligned_amount = round_up_to_multiple(amount_to_claim, alignment);
 
 			if (current_offset + aligned_amount > size_val) {
 				if constexpr (config.exceptions) {
@@ -102,6 +98,14 @@ namespace nihilus {
 		size_type current_offset{};
 		value_type* data_val{};
 		size_type size_val{};
+
+		NIHILUS_FORCE_INLINE void clear() noexcept {
+			if (data_val) {
+				alloc::deallocate(data_val);
+				data_val = nullptr;
+				size_val = 0;
+			}
+		}
 	};
 
 }

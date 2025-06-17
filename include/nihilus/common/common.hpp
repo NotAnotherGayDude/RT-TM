@@ -34,7 +34,84 @@ RealTimeChris (Chris M.)
 
 namespace nihilus {
 
-	static constexpr auto nanosecond_count{ 9000 };
+	template<bool exceptions> class file_loader {
+	  public:
+		explicit file_loader(const std::filesystem::path& filePath) {
+			if (!std::filesystem::exists(filePath)) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("File does not exist: " + filePath.string());
+				} else {
+					std::cerr << "File does not exist: " + filePath.string() << std::endl;
+				}
+			}
+
+			std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+			if (!file) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Failed to open file: " + filePath.string());
+				} else {
+					std::cerr << "Failed to open file: " + filePath.string() << std::endl;
+				}
+			}
+
+			const std::streamsize size = file.tellg();
+			file.seekg(0, std::ios::beg);
+			if (size != -1) {
+				contents.resize(static_cast<uint64_t>(size));
+				if (!file.read(contents.data(), size)) {
+					if constexpr (exceptions) {
+						throw std::runtime_error("Failed to read file: " + filePath.string());
+					} else {
+						std::cerr << "Failed to read file: " + filePath.string() << std::endl;
+					}
+				}
+			}
+		}
+
+		operator const std::string&() const noexcept {
+			return contents;
+		}
+
+		uint64_t size() const noexcept {
+			return contents.size();
+		}
+
+	  private:
+		std::string contents;
+	};
+
+	template<bool exceptions> class file_saver {
+	  public:
+		file_saver(const std::filesystem::path& path, const void* data, uint64_t size) {
+			if (!data || size == 0) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Cannot save null or empty data to file: " + path.string());
+				} else {
+					std::cerr << "Cannot save null or empty data to file: " + path.string() << std::endl;
+				}
+			}
+
+			std::ofstream file(path, std::ios::binary | std::ios::trunc);
+			if (!file) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Failed to open file for writing: " + path.string());
+				} else {
+					std::cerr << "Failed to open file for writing: " + path.string() << std::endl;
+				}
+			}
+
+			file.write(static_cast<const char*>(data), static_cast<std::streamsize>(size));
+			if (!file) {
+				if constexpr (exceptions) {
+					throw std::runtime_error("Failed to write data to file: " + path.string());
+				} else {
+					std::cerr << "Failed to write data to file: " + path.string() << std::endl;
+				}
+			}
+		}
+	};
+
+	static constexpr auto nanosecond_count{ 500 };
 
 	inline std::mutex mutex{};
 
@@ -86,10 +163,13 @@ namespace nihilus {
 	};
 
 	struct alignas(64) op_latch {
+		NIHILUS_FORCE_INLINE op_latch()							  = default;
+		NIHILUS_FORCE_INLINE op_latch& operator=(const op_latch&) = delete;
+		NIHILUS_FORCE_INLINE op_latch(const op_latch&)			  = delete;
 		alignas(64) std::vector<atomic_flag_wrapper> finish_flags{};
-		char padding01[40];
+		char padding01[32];
 		alignas(64) std::vector<atomic_flag_wrapper> start_flags{};
-		char padding02[40];
+		char padding02[32];
 		alignas(64) std::atomic_signed_lock_free global_counter{};
 		char padding03[56];
 		alignas(64) size_t thread_count{};
@@ -98,7 +178,7 @@ namespace nihilus {
 			thread_count = thread_count_new;
 			start_flags.resize(thread_count);
 			finish_flags.resize(thread_count);
-			global_counter.store(thread_count, std::memory_order_release);
+			global_counter.store(static_cast<int64_t>(thread_count), std::memory_order_release);
 		}
 
 		NIHILUS_FORCE_INLINE void worker_wait(size_t thread_index) {
@@ -126,13 +206,13 @@ namespace nihilus {
 		}
 
 		NIHILUS_FORCE_INLINE void main_wait() {
-			uint64_t current_value = global_counter.load(std::memory_order_acquire);
+			int64_t current_value = global_counter.load(std::memory_order_acquire);
 			while (current_value > 0) {
 				current_value = global_counter.load(std::memory_order_acquire);
 				nihilus_pause();
 			}
 
-			global_counter.store(thread_count, std::memory_order_release);
+			global_counter.store(static_cast<int64_t>(thread_count), std::memory_order_release);
 			for (size_t x = 0; x < thread_count; ++x) {
 				finish_flags[x].test_and_set();
 				finish_flags[x].notify_one();
@@ -187,7 +267,7 @@ namespace nihilus {
 			reset();
 		}
 
-		NIHILUS_FORCE_INLINE uint64_t get_average(time_type newTimeValue = time_type{}) noexcept {
+		NIHILUS_FORCE_INLINE uint64_t get_average() noexcept {
 			std::unique_lock lock{ mutex };
 			uint64_t total_time{};
 			for (auto& value: values) {
@@ -240,7 +320,9 @@ namespace nihilus {
 				return time;
 			}
 		}
-	};
+	};	
+
+	inline stop_watch<std::chrono::nanoseconds> stop_watch_val_nihilus{ 0 };
 
 	template<auto current_index, auto enum_count> NIHILUS_FORCE_INLINE constexpr std::string_view get_enum_name() {
 		std::string_view return_string{ std::source_location::current().function_name() };
@@ -278,6 +360,9 @@ namespace nihilus {
 
 	NIHILUS_FORCE_INLINE constexpr const char* get_type_name(data_type type) {
 		switch (type) {
+			case data_type::f64: {
+				return "double";
+			}
 			case data_type::f32: {
 				return "float_32";
 			}
@@ -287,17 +372,20 @@ namespace nihilus {
 			case data_type::q8_0: {
 				return "q8_0";
 			}
-			case data_type::i8: {
-				return "int8_t";
-			}
-			case data_type::i16: {
-				return "int16_t";
+			case data_type::i64: {
+				return "int64_t";
 			}
 			case data_type::i32: {
 				return "int32_t";
 			}
-			case data_type::i64: {
-				return "int64_t";
+			case data_type::i16: {
+				return "int16_t";
+			}
+			case data_type::i8: {
+				return "int8_t";
+			}
+			case data_type::count: {
+				return "count";
 			}
 		}
 	}
@@ -550,7 +638,7 @@ namespace nihilus {
 
 	template<typename model_size_type> struct get_op_type_type {
 		static constexpr auto get_op_type_impl() {
-			if constexpr (std::is_same_v<llama_model_generation, std::remove_cvref_t<model_size_type>>) {
+			if constexpr (std::is_same_v<llama_model_size, std::remove_cvref_t<model_size_type>>) {
 				return llama_op_types{};
 			} else {
 				return size_t{};
@@ -584,6 +672,7 @@ namespace nihilus {
 		model_format format{};
 		float norm_epsilon{};
 		bool exceptions{};
+		bool benchmark{};
 
 	  protected:
 		template<typename model_generateion_type_newer, typename model_size_type_newer> friend struct model_base;
@@ -620,7 +709,7 @@ namespace nihilus {
 		uint64_t gpu_index{};
 	};
 
-	struct op_graph_config {
+	struct runtime_model_config {
 		uint64_t num_threads{ std::thread::hardware_concurrency() };
 	};
 

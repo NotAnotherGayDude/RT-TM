@@ -19,7 +19,7 @@ RealTimeChris (Chris M.)
 */
 
 #include <nihilus/common/model_parser.hpp>
-#include <nihilus/common/model_graph.hpp>
+#include <nihilus/common/model_graph_data.hpp>
 #include <nihilus/common/debugging_io.hpp>
 #include <nihilus/common/memory_buffer.hpp>
 #include <nihilus/common/type_traits.hpp>

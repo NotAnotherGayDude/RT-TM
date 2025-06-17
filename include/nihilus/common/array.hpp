@@ -47,6 +47,19 @@ namespace nihilus {
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+		NIHILUS_FORCE_INLINE constexpr array& operator=(const array& other)
+			requires(std::copyable<value_type>)
+		{
+			std::copy(other.data(), other.data() + other.size(), data());
+			return *this;
+		};
+
+		NIHILUS_FORCE_INLINE constexpr array(const array& other)
+			requires(std::copyable<value_type>)
+		{
+			*this = other;
+		};
+
 		NIHILUS_FORCE_INLINE constexpr array(){};
 
 		NIHILUS_FORCE_INLINE constexpr array(std::initializer_list<value_type> list) {
@@ -138,12 +151,12 @@ namespace nihilus {
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr reference operator[](index_type position) noexcept {
-			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr const_reference operator[](index_type position) const noexcept {
-			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 

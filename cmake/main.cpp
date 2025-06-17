@@ -156,21 +156,5 @@ inline static uint32_t detect_supported_architectures() {
 int32_t main() {
 	const auto supported_isa = detect_supported_architectures();
 	std::cout << "CPU Brand: " << get_cpu_info() << "\n";
-	std::cout << "Supported instruction sets: ";
-
-	if (supported_isa & static_cast<uint32_t>(instruction_set::AVX2)) {
-		std::cout << "AVX2 ";
-	}
-	if (supported_isa & static_cast<uint32_t>(instruction_set::AVX512f)) {
-		std::cout << "AVX512F ";
-	}
-	if (supported_isa & static_cast<uint32_t>(instruction_set::NEON)) {
-		std::cout << "NEON ";
-	}
-	if (supported_isa & static_cast<uint32_t>(instruction_set::SVE2)) {
-		std::cout << "SVE ";
-	}
-
-	std::cout << "\n";
 	return supported_isa;
 }

@@ -39,13 +39,13 @@ namespace nihilus {
 		using attn_k_weight_type	  = weight_type;
 		using attn_v_weight_type	  = weight_type;
 		using attn_output_weight_type = weight_type;
-		using attn_norm_weight_type	  = weight_type;
+		using attn_norm_weight_type	  = compute_type;
 		using ffn_gate_weight_type	  = weight_type;
 		using ffn_up_weight_type	  = weight_type;
 		using ffn_down_weight_type	  = weight_type;
-		using ffn_norm_weight_type	  = weight_type;
+		using ffn_norm_weight_type	  = compute_type;
 		using output_weight_type	  = weight_type;
-		using output_norm_weight_type = weight_type;
+		using output_norm_weight_type = output_type_new;
 		using rope_freqs_weight_type  = compute_type;
 		using embedding_type		  = compute_type;
 		using query_type			  = compute_type;

@@ -83,6 +83,9 @@ namespace nihilus {
 	concept array_type = vector_subscriptable<value_type> && has_data<value_type> && has_size<value_type>;
 
 	template<typename value_type>
+	concept has_array_data_type = requires(std::remove_cvref_t<value_type>) { array_type<decltype(value_type::data)>; };
+
+	template<typename value_type>
 	concept core_traits_type = requires(std::remove_cvref_t<value_type>) {
 		typename value_type::output_type;
 		value_type::data;
