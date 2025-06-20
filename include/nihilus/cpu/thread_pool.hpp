@@ -229,11 +229,11 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE static void impl(base_type& core, uint64_t thread_count, array<array<void*, model_traits_type::block_count>, op_type_type::count>& data) {
 			if constexpr (array_type<decltype(core.data)>) {
 				for (size_t x = 0; x < model_traits_type::block_count; ++x) {
-					data[base_type::type][x] = static_cast<void*>(core.data[x]);
+					data[base_type::type][x] = reinterpret_cast<void*>(&core.data[x]);
 				}
 			} else {
 				for (size_t x = 0; x < model_traits_type::block_count; ++x) {
-					data[base_type::type][x] = static_cast<void*>(core.data);
+					data[base_type::type][x] = reinterpret_cast<void*>(&core.data);
 				}
 			}
 			for (uint64_t x = 0; x < base_type::model_traits_type::block_count; ++x) {
@@ -300,7 +300,7 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count) {
 			if constexpr (active_thread<base_type>) {
 				kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
-				spinlock_nanoseconds(500);
+				//spinlock_nanoseconds(500);
 			}
 		}
 		NIHILUS_FORCE_INLINE void thread_impl_main() {};
@@ -317,7 +317,7 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count, uint64_t current_index = 0) {
 			this->sync_flag_start[current_index].arrive_and_wait(thread_index);
 			kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
-			spinlock_nanoseconds(500);
+			//spinlock_nanoseconds(500);
 			this->sync_flag_end[current_index].arrive_and_wait(thread_index);
 		}
 

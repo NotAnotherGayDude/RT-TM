@@ -62,13 +62,13 @@ namespace nihilus {
 			}
 			uint64_t alignment{ cpu_alignment };
 #if defined(NIHILUS_PLATFORM_WINDOWS) || defined(NIHILUS_PLATFORM_LINUX)
-			return static_cast<value_type*>(_mm_malloc(round_up_to_multiple(count_new * sizeof(value_type), alignment), alignment));
+			return static_cast<value_type*>(_aligned_malloc(round_up_to_multiple(count_new * sizeof(value_type), alignment), alignment));
 #else
 			return static_cast<value_type*>(aligned_alloc(alignment, round_up_to_multiple(count_new * sizeof(value_type), alignment)));
 #endif
 		}
 
-		NIHILUS_FORCE_INLINE void deallocate(pointer ptr, uint64_t = 0) noexcept {
+		NIHILUS_FORCE_INLINE static void deallocate(pointer ptr, uint64_t = 0) noexcept {
 			if NIHILUS_LIKELY (ptr) {
 #if defined(NIHILUS_PLATFORM_WINDOWS) || defined(NIHILUS_PLATFORM_LINUX)
 				_mm_free(ptr);

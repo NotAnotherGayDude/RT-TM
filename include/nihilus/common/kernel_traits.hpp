@@ -26,19 +26,6 @@ RealTimeChris (Chris M.)
 
 namespace nihilus {
 
-	template<auto enum_error, typename... types> struct error_printer_impl;
-
-	template<bool value, auto enum_error, typename... value_to_test> struct static_assert_printer {
-		static constexpr bool impl{ [] {
-			if constexpr (!value) {
-				error_printer_impl<enum_error, value_to_test...>::failure_value;
-				return false;
-			} else {
-				return true;
-			}
-		}() };
-	};
-
 	enum class kernel_trait_static_assert_errors {
 		Sorry_but_these_output_types_are_not_the_same,
 		Sorry_but_these_input_type01_types_are_not_the_same,

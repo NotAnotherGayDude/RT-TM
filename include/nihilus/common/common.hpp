@@ -20,10 +20,12 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
+#include <nihilus/common/config.hpp>
 #include <nihilus/cpu/simd/nihilus_cpu_instructions.hpp>
-#include <nihilus/common/string_literal.hpp>
 #include <nihilus/common/data_types.hpp>
 #include <nihilus/common/concepts.hpp>
+
+#include <nihilus/common/array.hpp>
 #include <iostream>
 #include <cstdint>
 #include <chrono>

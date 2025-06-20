@@ -56,14 +56,14 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE model& operator=(const model&) = delete;
 		NIHILUS_FORCE_INLINE model(const model&)			  = delete;
 		NIHILUS_FORCE_INLINE model(cli_params params) : thread_pool<config, model>{ params.thread_count } {
+			stop_watch_val_nihilus.reset();
 			memory.init(total_required_bytes);
 			//if constexpr ()
-			std::cout << "MODEL FILE: " << params.model_file << std::endl;
-			std::cout << "TOTAL REQUIRED BYTES: " << total_required_bytes << std::endl;
 			array<array<void*, model_traits_type::block_count>, op_type_type::count> data{};
 			core_bases_config_type::template impl<memory_mapper>(memory);
 			core_bases_config_type::template impl<execution_planner>(params.thread_count, data);
 			model_graph_data<config> model_construction_data = model_parser<config>::parse_model(params.model_file, data);
+			std::cout << "TIME TO LOAD MODEL: " << stop_watch_val_nihilus.total_time_elapsed() << std::endl;
 		}
 
 		NIHILUS_FORCE_INLINE void init(cli_params params) {
