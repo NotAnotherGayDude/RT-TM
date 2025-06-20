@@ -28,7 +28,7 @@ include(FetchContent)
 FetchContent_Declare(
         Jsonifier
         GIT_REPOSITORY https://github.com/realtimechris/jsonifier.git
-        GIT_TAG        dev
+        GIT_TAG        dev-new
 )
 
 FetchContent_MakeAvailable(Jsonifier)

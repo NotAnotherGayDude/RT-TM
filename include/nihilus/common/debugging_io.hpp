@@ -277,7 +277,7 @@ namespace nihilus {
 			op		   = convert_ggml_op_to_nihilus_kernel(other.op);
 		}
 
-		template<core_traits_type tensor_type> NIHILUS_FORCE_INLINE intermediary_tensor(const tensor_type& other, const std::string& name_new) {
+		template<core_traits_type tensor_type> NIHILUS_FORCE_INLINE intermediary_tensor(const tensor_type& other, const std::string& name_new, size_t current_block) {
 			using output_type = typename tensor_type::output_type;
 			for (size_t x = 0; x < 4; ++x) {
 				dims[x] = other.dims[x];
@@ -308,7 +308,7 @@ namespace nihilus {
 				std::cout << "RHS Dims: " << other.dims << std::endl;
 			}
 			
-			return data == other.data && dims == other.dims && name == other.name;
+			return data == other.data;
 		}
 	};
 
@@ -368,7 +368,7 @@ namespace nihilus {
 				return "inp_embd";
 			}
 			case llama_op_types::inp_tokens: {
-				return "leaf_2";
+				return "inp_tokens";
 			}
 			case llama_op_types::attn_k_weight: {
 				return "blk." + block + ".attn_k.weight";
@@ -425,8 +425,10 @@ namespace nihilus {
 		std::map<std::string, intermediary_ggml_tensor> return_values_ggml{};
 		std::map<std::string, intermediary_tensor> return_values{};
 		file_loader<false> file_loader{ path };
+		std::string new_string{};
 		jsonifier::jsonifier_core parser{};
 		parser.parseJson<jsonifier::parse_options{ .minified = false }>(return_values_ggml, file_loader.operator const std::string&());
+		parser.serializeJson<jsonifier::serialize_options{}>(return_values_ggml, new_string);
 		for (auto& [key, value]: return_values_ggml) {
 			return_values[key] = value;
 			std::cout << key << std::endl;
@@ -443,13 +445,23 @@ namespace nihilus {
 		inline static std::map<std::string, intermediary_tensor> nodes{ get_tensors("C:/users/chris/source/repos/ft-tl/Node_Data.json") };
 		template<core_traits_type tensor_type> static bool compare_tensor_data(const tensor_type& tensor, size_t current_block) {
 			std::string tensor_name{ convert_op_to_string(tensor.type, current_block) };
+			bool was_it_found{ true };
 			if (leafs.contains(tensor_name)) {
-				intermediary_tensor tensor_new{ tensor, tensor_name };
-				//std::cout << "Found an op of name: " << tensor_name << ", OF TYPE: " << ( int32_t )tensor.type << std::endl;
+				intermediary_tensor tensor_new{ tensor, tensor_name, current_block };
 				return tensor_new == leafs[tensor_name];
 			} else {
-				//std::cout << "Found an op of name: " << tensor_name << ", OF TYPE: " << ( int32_t )tensor.type << std::endl;
+				was_it_found = false;
 			}
+			if (nodes.contains(tensor_name)) {
+				intermediary_tensor tensor_new{ tensor, tensor_name, current_block };
+				return tensor_new == nodes[tensor_name];
+			} else {
+				was_it_found = false;
+			}
+			if (!was_it_found) {
+				std::cout << "Failed to find an op of name: " << tensor_name << ", OF TYPE: " << ( int32_t )tensor.type << std::endl;
+			}
+			return was_it_found;
 		}
 	};
 

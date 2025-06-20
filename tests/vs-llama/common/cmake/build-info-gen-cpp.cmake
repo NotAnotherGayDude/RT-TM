@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_info.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build-info.cmake)
 
 set(TEMPLATE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/common/build-info.cpp.in")
 set(OUTPUT_FILE   "${CMAKE_CURRENT_SOURCE_DIR}/common/build-info.cpp")

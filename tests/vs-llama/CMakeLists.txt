@@ -22,7 +22,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 if (NOT DEFINED LLAMA_BRANCH)
-	set(LLAMA_BRANCH "dev")
+	set(LLAMA_BRANCH "dev-new")
 endif()
 
 project(

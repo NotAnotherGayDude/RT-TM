@@ -22,13 +22,18 @@ RealTimeChris (Chris M.)
 
 #include <nihilus/common/iterator.hpp>
 #include <nihilus/common/concepts.hpp>
+#include <nihilus/common/config.hpp>
 #include <algorithm>
 #include <stdexcept>
 
 namespace nihilus {
 
 	template<typename value_type01, typename value_type02> struct is_indexable {
-		static constexpr bool indexable{ std::is_same_v<value_type01, value_type02> || ( std::integral<value_type01> && std::integral<value_type02> )};
+		static constexpr bool indexable{ std::is_same_v<value_type01, value_type02> || std::integral<value_type01> };
+	};
+
+	enum class array_static_assert_errors {
+		invalid_index_type,
 	};
 
 	template<typename value_type_new, auto size_new> struct array {
@@ -133,7 +138,8 @@ namespace nihilus {
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr reference at(index_type position) {
-			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(static_assert_printer<is_indexable<index_type, decltype(size_new)>::indexable, array_static_assert_errors::invalid_index_type, index_type>::impl,
+				"Sorry, but please index into this array using the correct enum type!");
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -142,7 +148,8 @@ namespace nihilus {
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr const_reference at(index_type position) const {
-			static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(static_assert_printer<is_indexable<index_type, decltype(size_new)>::indexable, array_static_assert_errors::invalid_index_type, index_type>::impl,
+				"Sorry, but please index into this array using the correct enum type!");
 			if (size_new <= position) {
 				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -151,12 +158,14 @@ namespace nihilus {
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr reference operator[](index_type position) noexcept {
-			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(static_assert_printer<is_indexable<index_type, decltype(size_new)>::indexable, array_static_assert_errors::invalid_index_type, index_type>::impl,
+				"Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 
 		template<integral_or_enum index_type> NIHILUS_FORCE_INLINE constexpr const_reference operator[](index_type position) const noexcept {
-			//static_assert(is_indexable<index_type, decltype(size_new)>::indexable, "Sorry, but please index into this array using the correct enum type!");
+			static_assert(static_assert_printer<is_indexable<index_type, decltype(size_new)>::indexable, array_static_assert_errors::invalid_index_type, index_type>::impl,
+				"Sorry, but please index into this array using the correct enum type!");
 			return data_val[static_cast<uint64_t>(position)];
 		}
 
@@ -326,7 +335,7 @@ namespace nihilus {
 			return true;
 		}
 
-	  private:
+	  protected:
 		std::conditional_t<std::disjunction_v<std::is_default_constructible<value_type>, std::is_default_constructible<value_type>>, value_type, empty_array_element> data_val[1]{};
 	};
 }

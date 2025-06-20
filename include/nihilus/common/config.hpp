@@ -114,3 +114,16 @@ NIHILUS_FORCE_INLINE void nihilus_pause() noexcept {
 #else
 	#define NIHILUS_ASSERT(x)
 #endif
+
+template<auto enum_error, typename... types> struct error_printer_impl;
+
+template<bool value, auto enum_error, typename... value_to_test> struct static_assert_printer {
+	static constexpr bool impl{ [] {
+		if constexpr (!value) {
+			error_printer_impl<enum_error, value_to_test...>::failure_value;
+			return false;
+		} else {
+			return true;
+		}
+	}() };
+};

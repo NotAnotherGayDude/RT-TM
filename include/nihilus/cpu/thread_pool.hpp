@@ -199,18 +199,13 @@ namespace nihilus {
 		using model_traits_type																 = typename base_type::model_traits_type;
 		using op_type_type																	 = typename model_traits_type::op_type_type;
 		NIHILUS_FORCE_INLINE static void impl(base_type& core, uint64_t, array<array<void*, model_traits_type::block_count>, op_type_type::count>& data) {
-			if constexpr (static_cast<size_t>(base_type::type) <= 16) {
-				//std::cout << "TOTAL REQUIRED BYTES: " << base_type::total_required_bytes << ", FOR TYPE: " << static_cast<size_t>(base_type::type) << std::endl;
-				//std::cout << ", TOTAL DIMS: " << base_type::dims ;
-				//std::cout << ", TOTAL TYPE: " << typeid(typename base_type::output_type).name() << std::endl;
-			}
 			if constexpr (array_type<decltype(core.data)>) {
 				for (size_t x = 0; x < model_traits_type::block_count; ++x) {
-					data[base_type::type][x] = static_cast<void*>(core.data[x]);
+					data[base_type::type][x] = reinterpret_cast<void*>(&core.data[x]);
 				}
 			} else {
 				for (size_t x = 0; x < model_traits_type::block_count; ++x) {
-					data[base_type::type][x] = static_cast<void*>(core.data);
+					data[base_type::type][x] = reinterpret_cast<void*>(&core.data);
 				}
 			}
 		}
@@ -229,11 +224,11 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE static void impl(base_type& core, uint64_t thread_count, array<array<void*, model_traits_type::block_count>, op_type_type::count>& data) {
 			if constexpr (array_type<decltype(core.data)>) {
 				for (size_t x = 0; x < model_traits_type::block_count; ++x) {
-					data[base_type::type][x] = static_cast<void*>(core.data[x]);
+					data[base_type::type][x] = reinterpret_cast<void*>(&core.data[x]);
 				}
 			} else {
 				for (size_t x = 0; x < model_traits_type::block_count; ++x) {
-					data[base_type::type][x] = static_cast<void*>(core.data);
+					data[base_type::type][x] = reinterpret_cast<void*>(&core.data);
 				}
 			}
 			for (uint64_t x = 0; x < base_type::model_traits_type::block_count; ++x) {
@@ -276,10 +271,10 @@ namespace nihilus {
 		template<typename memory_buffer_type> NIHILUS_FORCE_INLINE static void impl(base_type& core, memory_buffer_type& memory_buffer) {
 			if constexpr (base_type::total_required_bytes > 0) {
 				output_type* ptr = static_cast<output_type*>(memory_buffer.claim_memory(core.total_required_bytes));
-				//tensor_debugger::compare_tensor_data(core, 0);
+				tensor_debugger::compare_tensor_data(core, 0);
 				if constexpr (array_type<decltype(core.data)>) {
 					for (uint64_t x = 0; x < base_type::model_traits_type::block_count; ++x) {
-						//tensor_debugger::compare_tensor_data(core, x);
+						tensor_debugger::compare_tensor_data(core, x);
 						core.data[x] = ptr;
 					}
 				} else {

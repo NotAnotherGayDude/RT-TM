@@ -68,7 +68,7 @@ namespace nihilus {
 #endif
 		}
 
-		NIHILUS_FORCE_INLINE void deallocate(pointer ptr, uint64_t = 0) noexcept {
+		NIHILUS_FORCE_INLINE static void deallocate(pointer ptr, uint64_t = 0) noexcept {
 			if NIHILUS_LIKELY (ptr) {
 #if defined(NIHILUS_PLATFORM_WINDOWS) || defined(NIHILUS_PLATFORM_LINUX)
 				_mm_free(ptr);

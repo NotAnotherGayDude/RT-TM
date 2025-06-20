@@ -20,8 +20,9 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
+#include <nihilus/common/array.hpp>
+#include <nihilus/common/config.hpp>
 #include <nihilus/cpu/simd/nihilus_cpu_instructions.hpp>
-#include <nihilus/common/string_literal.hpp>
 #include <nihilus/common/data_types.hpp>
 #include <nihilus/common/concepts.hpp>
 #include <iostream>
@@ -76,7 +77,7 @@ namespace nihilus {
 			return contents.size();
 		}
 
-	  private:
+	  protected:
 		std::string contents;
 	};
 

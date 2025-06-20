@@ -50,140 +50,447 @@ namespace nihilus {
 		GGUF_METADATA_VALUE_TYPE_UNSET	 = 13,
 	};
 
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <cassert>
-#include <filesystem>
-#include <stdexcept>
-
-#ifdef NIHILUS_PLATFORM_WINDOWS
-	#include <windows.h>
+#if defined(NIHILUS_PLATFORM_WINDOWS)
+	#include <io.h>
+	#ifndef PATH_MAX
+		#define PATH_MAX MAX_PATH
+	#endif
 #else
 	#include <sys/mman.h>
+	#include <sys/stat.h>
 	#include <fcntl.h>
 	#include <unistd.h>
+	#if defined(NIHIULUS_PLATFORM_LINUX)
+		#include <sys/resource.h>
+	#endif
+	#if defined(NIHIULUS_PLATFORM_MACOS)
+		#include <TargetConditionals.h>
+	#endif
 #endif
 
-	class mapped_file {
+#ifdef NIHILUS_PLATFORM_WINDOWS
+	NIHILUS_FORCE_INLINE std::string format_win_error(DWORD error_code) {
+		LPSTR buffer = nullptr;
+		DWORD size	 = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, error_code,
+			  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&buffer), 0, nullptr);
+
+		if (!size || !buffer) {
+			return "Unknown Win32 error: " + std::to_string(error_code);
+		}
+
+		std::string result(buffer, size);
+		LocalFree(buffer);
+
+		while (!result.empty() && (result.back() == '\n' || result.back() == '\r')) {
+			result.pop_back();
+		}
+
+		return result;
+	}
+#endif
+
+	class memory_mapped_file {
 	  public:
-		void* aligned_ptr  = nullptr;
-		void* base_ptr	   = nullptr;
-		size_t mapped_size = 0;
-		size_t file_size   = 0;
+		NIHILUS_FORCE_INLINE explicit memory_mapped_file() noexcept = default;
 
-		static constexpr size_t alignment = 64;
+		NIHILUS_FORCE_INLINE void init(std::string_view file_path_new, std::size_t prefetch_bytes = 0, bool numa_aware = false) {
+			file_path_ = file_path_new;
+			map_file(file_path_, prefetch_bytes, numa_aware);
+		}
 
-		mapped_file(std::string_view path) {
-			namespace fs = std::filesystem;
-			file_size	 = fs::file_size(path);
-			mapped_size	 = file_size + alignment;
+		NIHILUS_FORCE_INLINE void deinit() {
+			unmap_file();
+		}
 
-#if NIHILUS_PLATFORM_WINDOWS
-			HANDLE file = CreateFileA(path.data(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-			if (file == INVALID_HANDLE_VALUE)
-				throw std::runtime_error("Failed to open file");
+		NIHILUS_FORCE_INLINE ~memory_mapped_file() {
+			unmap_file();
+		}
 
-			HANDLE mapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
-			if (!mapping)
-				throw std::runtime_error("Failed to create file mapping");
-
-			void* raw = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, mapped_size);
-			if (!raw)
-				throw std::runtime_error("Failed to map view of file");
-
-			base_ptr	= raw;
-			aligned_ptr = reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(raw) + alignment - 1) & ~(alignment - 1));
-
-			CloseHandle(file);
-			CloseHandle(mapping);
+		NIHILUS_FORCE_INLINE memory_mapped_file(memory_mapped_file&& other) noexcept
+			: file_path_(other.file_path_), mapped_data_(other.mapped_data_), file_size_(other.file_size_)
+#ifdef NIHILUS_PLATFORM_WINDOWS
+			  ,
+			  file_handle_(other.file_handle_), mapping_handle_(other.mapping_handle_)
 #else
-			int fd = open(path.data(), O_RDONLY);
-			if (fd < 0)
-				throw std::runtime_error("Failed to open file");
-
-			void* raw = mmap(NULL, mapped_size, PROT_READ, MAP_PRIVATE, fd, 0);
-			if (raw == MAP_FAILED)
-				throw std::runtime_error("mmap failed");
-
-			base_ptr	= raw;
-			aligned_ptr = reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(raw) + alignment - 1) & ~(alignment - 1));
-
-			close(fd);
+			  ,
+			  file_descriptor_(other.file_descriptor_), mapped_fragments_(std::move(other.mapped_fragments_))
+#endif
+		{
+			other.mapped_data_ = nullptr;
+			other.file_size_   = 0;
+#ifdef NIHILUS_PLATFORM_WINDOWS
+			other.file_handle_	  = INVALID_HANDLE_VALUE;
+			other.mapping_handle_ = nullptr;
+#else
+			other.file_descriptor_ = -1;
+			other.mapped_fragments_.clear();
 #endif
 		}
 
-		~mapped_file() {
-			if (!base_ptr)
-				return;
+		NIHILUS_FORCE_INLINE memory_mapped_file& operator=(memory_mapped_file&& other) noexcept {
+			if (this != &other) {
+				unmap_file();
 
-#ifdef _WIN32
-			UnmapViewOfFile(base_ptr);
+				file_path_	 = other.file_path_;
+				mapped_data_ = other.mapped_data_;
+				file_size_	 = other.file_size_;
+#ifdef NIHILUS_PLATFORM_WINDOWS
+				file_handle_	= other.file_handle_;
+				mapping_handle_ = other.mapping_handle_;
 #else
-			munmap(base_ptr, mapped_size);
+				file_descriptor_  = other.file_descriptor_;
+				mapped_fragments_ = std::move(other.mapped_fragments_);
 #endif
-		}
 
-		template<typename T = uint8_t> const T* data() const {
-			return reinterpret_cast<const T*>(aligned_ptr);
-		}
-
-		size_t size() const {
-			return file_size;
-		}
-	};
-
-
-	struct stream_iterator {
-		std::ifstream* stream  = nullptr;
-		std::streambuf* buffer = nullptr;
-		uint64_t current_index = 0;
-		uint64_t length		   = 0;
-		bool valid			   = false;
-
-		NIHILUS_FORCE_INLINE stream_iterator(std::ifstream& s) : stream(&s), buffer(s.rdbuf()), current_index(0), length(0), valid(false) {
-			if (stream && stream->is_open()) {
-				auto pos = stream->tellg();
-				stream->seekg(0, std::ios::end);
-				length = static_cast<uint64_t>(stream->tellg());
-				stream->seekg(pos);
-				valid = stream->good();
-			}
-		}
-
-		template<typename value_type> NIHILUS_FORCE_INLINE stream_iterator& advance(uint64_t n = 1) {
-			static_assert(std::is_trivially_copyable_v<value_type>);
-			uint64_t offset = sizeof(value_type) * n;
-			if (valid && has_bytes<uint8_t>(offset)) {
-				stream->seekg(offset, std::ios::cur);
-				current_index += offset;
-			} else {
-				valid = false;
+				other.mapped_data_ = nullptr;
+				other.file_size_   = 0;
+#ifdef NIHILUS_PLATFORM_WINDOWS
+				other.file_handle_	  = INVALID_HANDLE_VALUE;
+				other.mapping_handle_ = nullptr;
+#else
+				other.file_descriptor_ = -1;
+				other.mapped_fragments_.clear();
+#endif
 			}
 			return *this;
 		}
 
-		template<typename value_type> NIHILUS_FORCE_INLINE value_type read() {
-			static_assert(std::is_trivially_copyable_v<value_type>);
-			value_type v{};
-			if (valid && has_bytes<value_type>()) {
-				auto read_bytes = buffer->sgetn(reinterpret_cast<char*>(&v), sizeof(value_type));
-				current_index += static_cast<uint64_t>(read_bytes);
-				valid = (read_bytes == sizeof(value_type));
-			} else {
-				valid = false;
-			}
-			return v;
+		memory_mapped_file(const memory_mapped_file&)			 = delete;
+		memory_mapped_file& operator=(const memory_mapped_file&) = delete;
+
+		NIHILUS_FORCE_INLINE void* data() const noexcept {
+			return mapped_data_;
 		}
 
-		NIHILUS_FORCE_INLINE void read_bytes_to_pointer(void* dest_ptr, uint64_t byte_count) {
-			if (valid && has_bytes<uint8_t>(byte_count)) {
-				auto read_bytes = buffer->sgetn(reinterpret_cast<char*>(dest_ptr), static_cast<int64_t>(byte_count));
-				current_index += static_cast<uint64_t>(read_bytes);
-				valid = (read_bytes == static_cast<int64_t>(byte_count));
-			} else {
-				valid = false;
+		NIHILUS_FORCE_INLINE std::size_t size() const noexcept {
+			return file_size_;
+		}
+
+		NIHILUS_FORCE_INLINE bool is_valid() const noexcept {
+			return mapped_data_ != nullptr;
+		}
+
+		NIHILUS_FORCE_INLINE std::string_view file_path() const noexcept {
+			return file_path_;
+		}
+
+		NIHILUS_FORCE_INLINE void unmap_fragment(std::size_t first_byte, std::size_t last_byte) {
+			unmap_fragment_impl(first_byte, last_byte);
+		}
+
+		NIHILUS_FORCE_INLINE void lock_memory() {
+			lock_memory_impl();
+		}
+
+		NIHILUS_FORCE_INLINE static bool memory_mapping_supported() noexcept {
+#if defined(_POSIX_MAPPED_FILES) || defined(NIHILUS_PLATFORM_WINDOWS)
+			return true;
+#else
+			return false;
+#endif
+		}
+
+	  protected:
+		std::string_view file_path_;
+		void* mapped_data_	   = nullptr;
+		std::size_t file_size_ = 0;
+
+#ifdef NIHILUS_PLATFORM_WINDOWS
+		HANDLE file_handle_	   = INVALID_HANDLE_VALUE;
+		HANDLE mapping_handle_ = nullptr;
+#else
+		int file_descriptor_ = -1;
+		std::vector<std::pair<std::size_t, std::size_t>> mapped_fragments_;
+#endif
+
+		NIHILUS_FORCE_INLINE void map_file(std::string_view file_path, std::size_t prefetch_bytes, bool numa_aware) {
+#ifdef NIHILUS_PLATFORM_WINDOWS
+			std::string file_path_str(file_path);
+
+			file_handle_ = CreateFileA(file_path_str.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+			if (file_handle_ == INVALID_HANDLE_VALUE) {
+				throw std::runtime_error("Failed to open file: " + format_win_error(GetLastError()));
 			}
+
+			LARGE_INTEGER file_size;
+			if (!GetFileSizeEx(file_handle_, &file_size)) {
+				CloseHandle(file_handle_);
+				throw std::runtime_error("Failed to get file size: " + format_win_error(GetLastError()));
+			}
+
+			file_size_ = static_cast<std::size_t>(file_size.QuadPart);
+
+			if (file_size_ == 0) {
+				CloseHandle(file_handle_);
+				throw std::runtime_error("Cannot map empty file");
+			}
+
+			mapping_handle_ = CreateFileMappingA(file_handle_, nullptr, PAGE_READONLY, 0, 0, nullptr);
+
+			if (mapping_handle_ == nullptr) {
+				CloseHandle(file_handle_);
+				throw std::runtime_error("Failed to create file mapping: " + format_win_error(GetLastError()));
+			}
+
+			mapped_data_ = MapViewOfFile(mapping_handle_, FILE_MAP_READ, 0, 0, 0);
+
+			if (mapped_data_ == nullptr) {
+				CloseHandle(mapping_handle_);
+				CloseHandle(file_handle_);
+				throw std::runtime_error("Failed to map view of file: " + format_win_error(GetLastError()));
+			}
+
+			if (reinterpret_cast<std::uintptr_t>(mapped_data_) % cpu_alignment != 0) {
+				UnmapViewOfFile(mapped_data_);
+				CloseHandle(mapping_handle_);
+				CloseHandle(file_handle_);
+				throw std::runtime_error("Memory mapping failed to achieve required SIMD alignment");
+			}
+
+			if (prefetch_bytes > 0) {
+	#if _WIN32_WINNT >= 0x602
+				HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+				if (kernel32) {
+					using PrefetchVirtualMemoryFunc = BOOL(WINAPI*)(HANDLE, ULONG_PTR, PWIN32_MEMORY_RANGE_ENTRY, ULONG);
+					auto prefetch_func				= reinterpret_cast<PrefetchVirtualMemoryFunc>(GetProcAddress(kernel32, "PrefetchVirtualMemory"));
+
+					if (prefetch_func) {
+						WIN32_MEMORY_RANGE_ENTRY range;
+						range.VirtualAddress = mapped_data_;
+						range.NumberOfBytes	 = std::min(file_size_, prefetch_bytes);
+
+						if (!prefetch_func(GetCurrentProcess(), 1, &range, 0)) {
+						}
+					}
+				}
+	#endif
+			}
+
+#else
+			std::string file_path_str(file_path);
+
+			file_descriptor_ = open(file_path_str.c_str(), O_RDONLY);
+			if (file_descriptor_ == -1) {
+				throw std::runtime_error("Failed to open file: " + std::string(std::strerror(errno)));
+			}
+
+			struct stat file_stat;
+			if (fstat(file_descriptor_, &file_stat) == -1) {
+				close(file_descriptor_);
+				throw std::runtime_error("Failed to get file statistics: " + std::string(std::strerror(errno)));
+			}
+
+			file_size_ = static_cast<std::size_t>(file_stat.st_size);
+
+			if (file_size_ == 0) {
+				close(file_descriptor_);
+				throw std::runtime_error("Cannot map empty file");
+			}
+
+			int flags = MAP_SHARED;
+			if (numa_aware) {
+				prefetch_bytes = 0;
+			}
+
+	#ifdef __linux__
+			if (posix_fadvise(file_descriptor_, 0, 0, POSIX_FADV_SEQUENTIAL) != 0) {
+			}
+
+			if (prefetch_bytes > 0) {
+				flags |= MAP_POPULATE;
+			}
+	#endif
+
+			std::size_t aligned_size = ((file_size_ + cpu_alignment - 1) / cpu_alignment) * cpu_alignment;
+
+			mapped_data_ = mmap(nullptr, aligned_size, PROT_READ, flags, file_descriptor_, 0);
+
+			if (mapped_data_ == MAP_FAILED) {
+				close(file_descriptor_);
+				mapped_data_ = nullptr;
+				throw std::runtime_error("Failed to memory map file: " + std::string(std::strerror(errno)));
+			}
+
+			if (reinterpret_cast<std::uintptr_t>(mapped_data_) % cpu_alignment != 0) {
+				munmap(mapped_data_, aligned_size);
+				close(file_descriptor_);
+				throw std::runtime_error("Memory mapping failed to achieve required SIMD alignment");
+			}
+
+			mapped_fragments_.emplace_back(0, file_size_);
+
+			if (prefetch_bytes > 0) {
+				std::size_t prefetch_size = std::min(file_size_, prefetch_bytes);
+				if (posix_madvise(mapped_data_, prefetch_size, POSIX_MADV_WILLNEED) != 0) {
+				}
+			}
+
+			if (numa_aware) {
+				if (posix_madvise(mapped_data_, file_size_, POSIX_MADV_RANDOM) != 0) {
+				}
+			} else {
+				if (posix_madvise(mapped_data_, file_size_, POSIX_MADV_SEQUENTIAL) != 0) {
+				}
+			}
+#endif
+		}
+
+		NIHILUS_FORCE_INLINE void unmap_file() {
+#ifdef NIHILUS_PLATFORM_WINDOWS
+			if (mapped_data_) {
+				UnmapViewOfFile(mapped_data_);
+				mapped_data_ = nullptr;
+			}
+
+			if (mapping_handle_) {
+				CloseHandle(mapping_handle_);
+				mapping_handle_ = nullptr;
+			}
+
+			if (file_handle_ != INVALID_HANDLE_VALUE) {
+				CloseHandle(file_handle_);
+				file_handle_ = INVALID_HANDLE_VALUE;
+			}
+#else
+			for (const auto& frag: mapped_fragments_) {
+				if (munmap(static_cast<char*>(mapped_data_) + frag.first, frag.second - frag.first) != 0) {
+				}
+			}
+			mapped_fragments_.clear();
+
+			if (file_descriptor_ != -1) {
+				close(file_descriptor_);
+				file_descriptor_ = -1;
+			}
+#endif
+			file_size_ = 0;
+		}
+
+		NIHILUS_FORCE_INLINE void unmap_fragment_impl(std::size_t first, std::size_t last) {
+#ifdef NIHILUS_PLATFORM_WINDOWS
+			( void )first;
+			( void )last;
+#else
+			if (!mapped_data_) {
+				return;
+			}
+
+			long page_size = sysconf(_SC_PAGESIZE);
+			if (page_size <= 0) {
+				return;
+			}
+
+			std::size_t page_size_t = static_cast<std::size_t>(page_size);
+
+			std::size_t offset_in_page = first & (page_size_t - 1);
+			if (offset_in_page != 0) {
+				first += page_size_t - offset_in_page;
+			}
+
+			last = last & ~(page_size_t - 1);
+
+			if (last <= first) {
+				return;
+			}
+
+			void* unmap_addr	   = static_cast<char*>(mapped_data_) + first;
+			std::size_t unmap_size = last - first;
+
+			if (munmap(unmap_addr, unmap_size) != 0) {
+				return;
+			}
+			std::vector<std::pair<std::size_t, std::size_t>> new_fragments;
+			for (const auto& frag: mapped_fragments_) {
+				if (frag.first < first && frag.second > last) {
+					new_fragments.emplace_back(frag.first, first);
+					new_fragments.emplace_back(last, frag.second);
+				} else if (frag.first < first && frag.second > first) {
+					new_fragments.emplace_back(frag.first, first);
+				} else if (frag.first < last && frag.second > last) {
+					new_fragments.emplace_back(last, frag.second);
+				} else if (frag.first >= first && frag.second <= last) {
+				} else {
+					new_fragments.push_back(frag);
+				}
+			}
+			mapped_fragments_ = std::move(new_fragments);
+#endif
+		}
+
+		NIHILUS_FORCE_INLINE void lock_memory_impl() {
+#ifdef NIHILUS_PLATFORM_WINDOWS
+			if (mapped_data_ && file_size_ > 0) {
+				VirtualLock(mapped_data_, file_size_);
+			}
+#else
+	#ifdef _POSIX_MEMLOCK_RANGE
+			if (mapped_data_ && file_size_ > 0) {
+				mlock(mapped_data_, file_size_);
+			}
+	#endif
+#endif
+		}
+	};
+
+	struct stream_iterator {
+		memory_mapped_file* file{};
+		uint64_t current_index = 0;
+		uint64_t length		   = 0;
+		bool valid			   = true;
+
+		NIHILUS_FORCE_INLINE stream_iterator(memory_mapped_file* s) : file(s), length{ file->size() } {};
+
+		NIHILUS_FORCE_INLINE std::uint64_t get_length(FILE* file) noexcept {
+			if (!file) [[unlikely]] {
+				return 0;
+			}
+
+#ifdef NIHILUS_PLATFORM_WINDOWS
+			int fd = _fileno(file);
+			if (fd == -1) [[unlikely]] {
+				return 0;
+			}
+
+			struct __stat64 file_stat;
+			if (_fstat64(fd, &file_stat) != 0) [[unlikely]] {
+				return 0;
+			}
+
+			return static_cast<std::uint64_t>(file_stat.st_size);
+
+#else
+			int fd = fileno(file);
+			if (fd == -1) [[unlikely]] {
+				return 0;
+			}
+
+			struct stat file_stat;
+			if (fstat(fd, &file_stat) != 0) [[unlikely]] {
+				return 0;
+			}
+
+			return static_cast<std::uint64_t>(file_stat.st_size);
+#endif
+		}
+
+		template<typename value_type> NIHILUS_FORCE_INLINE value_type read() {
+			value_type dst{};
+			std::memcpy(&dst, static_cast<uint8_t*>(file->data()) + current_index, sizeof(value_type));
+			current_index += sizeof(value_type);
+			return dst;
+		}
+
+		NIHILUS_FORCE_INLINE bool read_bytes_to_pointer(void* dst, const size_t size) {
+			std::memcpy(dst, static_cast<uint8_t*>(file->data()) + current_index, size);
+			current_index += size;
+			return true;
+		}
+
+		NIHILUS_FORCE_INLINE bool map_pointer(void* dst, const size_t size) {
+			*reinterpret_cast<void**>(dst) = reinterpret_cast<uint8_t*>(file->data()) + current_index;
+			current_index += size;
+			return true;
 		}
 
 		template<typename value_type = uint8_t> NIHILUS_FORCE_INLINE bool has_bytes(size_t size = sizeof(value_type)) const {
@@ -214,8 +521,8 @@ namespace nihilus {
 			*this = other;
 		};
 		gguf_metadata_value_t(const gguf_metadata_value_variant& other) noexcept;
-		gguf_metadata_value_variant value{};
 		~gguf_metadata_value_t();
+		gguf_metadata_value_variant value{};
 	};
 
 	struct gguf_array_t {
@@ -416,14 +723,14 @@ namespace nihilus {
 	};
 
 	struct gguf_header_t {
-		std::map<std::string, gguf_metadata_kv_t> metadata_kv{};
+		std::map<std::string_view, gguf_metadata_kv_t> metadata_kv{};
 		uint64_t metadata_kv_count{};
 		uint64_t tensor_count{};
 		uint32_t version{};
 		uint32_t magic{};
 	};
 
-	template<typename value_type> NIHILUS_FORCE_INLINE void gather_scalar(const std::string& key, value_type& out, const std::map<std::string, gguf_metadata_kv_t>& metadata_kv) {
+	template<typename value_type> NIHILUS_FORCE_INLINE void gather_scalar(std::string_view key, value_type& out, const std::map<std::string_view, gguf_metadata_kv_t>& metadata_kv) {
 		auto it = metadata_kv.find(key);
 		if (it == metadata_kv.end())
 			return;
@@ -434,7 +741,7 @@ namespace nihilus {
 	};
 
 	template<typename value_type>
-	NIHILUS_FORCE_INLINE void gather_array(const std::string& key, std::vector<value_type>& out, const std::map<std::string, gguf_metadata_kv_t>& metadata_kv) {
+	NIHILUS_FORCE_INLINE void gather_array(std::string_view key, std::vector<value_type>& out, const std::map<std::string_view, gguf_metadata_kv_t>& metadata_kv) {
 		auto it = metadata_kv.find(key);
 		if (it == metadata_kv.end())
 			return;
@@ -465,7 +772,7 @@ namespace nihilus {
 	}
 
 	template<> struct value_reader<construction_parameters<model_arch::llama>, model_arch::llama> {
-		NIHILUS_FORCE_INLINE static construction_parameters<model_arch::llama> gather_value(const std::map<std::string, gguf_metadata_kv_t>& metadata_kv) {
+		NIHILUS_FORCE_INLINE static construction_parameters<model_arch::llama> gather_value(const std::map<std::string_view, gguf_metadata_kv_t>& metadata_kv) {
 			construction_parameters<model_arch::llama> value{};
 			std::string architecture{};
 			if (metadata_kv.contains("general.architecture")) {
@@ -496,7 +803,7 @@ namespace nihilus {
 	};
 
 	template<> struct value_reader<tokenizer_parameters<model_arch::llama>, model_arch::llama> {
-		NIHILUS_FORCE_INLINE static tokenizer_parameters<model_arch::llama> gather_value(const std::map<std::string, gguf_metadata_kv_t>& metadata_kv) {
+		NIHILUS_FORCE_INLINE static tokenizer_parameters<model_arch::llama> gather_value(const std::map<std::string_view, gguf_metadata_kv_t>& metadata_kv) {
 			tokenizer_parameters<model_arch::llama> value{};
 			gather_scalar("tokenizer.ggml.bos_token_id", value.bos_token_id, metadata_kv);
 			gather_scalar("tokenizer.ggml.eos_token_id", value.eos_token_id, metadata_kv);
@@ -607,8 +914,8 @@ namespace nihilus {
 	};
 
 	NIHILUS_FORCE_INLINE bool operator<(const core_base_creation_data& lhs, const core_base_creation_data& rhs) noexcept {
-		const std::string& lhs_name{ lhs.name };
-		const std::string& rhs_name{ rhs.name };
+		std::string_view lhs_name{ lhs.name };
+		std::string_view rhs_name{ rhs.name };
 		if (lhs_name.find_first_of("1234567890") != std::string::npos && rhs_name.find_first_of("1234567890") != std::string::npos) {
 			uint64_t lhs_offset{ lhs_name.find_first_of("1234567890") };
 			uint64_t rhs_offset{ rhs_name.find_first_of("1234567890") };
@@ -681,9 +988,9 @@ namespace nihilus {
 		using op_type_type		= typename decltype(config)::op_type_type;
 		static_assert((std::endian::native == std::endian::little), "Sorry, but big-endian is not yet supported by the library");
 
-		NIHILUS_FORCE_INLINE static model_graph_data<config> parse_model(std::string_view path, array<array<void*, model_traits_type::block_count>, op_type_type::count>& data) {
-			std::ifstream file(static_cast<std::string>(path), std::ios::binary);
-			stream_iterator ptr{ file };
+		NIHILUS_FORCE_INLINE static model_graph_data<config> parse_model(std::string_view path, array<array<void*, model_traits_type::block_count>, op_type_type::count>& data,
+			memory_mapped_file& model_data) {
+			stream_iterator ptr{ &model_data };
 			model_graph_data<config> return_value{};
 			gguf_file_t gguf_file{};
 			gguf_file.header = value_reader<gguf_header_t>::gather_value(ptr);
@@ -707,13 +1014,8 @@ namespace nihilus {
 			return_value.tokenizer_params = value_reader<tokenizer_parameters<model_arch::llama>, model_arch::llama>::gather_value(gguf_file.header.metadata_kv);
 			sort_tensor_infos(gguf_file.tensor_infos);
 			for (uint64_t x = 0; x < gguf_file.tensor_infos.size(); ++x) {
-				//std::cout << "TOTAL REQUIRED BYTES (PRE): " << gguf_file.tensor_infos[x].core_total_byte_size()
-				//<< ", FOR TYPE: " << static_cast<size_t>(string_to_tensor_name<model_arch::llama>::impl(gguf_file.tensor_infos[x].name));
-				//std::cout << ", NAME: " << gguf_file.tensor_infos[x].name;
-				//std::cout << ", DIMS: " << gguf_file.tensor_infos[x].dimensions << std::endl;
-				//ptr.read_bytes_to_pointer(
-				//data[string_to_tensor_name<model_arch::llama>::impl(gguf_file.tensor_infos[x].name)][extract_layer_number(gguf_file.tensor_infos[x].name)],
-				//gguf_file.tensor_infos[x].core_total_byte_size());
+				ptr.map_pointer(data[string_to_tensor_name<model_arch::llama>::impl(gguf_file.tensor_infos[x].name)][extract_layer_number(gguf_file.tensor_infos[x].name)],
+					gguf_file.tensor_infos[x].core_total_byte_size());
 			}
 			return return_value;
 		}
@@ -725,8 +1027,9 @@ namespace nihilus {
 		using model_traits_type = model_traits<config.arch, config.model_size, config.model_generation>;
 		using op_type_type		= typename decltype(config)::op_type_type;
 
-		NIHILUS_FORCE_INLINE static model_graph_data<config> parse_model(std::string_view path, array<array<void*, model_traits_type::block_count>, op_type_type::count>& data) {
-			return model_parser_impl<config, config.arch, config.format>::parse_model(path, data);
+		NIHILUS_FORCE_INLINE static model_graph_data<config> parse_model(std::string_view path, array<array<void*, model_traits_type::block_count>, op_type_type::count>& data,
+			memory_mapped_file& model_data) {
+			return model_parser_impl<config, config.arch, config.format>::parse_model(path, data, model_data);
 		}
 	};
 }
