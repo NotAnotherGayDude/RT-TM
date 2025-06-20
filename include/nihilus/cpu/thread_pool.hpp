@@ -271,17 +271,17 @@ namespace nihilus {
 		template<typename memory_buffer_type> NIHILUS_FORCE_INLINE static void impl(base_type& core, memory_buffer_type& memory_buffer) {
 			if constexpr (base_type::total_required_bytes > 0) {
 				output_type* ptr = static_cast<output_type*>(memory_buffer.claim_memory(core.total_required_bytes));
-				tensor_debugger::compare_tensor_data(core, 0);
+				//tensor_debugger::compare_tensor_data(core, 0);
 				if constexpr (array_type<decltype(core.data)>) {
 					for (uint64_t x = 0; x < base_type::model_traits_type::block_count; ++x) {
-						tensor_debugger::compare_tensor_data(core, x);
+						//tensor_debugger::compare_tensor_data(core, x);
 						core.data[x] = ptr;
 					}
 				} else {
 					core.data = ptr;
 				}
 			} else {
-				tensor_debugger::compare_tensor_data(core, 0);
+				//tensor_debugger::compare_tensor_data(core, 0);
 			}
 		}
 	};
@@ -297,7 +297,7 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count) {
 			if constexpr (active_thread<base_type>) {
 				kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
-				spinlock_nanoseconds(500);
+				//spinlock_nanoseconds(500);
 			}
 		}
 		NIHILUS_FORCE_INLINE void thread_impl_main() {};
@@ -314,7 +314,7 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count, uint64_t current_index = 0) {
 			this->sync_flag_start[current_index].arrive_and_wait(thread_index);
 			kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
-			spinlock_nanoseconds(500);
+			//spinlock_nanoseconds(500);
 			this->sync_flag_end[current_index].arrive_and_wait(thread_index);
 		}
 

@@ -10,12 +10,14 @@
 #include <BnchSwt/BenchmarkSuite.hpp>
 #include <../src/llama-context.h>
 #include <nihilus/index.hpp>
-#include <llama.h>
-#include "common/arg.h"
-#include "common/common.h"
-#include "common/console.h"
-#include "common/log.h"
-#include "common/sampling.h"
+#include "arg.h"
+#include "common.h"
+#include "console.h"
+#include "log.h"
+#include "sampling.h"
+#include "llama.h"
+#include "chat.h"
+
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 	#include <signal.h>
@@ -25,14 +27,14 @@
 	#ifndef NOMINMAX
 		#define NOMINMAX
 	#endif
-	#include <signal.h>
 	#include <windows.h>
+	#include <signal.h>
 #endif
 
 #if defined(_MSC_VER)
 	#pragma warning(disable : 4244 4267)// possible loss of data
 #endif
-static const char* DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant";
+
 static llama_context** g_ctx;
 static llama_model** g_model;
 static common_sampler** g_smpl;
@@ -47,8 +49,8 @@ static void print_usage(int argc, char** argv) {
 	( void )argc;
 
 	LOG("\nexample usage:\n");
-	LOG("\n  text generation:     %s -m your_model.gguf -p \"I believe the meaning of life is\" -n 128\n", argv[0]);
-	LOG("\n  chat (conversation): %s -m your_model.gguf -p \"You are a helpful assistant\" -cnv\n", argv[0]);
+	LOG("\n  text generation:     %s -m your_model.gguf -p \"I believe the meaning of life is\" -n 128 -no-cnv\n", argv[0]);
+	LOG("\n  chat (conversation): %s -m your_model.gguf -sys \"You are a helpful assistant\"\n", argv[0]);
 	LOG("\n");
 }
 
@@ -62,14 +64,6 @@ static bool file_is_empty(const std::string& path) {
 	f.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	f.open(path.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
 	return f.tellg() == 0;
-}
-
-static std::string chat_add_and_format(struct llama_model* model, std::vector<common_chat_msg>& chat_msgs, const std::string& role, const std::string& content) {
-	common_chat_msg new_msg{ role, content };
-	auto formatted = common_chat_format_single(model, g_params->chat_template, chat_msgs, new_msg, role == "user");
-	chat_msgs.push_back({ role, content });
-	LOG_DBG("formatted: '%s'\n", formatted.c_str());
-	return formatted;
 }
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(_WIN32)
@@ -95,15 +89,15 @@ static void sigint_handler(int signo) {
 
 int main(int argc, char** argv) {
 	try {
-		static constexpr auto model_config = nihilus::generate_model_config(nihilus::llama_model_generation::v3, nihilus::llama_model_size::llama_8B,
+		static constexpr nihilus::model_config model_config = nihilus::generate_model_config(nihilus::llama_model_generation::v3, nihilus::llama_model_size::llama_8B,
 			nihilus::kernel_type_profile::q8_gqa, nihilus::model_arch::llama, false);
-		auto cli_args_final				   = nihilus::harbinger<model_config>::parse_cli_arguments(argc, argv);
+		auto cli_args_final									= nihilus::harbinger<model_config>::parse_cli_arguments(argc, argv);
 		std::string return_value{};
-		bnch_swt::benchmark_stage<"nihilus-vs_llama.cpp", 2, 1, true, "Token">::runBenchmark<"llama.cpp", "cyan">([&] {
+		bnch_swt::benchmark_stage<"nihilus-vs_llama.cpp", 4, 2, true, "Token">::runBenchmark<"llama.cpp", "cyan">([&] {
 			return_value.clear();
 			size_t token_count{};
 
-			common_params params;
+			 common_params params;
 			g_params = &params;
 			if (!common_params_parse(argc, argv, params, LLAMA_EXAMPLE_MAIN, print_usage)) {
 				return 1;
@@ -119,14 +113,6 @@ int main(int argc, char** argv) {
 			atexit([]() {
 				console::cleanup();
 			});
-
-			if (params.logits_all) {
-				LOG_ERR("************\n");
-				LOG_ERR("%s: please use the 'perplexity' tool for perplexity calculations\n", __func__);
-				LOG_ERR("************\n\n");
-
-				return 0;
-			}
 
 			if (params.embedding) {
 				LOG_ERR("************\n");
@@ -177,10 +163,16 @@ int main(int argc, char** argv) {
 			}
 
 			const llama_vocab* vocab = llama_model_get_vocab(model);
+			auto chat_templates		 = common_chat_templates_init(model, params.chat_template);
 
 			LOG_INF("%s: llama threadpool init, n_threads = %d\n", __func__, ( int )params.cpuparams.n_threads);
 
-			auto* reg					  = ggml_backend_dev_backend_reg(ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU));
+			auto* cpu_dev = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+			if (!cpu_dev) {
+				LOG_ERR("%s: no CPU backend found\n", __func__);
+				return 1;
+			}
+			auto* reg					  = ggml_backend_dev_backend_reg(cpu_dev);
 			auto* ggml_threadpool_new_fn  = ( decltype(ggml_threadpool_new)* )ggml_backend_reg_get_proc_address(reg, "ggml_threadpool_new");
 			auto* ggml_threadpool_free_fn = ( decltype(ggml_threadpool_free)* )ggml_backend_reg_get_proc_address(reg, "ggml_threadpool_free");
 
@@ -217,7 +209,7 @@ int main(int argc, char** argv) {
 			}
 
 			// auto enable conversation mode if chat template is available
-			const bool has_chat_template = !common_get_builtin_chat_template(model).empty() || !params.chat_template.empty();
+			const bool has_chat_template = common_chat_templates_was_explicit(chat_templates.get());
 			if (params.conversation_mode == COMMON_CONVERSATION_MODE_AUTO) {
 				if (has_chat_template) {
 					LOG_INF("%s: chat template is available, enabling conversation mode (disable it with -no-cnv)\n", __func__);
@@ -235,7 +227,11 @@ int main(int argc, char** argv) {
 			// print chat template example in conversation mode
 			if (params.conversation_mode) {
 				if (params.enable_chat_template) {
-					LOG_INF("%s: chat template example:\n%s\n", __func__, common_chat_format_example(model, params.chat_template).c_str());
+					if (!params.prompt.empty() && params.system_prompt.empty()) {
+						LOG_WRN("*** User-specified prompt will pre-start conversation, did you mean to set --system-prompt (-sys) instead?\n");
+					}
+
+					LOG_INF("%s: chat template example:\n%s\n", __func__, common_chat_format_example(chat_templates.get(), params.use_jinja).c_str());
 				} else {
 					LOG_INF("%s: in-suffix/prefix is specified, chat template will be disabled\n", __func__);
 				}
@@ -270,7 +266,7 @@ int main(int argc, char** argv) {
 				}
 			}
 
-			const bool add_bos = llama_vocab_get_add_bos(vocab);
+			const bool add_bos = llama_vocab_get_add_bos(vocab) && !params.use_jinja;
 			if (!llama_model_has_encoder(model)) {
 				GGML_ASSERT(!llama_vocab_get_add_eos(vocab));
 			}
@@ -279,13 +275,45 @@ int main(int argc, char** argv) {
 
 			std::vector<llama_token> embd_inp;
 
+			bool waiting_for_first_input = false;
+			auto chat_add_and_format	 = [&chat_msgs, &chat_templates](const std::string& role, const std::string& content) {
+				common_chat_msg new_msg;
+				new_msg.role	= role;
+				new_msg.content = content;
+				auto formatted	= common_chat_format_single(chat_templates.get(), chat_msgs, new_msg, role == "user", g_params->use_jinja);
+				chat_msgs.push_back(new_msg);
+				LOG_DBG("formatted: '%s'\n", formatted.c_str());
+				return formatted;
+			};
+
+			std::string prompt;
 			{
-				auto prompt = (params.conversation_mode && params.enable_chat_template)
-					// format the system prompt in conversation mode (fallback to default if empty)
-					? chat_add_and_format(model, chat_msgs, "system", params.prompt.empty() ? DEFAULT_SYSTEM_MESSAGE : params.prompt)
+				if (params.conversation_mode && params.enable_chat_template) {
+					if (!params.system_prompt.empty()) {
+						// format the system prompt (will use template default if empty)
+						chat_add_and_format("system", params.system_prompt);
+					}
+
+					if (!params.prompt.empty()) {
+						// format and append the user prompt
+						chat_add_and_format("user", params.prompt);
+					} else {
+						waiting_for_first_input = true;
+					}
+
+					if (!params.system_prompt.empty() || !params.prompt.empty()) {
+						common_chat_templates_inputs inputs;
+						inputs.messages				 = chat_msgs;
+						inputs.add_generation_prompt = !params.prompt.empty();
+
+						prompt = common_chat_templates_apply(chat_templates.get(), inputs).prompt;
+					}
+				} else {
 					// otherwise use the prompt as is
-					: params.prompt;
-				if (params.interactive_first || !params.prompt.empty() || session_tokens.empty()) {
+					prompt = params.prompt;
+				}
+
+				if (params.interactive_first || !prompt.empty() || session_tokens.empty()) {
 					LOG_DBG("tokenize the prompt\n");
 					embd_inp = common_tokenize(ctx, prompt, true, true);
 				} else {
@@ -298,7 +326,7 @@ int main(int argc, char** argv) {
 			}
 
 			// Should not run without any tokens
-			if (embd_inp.empty()) {
+			if (!waiting_for_first_input && embd_inp.empty()) {
 				if (add_bos) {
 					embd_inp.push_back(llama_vocab_bos(vocab));
 					LOG_WRN("embd_inp was considered empty and bos was added: %s\n", string_from(ctx, embd_inp).c_str());
@@ -334,7 +362,7 @@ int main(int argc, char** argv) {
 				}
 
 				// remove any "future" tokens that we might have inherited from the previous session
-				llama_kv_cache_seq_rm(ctx, -1, n_matching_session_tokens, -1);
+				llama_kv_self_seq_rm(ctx, -1, n_matching_session_tokens, -1);
 			}
 
 			LOG_DBG("recalculate the cached logits (check): embd_inp.size() %zu, n_matching_session_tokens %zu, embd_inp.size() %zu, session_tokens.size() %zu\n", embd_inp.size(),
@@ -356,7 +384,12 @@ int main(int argc, char** argv) {
 			}
 
 			if (params.conversation_mode) {
-				params.interactive_first = true;
+				if (params.single_turn && !params.prompt.empty()) {
+					params.interactive		 = false;
+					params.interactive_first = false;
+				} else {
+					params.interactive_first = true;
+				}
 			}
 
 			// enable interactive mode if interactive start is specified
@@ -480,8 +513,8 @@ int main(int argc, char** argv) {
 				LOG_INF(" - Press Ctrl+C to interject at any time.\n");
 #endif
 				LOG_INF("%s", control_message);
-				if (params.conversation_mode && params.enable_chat_template && params.prompt.empty()) {
-					LOG_INF(" - Using default system message. To change it, set a different value via -p PROMPT or -f FILE argument.\n");
+				if (params.conversation_mode && params.enable_chat_template && params.system_prompt.empty()) {
+					LOG_INF(" - Not using system message. To change it, set a different value via -sys PROMPT\n");
 				}
 				LOG_INF("\n");
 
@@ -512,12 +545,14 @@ int main(int argc, char** argv) {
 
 			std::vector<llama_token> embd;
 
-			// tokenized antiprompts
-			std::vector<std::vector<llama_token>> antiprompt_ids;
+			// single-token antiprompts
+			std::vector<llama_token> antiprompt_token;
 
-			antiprompt_ids.reserve(params.antiprompt.size());
 			for (const std::string& antiprompt: params.antiprompt) {
-				antiprompt_ids.emplace_back(::common_tokenize(ctx, antiprompt, false, true));
+				auto ids = ::common_tokenize(ctx, antiprompt, false, true);
+				if (ids.size() == 1) {
+					antiprompt_token.push_back(ids[0]);
+				}
 			}
 
 			if (llama_model_has_encoder(model)) {
@@ -577,8 +612,8 @@ int main(int argc, char** argv) {
 
 							LOG_DBG("context full, swapping: n_past = %d, n_left = %d, n_ctx = %d, n_keep = %d, n_discard = %d\n", n_past, n_left, n_ctx, params.n_keep, n_discard);
 
-							llama_kv_cache_seq_rm(ctx, 0, params.n_keep, params.n_keep + n_discard);
-							llama_kv_cache_seq_add(ctx, 0, params.n_keep + n_discard, n_past, -n_discard);
+							llama_kv_self_seq_rm(ctx, 0, params.n_keep, params.n_keep + n_discard);
+							llama_kv_self_seq_add(ctx, 0, params.n_keep + n_discard, n_past, -n_discard);
 
 							n_past -= n_discard;
 
@@ -602,9 +637,9 @@ int main(int argc, char** argv) {
 								(ga_i + ib * bd + ga_w) / ga_n);
 							LOG_DBG("shift: [%6d, %6d] + %6d -> [%6d, %6d]\n", ga_i + ib * bd + ga_w, n_past + ib * bd, dd, ga_i + ib * bd + ga_w + dd, n_past + ib * bd + dd);
 
-							llama_kv_cache_seq_add(ctx, 0, ga_i, n_past, ib * bd);
-							llama_kv_cache_seq_div(ctx, 0, ga_i + ib * bd, ga_i + ib * bd + ga_w, ga_n);
-							llama_kv_cache_seq_add(ctx, 0, ga_i + ib * bd + ga_w, n_past + ib * bd, dd);
+							llama_kv_self_seq_add(ctx, 0, ga_i, n_past, ib * bd);
+							llama_kv_self_seq_div(ctx, 0, ga_i + ib * bd, ga_i + ib * bd + ga_w, ga_n);
+							llama_kv_self_seq_add(ctx, 0, ga_i + ib * bd + ga_w, n_past + ib * bd, dd);
 
 							n_past -= bd;
 
@@ -762,8 +797,8 @@ int main(int argc, char** argv) {
 
 						// check for reverse prompt using special tokens
 						llama_token last_token = common_sampler_last(smpl);
-						for (std::vector<llama_token> ids: antiprompt_ids) {
-							if (ids.size() == 1 && last_token == ids[0]) {
+						for (auto token: antiprompt_token) {
+							if (token == last_token) {
 								if (params.interactive) {
 									is_interacting = true;
 								}
@@ -778,7 +813,7 @@ int main(int argc, char** argv) {
 					}
 
 					// deal with end of generation tokens in interactive mode
-					if (llama_vocab_is_eog(vocab, common_sampler_last(smpl))) {
+					if (!waiting_for_first_input && llama_vocab_is_eog(vocab, common_sampler_last(smpl))) {
 						LOG_DBG("found an EOG token\n");
 
 						if (params.interactive) {
@@ -790,7 +825,7 @@ int main(int argc, char** argv) {
 							}
 
 							if (params.enable_chat_template) {
-								chat_add_and_format(model, chat_msgs, "assistant", assistant_ss.str());
+								chat_add_and_format("assistant", assistant_ss.str());
 							}
 							is_interacting = true;
 							LOG("\n");
@@ -798,12 +833,17 @@ int main(int argc, char** argv) {
 					}
 
 					// if current token is not EOG, we add it to current assistant message
-					if (params.conversation_mode) {
+					if (params.conversation_mode && !waiting_for_first_input) {
 						const auto id = common_sampler_last(smpl);
 						assistant_ss << common_token_to_piece(ctx, id, false);
+
+						if (!prompt.empty()) {
+							prompt.clear();
+							is_interacting = false;
+						}
 					}
 
-					if (n_past > 0 && is_interacting) {
+					if ((n_past > 0 || waiting_for_first_input) && is_interacting) {
 						LOG_DBG("waiting for user input\n");
 
 						if (params.conversation_mode) {
@@ -836,9 +876,22 @@ int main(int argc, char** argv) {
 						console::set_display(console::reset);
 						display = true;
 
-						// Add tokens to embd only if the input buffer is non-empty
-						// Entering a empty line lets the user pass control back
-						if (buffer.length() > 1) {
+						if (buffer.empty()) {// Ctrl+D on empty line exits
+							LOG("EOF by user\n");
+							break;
+						}
+
+						if (buffer.back() == '\n') {
+							// Implement #587:
+							// If the user wants the text to end in a newline,
+							// this should be accomplished by explicitly adding a newline by using \ followed by return,
+							// then returning control by pressing return again.
+							buffer.pop_back();
+						}
+
+						if (buffer.empty()) {// Enter key on empty line lets the user pass control back
+							LOG_DBG("empty line, passing control back\n");
+						} else {// Add tokens to embd only if the input buffer is non-empty
 							// append input suffix if any
 							if (!params.input_suffix.empty() && !params.conversation_mode) {
 								LOG_DBG("appending input suffix: '%s'\n", params.input_suffix.c_str());
@@ -854,7 +907,7 @@ int main(int argc, char** argv) {
 							}
 
 							bool format_chat	 = params.conversation_mode && params.enable_chat_template;
-							std::string user_inp = format_chat ? chat_add_and_format(model, chat_msgs, "user", std::move(buffer)) : std::move(buffer);
+							std::string user_inp = format_chat ? chat_add_and_format("user", std::move(buffer)) : std::move(buffer);
 							// TODO: one inconvenient of current chat template implementation is that we can't distinguish between user input and special tokens (prefix/postfix)
 							const auto line_pfx = common_tokenize(ctx, params.input_prefix, false, true);
 							const auto line_inp = common_tokenize(ctx, user_inp, false, format_chat);
@@ -884,18 +937,22 @@ int main(int argc, char** argv) {
 
 							n_remain -= line_inp.size();
 							LOG_DBG("n_remain: %d\n", n_remain);
-						} else {
-							LOG_DBG("empty line, passing control back\n");
 						}
 
 						input_echo = false;// do not echo this again
 					}
 
-					if (n_past > 0) {
+					if (n_past > 0 || waiting_for_first_input) {
 						if (is_interacting) {
 							common_sampler_reset(smpl);
 						}
 						is_interacting = false;
+
+						if (waiting_for_first_input && params.single_turn) {
+							params.interactive		 = false;
+							params.interactive_first = false;
+						}
+						waiting_for_first_input = false;
 					}
 				}
 
@@ -927,10 +984,8 @@ int main(int argc, char** argv) {
 
 			ggml_threadpool_free_fn(threadpool);
 			ggml_threadpool_free_fn(threadpool_batch);
-			return static_cast<int32_t>(token_count - 2);
-			return 0;
 		});
-		bnch_swt::benchmark_stage<"nihilus-vs_llama.cpp", 2, 1, true, "Token">::runBenchmark<"nihilus", "cyan">([&] {
+		bnch_swt::benchmark_stage<"nihilus-vs_llama.cpp", 4, 2, true, "Token">::runBenchmark<"nihilus", "cyan">([&] {
 			nihilus::model<model_config> model_graph_data{ cli_args_final };
 			nihilus::input_session_config session_config{ std::cin, 1024 };
 			nihilus::input_session input_session{ session_config, model_graph_data };
@@ -942,7 +997,7 @@ int main(int argc, char** argv) {
 			return input_session.exec_params.token_count - 1;
 		});
 		std::cout << return_value << std::endl;
-		bnch_swt::benchmark_stage<"nihilus-vs_llama.cpp", 2, 1, true, "Token">::printResults();
+		bnch_swt::benchmark_stage<"nihilus-vs_llama.cpp", 4, 2, true, "Token">::printResults();
 	} catch (const std::exception& error) {
 		std::cout << "Error: " << error.what() << std::endl;
 	}

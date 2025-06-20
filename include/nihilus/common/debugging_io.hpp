@@ -362,6 +362,9 @@ namespace nihilus {
 	NIHILUS_FORCE_INLINE std::string convert_op_to_string(llama_op_types type, size_t current_block) {
 		std::string block{ std::to_string(current_block) };
 		switch (type) {
+			case llama_op_types::inp_pos: {
+				return "inp_pos";
+			}
 			case llama_op_types::inp_embd: {
 				return "inp_embd";
 			}

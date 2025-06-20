@@ -55,7 +55,7 @@ namespace nihilus {
 		NIHILUS_FORCE_INLINE model(model&&)				  = delete;
 		NIHILUS_FORCE_INLINE model& operator=(const model&) = delete;
 		NIHILUS_FORCE_INLINE model(const model&)			  = delete;
-		NIHILUS_FORCE_INLINE model(cli_params params) : thread_pool<config, model>{ params.thread_count } {
+		NIHILUS_FORCE_INLINE model(const cli_params& params) : thread_pool<config, model>{ params.thread_count } {
 			stop_watch_val_nihilus.reset();
 			memory.init(total_required_bytes);
 			model_data.init(params.model_file);
