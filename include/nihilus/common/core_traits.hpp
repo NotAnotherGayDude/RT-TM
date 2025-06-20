@@ -351,7 +351,7 @@ namespace nihilus {
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::feed_forward_length, model_traits_type::embedding_dim, 1, 1 } };
 		static constexpr array<size_t, 4> strides{ type_traits<output_type>::impl(dims) };
 		static constexpr uint64_t total_required_bytes{ 0 };
-		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
+		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::ffn_down_weight };
 		static constexpr uint64_t count{ total_required_bytes / sizeof(output_type) };
@@ -371,7 +371,7 @@ namespace nihilus {
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::embedding_dim, 1, 1, 1 } };
 		static constexpr array<size_t, 4> strides{ type_traits<output_type>::impl(dims) };
 		static constexpr uint64_t total_required_bytes{ 0 };
-		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
+		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::ffn_norm_weight };
 		static constexpr uint64_t count{ total_required_bytes / sizeof(output_type) };
@@ -391,7 +391,7 @@ namespace nihilus {
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim * model_traits_type::embedding_dim, 1, 1, 1 } };
 		static constexpr array<size_t, 4> strides{ type_traits<output_type>::impl(dims) };
 		static constexpr uint64_t total_required_bytes{ round_up_to_multiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
-		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
+		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::cache_k };
 		static constexpr uint64_t count{ total_required_bytes / sizeof(output_type) };
@@ -411,7 +411,7 @@ namespace nihilus {
 		static constexpr array<uint64_t, 4> dims{ { model_traits_type::head_count_kv * model_traits_type::head_dim * model_traits_type::embedding_dim, 1, 1, 1 } };
 		static constexpr array<size_t, 4> strides{ type_traits<output_type>::impl(dims) };
 		static constexpr uint64_t total_required_bytes{ round_up_to_multiple(type_traits<output_type>::total_byte_size(dims), 64ull) };
-		static constexpr layer_op_type layer_type{ layer_op_type::per_block };
+		static constexpr layer_op_type layer_type{ layer_op_type::none };
 		static constexpr kernel_type krn_type{ kernel_type::none };
 		static constexpr llama_op_types type{ llama_op_types::cache_v };
 		static constexpr uint64_t count{ total_required_bytes / sizeof(output_type) };

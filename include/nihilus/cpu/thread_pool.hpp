@@ -312,15 +312,15 @@ namespace nihilus {
 		using output_type																 = base_type_new::output_type;
 		using base_type																	 = base_type_new;
 		NIHILUS_FORCE_INLINE void thread_impl(uint64_t thread_index, uint64_t thread_count, uint64_t current_index = 0) {
-			this->sync_flag_start[current_index].arrive_and_wait(thread_index);
+			//this->sync_flag_start[current_index].arrive_and_wait(thread_index);
 			kernel_dispatcher<config, device_type::cpu, base_type>::impl(*this, thread_index, thread_count);
 			//spinlock_nanoseconds(500);
-			this->sync_flag_end[current_index].arrive_and_wait(thread_index);
+			//this->sync_flag_end[current_index].arrive_and_wait(thread_index);
 		}
 
 		NIHILUS_FORCE_INLINE void thread_impl_main(uint64_t current_index = 0) {
-			this->sync_flag_start[current_index].main_wait();
-			this->sync_flag_end[current_index].main_wait();
+			//this->sync_flag_start[current_index].main_wait();
+			//this->sync_flag_end[current_index].main_wait();
 		}
 	};
 

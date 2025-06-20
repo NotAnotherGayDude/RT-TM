@@ -138,7 +138,7 @@ private:
     } else if (callable_) {
       throw std::runtime_error("Cannot dump callable to JSON");
     } else if (is_boolean() && !to_json) {
-      out << (this->to_bool() ? "True" : "False");
+      out << (to_bool() ? "True" : "False");
     } else if (is_string() && !to_json) {
       dump_string(primitive_, out, string_quote);
     } else {
@@ -1119,7 +1119,7 @@ public:
         auto & name = var_names[0];
         auto ns_value = context->get(ns);
         if (!ns_value.is_object()) throw std::runtime_error("Namespace '" + ns + "' is not an object");
-        ns_value.set(name, this->value->evaluate(context));
+        ns_value.set(name, value->evaluate(context));
       } else {
         auto val = value->evaluate(context);
         destructuring_assign(var_names, context, val);
@@ -1379,7 +1379,7 @@ struct ArgumentsExpression {
 
     ArgumentsValue evaluate(const std::shared_ptr<Context> & context) const {
         ArgumentsValue vargs;
-        for (const auto& arg : this->args) {
+        for (const auto& arg : args) {
             if (auto un_expr = std::dynamic_pointer_cast<UnaryOpExpr>(arg)) {
                 if (un_expr->op == UnaryOpExpr::Op::Expansion) {
                     auto array = un_expr->expr->evaluate(context);
@@ -1403,7 +1403,7 @@ struct ArgumentsExpression {
             }
             vargs.args.push_back(arg->evaluate(context));
         }
-        for (const auto& [name, value] : this->kwargs) {
+        for (const auto& [name, value] : kwargs) {
             vargs.kwargs.push_back({name, value->evaluate(context)});
         }
         return vargs;
@@ -1620,8 +1620,8 @@ private:
 
     Parser(const std::shared_ptr<std::string>& template_str, const Options & options) : template_str(template_str), options(options) {
       if (!template_str) throw std::runtime_error("Template string is null");
-      start = it = this->template_str->begin();
-      end = this->template_str->end();
+      start = it = template_str->begin();
+      end = template_str->end();
     }
 
     bool consumeSpaces(SpaceHandling space_handling = SpaceHandling::Strip) {
