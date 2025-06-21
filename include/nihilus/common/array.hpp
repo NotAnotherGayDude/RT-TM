@@ -21,7 +21,6 @@ RealTimeChris (Chris M.)
 #pragma once
 
 #include <nihilus/common/iterator.hpp>
-#include <nihilus/common/concepts.hpp>
 #include <nihilus/common/config.hpp>
 #include <algorithm>
 #include <stdexcept>
@@ -335,7 +334,7 @@ namespace nihilus {
 			return true;
 		}
 
-	  protected:
+	  private:
 		std::conditional_t<std::disjunction_v<std::is_default_constructible<value_type>, std::is_default_constructible<value_type>>, value_type, empty_array_element> data_val[1]{};
 	};
 }

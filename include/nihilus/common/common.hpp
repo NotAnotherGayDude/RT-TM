@@ -20,11 +20,11 @@ RealTimeChris (Chris M.)
 
 #pragma once
 
-#include <nihilus/common/array.hpp>
 #include <nihilus/common/config.hpp>
 #include <nihilus/cpu/simd/nihilus_cpu_instructions.hpp>
 #include <nihilus/common/data_types.hpp>
 #include <nihilus/common/concepts.hpp>
+#include <nihilus/common/array.hpp>
 #include <iostream>
 #include <cstdint>
 #include <chrono>
@@ -112,7 +112,7 @@ namespace nihilus {
 		}
 	};
 
-	static constexpr auto nanosecond_count{ 500 };
+	static constexpr auto spinlock_time{ 500 };
 
 	inline std::mutex mutex{};
 
@@ -321,7 +321,7 @@ namespace nihilus {
 				return time;
 			}
 		}
-	};	
+	};
 
 	inline stop_watch<std::chrono::nanoseconds> stop_watch_val_nihilus{ 0 };
 
